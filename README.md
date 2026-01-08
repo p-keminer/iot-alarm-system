@@ -1,5 +1,18 @@
 # IoT-Alarmanlage / IoT Alarm System
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+## 📑 Inhaltsverzeichnis
+- [Übersicht](#übersicht--overview)
+- [Systemarchitektur](#systemarchitektur--system-architecture)
+- [Firmware](#firmware)
+- [Hardware](#hardware)
+- [Mechanik](#mechanik--mechanical-design)
+- [Assembly](#assembly--zusammenbau)
+- [Lessons Learned](#lessons-learned)
+- [Status](#status)
+- [Hinweis](#hinweis--notes)
+
 ## Übersicht / Overview
 Dieses Projekt ist eine selbstentwickelte IoT-Alarmanlage mit zwei ESP8266-Nodes und einem Arduino R3.  
 Sie umfasst Sensorerfassung, Kommunikation zwischen den Nodes, eine zentrale Steuerungseinheit sowie eine selbst entworfene PCB.  
