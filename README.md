@@ -55,7 +55,7 @@ This was my first hands-on embedded system project, developed with minimal prior
 ---
 
 ## Lessons Learned
-- Dokumentiert in `docs/lessons_learned.md` / Documented in `docs/lessons_learned.md`
+- Dokumentiert in `docs/lessonslearned.md` / Documented in `docs/lessonslearned.md`
 - Herausforderungen: Embedded Programming, Löten, Sensorintegration, Debugging / Challenges: embedded programming, soldering, sensor integration, debugging
 - Iteratives Vorgehen und Dokumentation entscheidend / Iterative approach and documentation are essential
 
