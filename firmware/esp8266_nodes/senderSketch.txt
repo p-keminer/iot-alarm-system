@@ -1,0 +1,95 @@
+#include <ESP8266WiFi.h>
+#include <WiFiUdp.h>
+
+//WLAN ZUGRIFF
+const char* ssid = "";				//WLAN Daten hier eintragen
+const char* password = "";				
+
+//FESTE IP EINSTELLUNGEN
+IPAddress localIP(192,168,2,xxx);     // IP SENDER hier eintragen
+IPAddress gateway(192,168,2,x);      // GATEWAY(ROUTER)
+IPAddress subnet(255,255,255,0);     // SUBNETMASK
+
+
+//UDP EMPFÄNGER
+const char* empfaengerIP = ""; 		// IP des Empfänger ESP hier eintragen
+const unsigned int empfaengerPort = 4210;
+WiFiUDP udp;
+const unsigned int localPort = 4211;
+
+bool wifiWarVerbunden = false;
+
+//DEBUGINGLEDs
+#define LED_ALARM LED_BUILTIN
+#define LED_WIFI D5
+
+unsigned long lastBlink = 0;
+const unsigned long blinkInterval = 500;
+
+void setup() {
+  Serial.begin(9600);
+ 
+  //ALARM DEBUGGING LED
+  pinMode(LED_ALARM, OUTPUT);
+  digitalWrite(LED_ALARM, LOW);
+
+  //WIFI DEBUGGING LED
+  pinMode(LED_WIFI, OUTPUT);
+  digitalWrite(LED_WIFI, LOW);
+
+  // WLAN verbinden
+  WiFi.config(localIP, gateway, subnet);
+  WiFi.begin(ssid, password);
+  Serial.print("Verbinde mit WLAN");
+
+  //UDP STARTEN
+  udp.begin(localPort);
+}
+
+void loop() {
+  if (WiFi.status() != WL_CONNECTED) {
+     wifiWarVerbunden = false;
+ 
+    //BLINKEND WENN NICHT VERBUNDEN
+    if (millis() - lastBlink >= blinkInterval) {
+      digitalWrite(LED_WIFI, !digitalRead(LED_WIFI));
+      lastBlink = millis();
+    }
+  } else {
+    //AN WENN VERBUNDEN
+   digitalWrite(LED_WIFI, HIGH);
+
+  if (!wifiWarVerbunden) {
+    Serial.println("\nVerbunden!");
+    Serial.print("Zugewiesene IP: ");
+    Serial.println(WiFi.localIP());
+    wifiWarVerbunden = true;
+    }
+  }
+
+  if (Serial.available()) {
+    String cmd = Serial.readStringUntil('\n');
+    cmd.trim(); // entfernt \r und Leerzeichen
+
+    if (cmd == "ALARM_ON") {
+      digitalWrite(LED_ALARM, HIGH);
+      Serial.println("ESP: Alarm aktiviert");
+      //ALARM SENDEN
+      udp.beginPacket(empfaengerIP, empfaengerPort);
+      udp.print("ALARM_ON");
+      udp.endPacket();
+    }
+    else if (cmd == "ALARM_OFF") {
+      digitalWrite(LED_ALARM, LOW);
+      Serial.println("ESP: Alarm deaktiviert");
+      //ALARM STOPPEN
+      udp.beginPacket(empfaengerIP, empfaengerPort);
+      udp.print("ALARM_OFF");
+      udp.endPacket();
+    }
+    else {
+      Serial.print("ESP: Unbekanntes Kommando: ");
+      Serial.println(cmd);
+    }
+  }
+}

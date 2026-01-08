@@ -1,0 +1,160 @@
+//BIB KARTENLESER
+#include <SPI.h>
+#include <MFRC522.h>
+
+//PIN BUZZER
+#define BUZZER_PIN 5
+
+// PINS KARTENLESER
+#define RST_PIN   9
+#define SS_PIN    10
+
+MFRC522 mfrc522(SS_PIN, RST_PIN);
+
+//VARIABLEN KARTENLÖSER
+bool karteDa = 0;
+bool zutritt = 0;
+bool alarmScharf = 0;
+byte erlaubteUIDs[2][4] = {{,,,},{,,,}};  	//UIDs eingeben
+
+//PINS MAGNETSENSOR
+#define REED_PIN1 2
+#define REED_PIN2 3
+
+//PINS LEDS
+#define LED_ALARM   6
+#define LED_SENS1   7
+#define LED_SENS2   8
+
+//VARIABLEN ALARMSENDEN
+bool alarmAusgeloest = false;
+
+//VARIABLEN MAGNETSENSOREN
+uint8_t reed1=HIGH;
+uint8_t reed2=HIGH;
+ 
+    // FUNKTIONEN ALLE
+
+//FUNKTIONEN MAGNETSENSOREN
+void pruefeSensor1(){
+  reed1 = digitalRead(REED_PIN1);
+}
+
+void pruefeSensor2(){
+  reed2 = digitalRead(REED_PIN2);
+}
+
+//FUNKTIONEN KARTENLESER
+bool UIDvergleich(){
+bool uidErlaubt = false;
+for(int k = 0; k < 2; k++){       // für jede erlaubte UID
+   bool gleich = true;
+  for(int i = 0; i < 4; i++){   // für jedes Byte
+       if(mfrc522.uid.uidByte[i] != erlaubteUIDs[k][i]){
+           gleich = false;
+      }
+   }
+   if(gleich){
+   uidErlaubt = true;
+}
+}
+return uidErlaubt;
+}
+//FUNKTIONEN KARTENLESER
+void pruefeRFID(){
+  // KONTROLLE OB KARTE DA
+if (!mfrc522.PICC_IsNewCardPresent()) {
+    karteDa = false;
+    return;
+ }
+ // FALLS DA ABER NICHT LESBAR
+ if (!mfrc522.PICC_ReadCardSerial()) {
+    return;
+  }
+ zutritt = UIDvergleich();
+  if (zutritt && !karteDa) {
+    karteDa = true;
+    alarmScharf = !alarmScharf;
+    Serial.print("Alarm jetzt: ");
+    Serial.println(alarmScharf ? "scharf" : "unscharf");
+  }
+
+  // KOMMUNIKATION MIT KARTE BEENDEN
+mfrc522.PICC_HaltA();
+}
+
+//FUNKTIONEN LEDS
+ void updateLEDs(){
+ 
+ digitalWrite(LED_ALARM, alarmScharf ? HIGH : LOW);
+
+  if (alarmScharf) {
+    digitalWrite(LED_SENS1, reed1 == LOW ? HIGH : LOW);
+    digitalWrite(LED_SENS2, reed2 == LOW ? HIGH : LOW);
+  } else {
+    digitalWrite(LED_SENS1, LOW);
+    digitalWrite(LED_SENS2, LOW);
+  }
+}
+
+//FUNKTION KOMMUNIKATION
+
+void sendeAlarm(){
+  if(alarmScharf && !alarmAusgeloest && reed1 == HIGH && reed2 == HIGH){
+    alarmAusgeloest = true;
+    Serial.println("ALARM_ON");
+    digitalWrite(BUZZER_PIN,HIGH);
+  }
+  if(!alarmScharf && alarmAusgeloest){
+    alarmAusgeloest = false;
+    Serial.println("ALARM_OFF");
+    digitalWrite(BUZZER_PIN,LOW);
+  }
+}
+void pruefeSerielleEingabe() {
+  if (Serial.available() > 0) {
+    char input = Serial.read();
+ 
+    // '1' zum Schärfen, '0' zum Entschärfen
+    if (input == '1') {
+      alarmScharf = true;
+      Serial.println("Serieller Befehl: Alarm SCHARF");
+    }
+    else if (input == '0') {
+      alarmScharf = false;
+      Serial.println("Serieller Befehl: Alarm UNSCHARF");
+    }
+  }
+}
+void setup() {
+//MAGNETSENSOREN
+pinMode(REED_PIN1, INPUT_PULLUP);
+pinMode(REED_PIN2, INPUT_PULLUP);
+//LED PINS
+pinMode(LED_BUILTIN, OUTPUT);
+pinMode(LED_SENS1, OUTPUT);
+pinMode(LED_SENS2, OUTPUT);
+pinMode(LED_ALARM, OUTPUT);
+//BUZZER PIN
+pinMode(BUZZER_PIN,OUTPUT);
+
+digitalWrite(LED_BUILTIN, LOW);
+
+Serial.begin(9600);
+
+
+//KARTENLESER
+SPI.begin();         // Init SPI bus
+mfrc522.PCD_Init();  // Init MFRC522 card
+
+}
+
+void loop() {
+ pruefeSerielleEingabe();
+  pruefeRFID();
+  pruefeSensor1();
+  pruefeSensor2();
+ 
+  sendeAlarm();
+  updateLEDs();
+}
