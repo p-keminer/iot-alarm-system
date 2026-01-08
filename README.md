@@ -1,6 +1,6 @@
 # IoT-Alarmanlage / IoT Alarm System
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)
 
 ## 📑 Inhaltsverzeichnis
 - [Übersicht](#übersicht--overview)
