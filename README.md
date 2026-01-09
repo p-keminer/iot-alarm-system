@@ -14,12 +14,14 @@
 - [Hinweis](#hinweis--notes)
 
 ## Übersicht / Overview
-Dieses Projekt ist eine selbstentwickelte IoT-Alarmanlage mit zwei ESP8266-Nodes und einem Arduino R3.  
+Dieses Projekt ist eine selbstentwickelte Basis-IoT-Alarmanlage mit zwei ESP8266-Nodes und einem Arduino R3.  
+Es dient als modularer Grundbaustein, der es ermöglicht, bei Bedarf weitere Nodes hinzuzufügen und das System so flexibel zu erweitern.
 Sie umfasst Sensorerfassung, Kommunikation (UART&UDP) zwischen den Nodes, eine zentrale Steuerungseinheit sowie selbst entworfene PCB.  
 Für die Sensoren wurden 3D-gedruckte Gehäuse verwendet.  
 Dies war mein erstes praktisches Embedded-System-Projekt, umgesetzt mit minimaler Vorerfahrung.  
 
-This project is a self-developed IoT alarm system using two ESP8266 nodes and an Arduino R3.  
+This project is a self-developed basic IoT alarm system using two ESP8266 nodes and an Arduino R3.  
+It serves as a modular foundation, allowing additional nodes to be integrated as needed, making the system flexible and easily expandable.
 It includes sensor data acquisition, communication (UART&UDP) between nodes, a central control unit, and custom-designed PCB.  
 3D-printed housings were used for the sensors.  
 This was my first hands-on embedded system project, developed with minimal prior experience.
@@ -29,7 +31,7 @@ This was my first hands-on embedded system project, developed with minimal prior
 ## Systemarchitektur / System Architecture
 - Zwei ESP8266-Nodes zur Sensorerfassung und Kommunikation / Two ESP8266 nodes for sensor data acquisition and communication
 - Arduino R3 als zentrale Steuerung / Arduino R3 as central controller
-- Selbst entworfene PCB / Custom designed PCB [PCB Sending Nodes](hardware/pcb/r3_senderEsp/rückseite_r3_senderEsp.png) [PCB Receiving Nodes](hardware/pcb/empfaengerEsp/rückseiteEmpfaenger.png)  
+- Selbst entworfene PCB / Custom designed PCB  [![PCB Sending Nodes](https://img.shields.io/badge/PCB-Sending%20Nodes-blue)](hardware/pcb/r3_senderEsp/rückseite_r3_senderEsp.png)  [![PCB Receiving Nodes](https://img.shields.io/badge/PCB-Receiving%20Nodes-green)](hardware/pcb/empfaengerEsp/rückseiteEmpfaenger.png)
 - 3D-gedruckte Sensorgehäuse / 3D-printed housings for sensors 
 
 **Ablauf / Workflow:** Sensoren → Arduino → Alarmlogik → ESP-Nodes  → Kommunikation → Ausgabe   
@@ -83,3 +85,13 @@ This was my first hands-on embedded system project, developed with minimal prior
 ## Hinweis / Notes
 - KI-Tools wurden unterstützend für Code und Debugging verwendet / AI tools were used to assist with code and debugging
 - Alle Entscheidungen, Tests und Aufbau wurden persönlich durchgeführt / All decisions, testing, and assembly were performed personally
+
+---
+
+## Verwendete Tools / Tools Used
+
+- **KiCAD** – PCB-Design und Schaltpläne / PCB design and schematics  
+- **Tinkercad** – Simulation und Prototyping / Simulation and prototyping  
+- **DIY Layout Creator** – Layout-Erstellung für Prototypen / Layout creation for prototypes  
+- **Bambu Lab Studio** – 3D-Druck-Slicing für H2S / 3D printing slicing for H2S  
+- **ChatGPT & Google Gemini** – Unterstützende Tools für Code, Debugging und Ideen / Assistive tools for code, debugging, and ideas
