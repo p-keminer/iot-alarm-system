@@ -1,4 +1,4 @@
-# IoT-Alarmanlage / IoT Alarm System
+# IoT-Basis-Alarmanlage / IoT Basic Alarm System
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)
 
@@ -63,7 +63,7 @@ This was my first hands-on embedded systems project, developed with minimal prio
 
 ---
 
-## Assembly / Zusammenbau
+## Zusammenbau / Assembly
 - Programmierung der Nodes und Test der Sensoren / Nodes programmed and sensors tested
 - Zusammenführung der Nodes und Test der Funktionalität / Nodes integrated and verified overall functionality
 - Komponenten montiert und funktionsfähigen Prototyp erstellt / Components assembled into a functional prototype
@@ -74,7 +74,7 @@ This was my first hands-on embedded systems project, developed with minimal prio
 
 ---
 
-## Lessons Learned
+## Reflektion / Lessons Learned
 - Dokumentiert in `docs/lessonslearned.md` / Documented in `docs/lessonslearned.md`
 - Herausforderungen: Embedded Programming, Löten, Sensorintegration, Debugging / Challenges: embedded programming, soldering, sensor integration, debugging
 - Iteratives Vorgehen und Dokumentation entscheidend / Iterative approach and documentation are essential
