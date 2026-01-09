@@ -60,7 +60,7 @@ bool tasterJetzt = HIGH;
     // --- Funktionen UDP  ---
 
 /* prueft auf eingehende Nachrichten, liest aus,
-wandelt um & aktiviert Alarm*/
+wandelt um & aktiviert Alarm */
 
 void pruefeUDP() {
 	int packetSize = udp.parsePacket();						// Prüfe auf eingehendes Paket
@@ -87,7 +87,7 @@ void pruefeUDP() {
 
     // --- Alarm Funktionen ---
 
-/* Pruefe ob Alarm Signal empfangen*/
+/* Pruefe ob Alarm Signal empfangen */
 
 void pruefeAlarm() {
 	if(alarmEmpfangen){									
@@ -115,7 +115,7 @@ void tasterSetztAlarm() {
     // --- Blynk Funktion ---
 
 /* ermoeglicht manuelles de- & aktivieren 
-des Alarms per App oder Dashboard*/
+des Alarms per App oder Dashboard */
 
 BLYNK_WRITE(V0) {										
 	int value = param.asInt();							       	// Wert auslesen & speichern
@@ -134,7 +134,7 @@ BLYNK_WRITE(V0) {
 
     // --- Funktion Alarmanzeige (visuell & optisch) ---
 
-/* schaltet LEDs und Buzzer togglend an*/
+/* schaltet LEDs und Buzzer togglend an */
 
 void updateAlarm() {
 	if(alarmAn){											    		// wenn Alarm aktiviert 
@@ -158,7 +158,7 @@ void updateAlarm() {
 
 		// ---Funktion WLAN LED ---
 	
-/*WLAN Status Anzeige*/
+/* WLAN Status Anzeige */
 
 void updateLedWLAN() {
 	if (WiFi.status() == WL_CONNECTED) {										
