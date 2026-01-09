@@ -1,18 +1,28 @@
 # IoT-Basis-Alarmanlage / IoT Basic Alarm System
 
+**Kurzbeschreibung / Brief Description:**  
+IoT-Alarmanlagen-Basissystem auf ESP8266 und Elegoo Uno R3-Basis mit magnetischen Hall-Sensoren (KY-021) und RFID-Zugangskontrolle (RC522). Das System verarbeitet Sensordaten lokal, steuert Ausgaben wie LED und Buzzer, kommuniziert über UART und UDP und ist modular erweiterbar. Ziel ist ein praxisnahes Embedded-/IoT-Projekt eines Studierenden der THGA Bochum.
+
+---
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md) [![PCB Sending Nodes](https://img.shields.io/badge/PCB-Sending%20Nodes-blue)](hardware/pcb/r3_senderEsp/rückseite_r3_senderEsp.png)  [![PCB Receiving Nodes](https://img.shields.io/badge/PCB-Receiving%20Nodes-blue)](hardware/pcb/empfaengerEsp/rückseiteEmpfaenger.png) [![UNO R3](https://img.shields.io/badge/Firmware-%20UNO%20R3-green)](firmware/elegoo_uno_r3/sketchR3/sketchR3.ino) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266_nodes/sketch_empfaengerESP/sketch_empfaengerESP.ino) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266_nodes/sketch_senderESP/sketch_senderESP.ino) [![3D Printed Reed Sensor Housing](https://img.shields.io/badge/3D%20Print-Reed%20Sensor-red)](mechanics/3d_prints/reed_sensor/reed_sensor_gehaeuse.stl) [![3D Printed RFID Sensor Housing](https://img.shields.io/badge/3D%20Print-RFID%20Sensor-red)](mechanics/3d_prints/rfid_sensor/rfid_sensor_gehaeuse.stl) [![Prototype Breadboard](https://img.shields.io/badge/Prototype-Breadboard-pink)](photos/prototyp_breadboards.png) [![Prototype Perfboard](https://img.shields.io/badge/Prototype-Perfboard-pink)](photos/prototyp_perforatedCircuitBoards.jpg) 
 
+---
+
 ## 📑 Inhaltsverzeichnis
-- [Übersicht](#übersicht--overview)
-- [Systemarchitektur](#systemarchitektur--system-architecture)
+- [Übersicht / Overwiev](#übersicht--overview)
+- [Systemarchitektur / System Architecture](#systemarchitektur--system-architecture)
 - [Firmware](#firmware)
 - [Hardware](#hardware)
-- [Mechanik](#mechanik--mechanical-design)
-- [Assembly](#zusammenbau--assembly) 
-- [Lessons Learned](#reflektion--lessons-learned)
+- [Projekt-Highlights / Features](#projekt-highlights--features)
+- [Mechanik / Mechanical Design](#mechanik--mechanical-design)
+- [Zusammenbau / Assembly](#zusammenbau--assembly) 
+- [Reflektion / Lessons Learned](#reflektion--lessons-learned)
 - [Status](#status)
-- [Hinweis](#hinweis--notes)
-- [Verwendete Tools](#verwendete-tools--tools-used)
+- [Hinweis / Notes](#hinweis--notes)
+- [Verwendete Tools / Tools Used](#verwendete-tools--tools-used)
+
+---
 
 ## Übersicht / Overview
 Dieses Projekt ist eine selbstentwickelte Basis-IoT-Alarmanlage mit zwei ESP8266-Nodes und einem Arduino R3.  
@@ -30,13 +40,16 @@ This was my first hands-on embedded systems project, developed with minimal prio
 ---
 
 ## Systemarchitektur / System Architecture
-- Zwei ESP8266-Nodes zur Sensorerfassung und Kommunikation / Two ESP8266 nodes for sensor data acquisition and communication
-- Arduino R3 als zentrale Steuerung / Arduino R3 as central controller
+- Zwei ESP8266-Nodes zur Kommunikation / Two ESP8266-Nodes for communication
+- Elegoo Uno R3 als zentrale Steuerung / Elegoo Uno R3 as central controller
 - Selbst entworfene PCBs / Custom designed PCBs  [![PCB Sending Nodes](https://img.shields.io/badge/PCB-Sending%20Nodes-blue)](hardware/pcb/r3_senderEsp/rückseite_r3_senderEsp.png)  [![PCB Receiving Nodes](https://img.shields.io/badge/PCB-Receiving%20Nodes-blue)](hardware/pcb/empfaengerEsp/rückseiteEmpfaenger.png)
 - 3D-gedruckte Sensorgehäuse / 3D-printed housings for sensors
 
-**Ablauf / Workflow:** Sensoren → Arduino → Alarmlogik → ESP-Nodes → Kommunikation → Ausgabe   
-**Workflow:** Sensors → Arduino → Alarm logic → ESP-Nodes → Communication → Output 
+Der folgende Workflow zeigt, wie Sensoren und Aktoren über die Steuerungseinheit und ESP-Nodes interagieren.  
+The following workflow shows how sensors and actuators interact via the control unit and ESP nodes.
+
+**Workflow / Ablauf:**  
+RC522 + KY-021 → Elegoo Uno R3 (Alarm-Logik / Alarm logic) → LED + Buzzer → ESP-Nodes → Kommunikation / Communication → LED + Buzzer
 
 ---
 
@@ -46,12 +59,33 @@ This was my first hands-on embedded systems project, developed with minimal prio
 - Strukturierter und kommentierter Code / Structured and well-commented code 
 - Einzeltests der Nodes / Individual node testing
 [![UNO R3](https://img.shields.io/badge/Firmware-%20UNO%20R3-green)](firmware/elegoo_uno_r3/sketchR3/sketchR3.ino) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266_nodes/sketch_empfaengerESP/sketch_empfaengerESP.ino) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266_nodes/sketch_senderESP/sketch_senderESP.ino)
+
 ---
 
 ## Hardware
-- Prototyp-PCBs selbst gelötet / Custom PCBs soldered as prototype
-- Funktionsweise getestet / Functionality tested
-- Schaltpläne und Lochrasterlayouts in `schematics/` und `pcb/` enthalten / Schematics and perfboard layouts included in `schematics/` and `pcb/`
+
+| Komponente / Component | Typ / Modell / Type | Beschreibung / Function |
+|------------------------|------------------|------------------------|
+| MCU | ESP8266 | Kommuniziert mit den Sensor-Nodes, verarbeitet Events / Communicates with sensor nodes, processes events |
+| MCU | Elegoo Uno R3 | Zentrale Alarm-Logik, sammelt Sensordaten / Central alarm logic, collects sensor data |
+| Sensor | KY-021 | Magnetischer Hall-Sensor zur Tür-/Fensterüberwachung / Magnetic Hall sensor for door/window detection |
+| Sensor | RC522 | RFID-Modul für Zugangskontrolle / RFID module for access control |
+| Aktor / Actuator | LED | Visuelle Alarmanzeige / Visual alarm indicator |
+| Aktor / Actuator | Buzzer | Akustische Alarmanzeige / Acoustic alarm indicator |
+| PCB | Custom | Selbst entworfene Leiterplatten für Nodes / Custom designed PCBs for nodes |
+| Gehäuse / Housing | 3D-gedruckt / 3D-printed | Schützt Sensoren und Elektronik / Protects sensors and electronics |
+
+---
+
+## Projekt Highlights / Features
+
+- Magnetische Tür-/Fensterüberwachung mit KY-021 Sensoren / Magnetic door/window monitoring with KY-021 sensors  
+- RFID-basierte Zugangskontrolle über RC522 / RFID-based access control via RC522  
+- Ereignisbasierte Auslösung von LED und Buzzer / Event-based triggering of LED and buzzer  
+- Lokale Alarm-Logik auf Elegoo Uno R3 / Local alarm logic on Elegoo Uno R3  
+- Kommunikation zwischen ESP8266-Nodes für verteilte Sensorik / Communication between ESP8266 nodes for distributed sensing  
+- Modular erweiterbar für zusätzliche Sensoren oder Aktoren, z. B. ESP32-Kamera-Modul oder PIR-Bewegungssensoren / Modularly extendable for additional sensors or actuators, e.g., ESP32 camera module or PIR motion sensors  
+- Prototypische IoT-Funktionalität über UART und UDP / Prototype IoT functionality via UART and UDP
 
 ---
 
