@@ -4,10 +4,10 @@
 #include <MFRC522.h>			            // Buskommunikation (SPI) und Objekt 
 
 
-#define RST_PIN   9			              // definieren der Pins des RFID-Sensor
-#define SS_PIN    10
+#define RST_PIN 9			             	// definieren der Pins des RFID-Sensor
+#define SS_PIN 10
 
-MFRC522 mfrc522(SS_PIN, RST_PIN);	    // Initialisieren des RFID-Sensor 
+MFRC522 mfrc522(SS_PIN, RST_PIN);	    	// Initialisieren des RFID-Sensor 
 
 
 bool karteDa = 0;			                // Statusvariablen für RFID-Sensor	
@@ -20,18 +20,18 @@ byte erlaubteUIDs[2][4] = {{0x,0x,0x,0x},{0x,0x,0x,0x}};  	// <- UIDs eintragen 
 #define BUZZER_PIN 5			            // definieren des Buzzer Pin
 
 
-#define REED_PIN1 2			              // definieren der Magnetsensor Pins
+#define REED_PIN1 2			             	// definieren der Magnetsensor Pins
 #define REED_PIN2 3
 
-#define LED_ALARM   6			            // definieren der LED Pins
-#define LED_SENS1   7
-#define LED_SENS2   8
+#define LED_ALARM 6			           		// definieren der LED Pins
+#define LED_SENS1 7
+#define LED_SENS2 8
 
    // --- Variablen Magnetsensoren & Alarm ---
 
-bool alarmAusgeloest = false;		      // Variable Alarm senden
+bool alarmAusgeloest = false;		      	// Variable Alarm senden
 
-uint8_t reed1=HIGH;			              // Variablen Magnetsensor
+uint8_t reed1=HIGH;			              	// Variablen Magnetsensor
 uint8_t reed2=HIGH;
 
 
@@ -59,16 +59,16 @@ bool UIDvergleich(){
 bool uidErlaubt = false;
 for(int k = 0; k < 2; k++){      		 		// iteriere über jede erlaubte UID [x][]
   bool gleich = true;
- for(int i = 0; i < 4; i++){   				  // iteriere über jedes Byte [][x]
+ for(int i = 0; i < 4; i++){   				  	// iteriere über jedes Byte [][x]
       if(mfrc522.uid.uidByte[i] != erlaubteUIDs[k][i]){
-          gleich = false;					      // aktuelles Byte stimmt nicht ueberein
+          gleich = false;					    // aktuelles Byte stimmt nicht ueberein
      }
   }
   if(gleich){
-  uidErlaubt = true;						        // richtige UID
+  uidErlaubt = true;						    // richtige UID
 }
 }
-return uidErlaubt;						          // Rueckgabe Pruefung UIDs
+return uidErlaubt;						        // Rueckgabe Pruefung UIDs
 }
 
 
@@ -76,18 +76,18 @@ return uidErlaubt;						          // Rueckgabe Pruefung UIDs
 und aktiviert (funktionell) Alarm */
 
 void pruefeRFID(){
- if (!mfrc522.PICC_IsNewCardPresent()) {			// kontrolle ob Karte da ist
+ if (!mfrc522.PICC_IsNewCardPresent()) {				// kontrolle ob Karte da ist
    karteDa = false;
    return;
 }
-if (!mfrc522.PICC_ReadCardSerial()) {				  // falls da, aber nicht lesbar
+if (!mfrc522.PICC_ReadCardSerial()) {				 	// falls da, aber nicht lesbar
    return;
  }
 zutritt = UIDvergleich();					
- if (zutritt && !karteDa) {					          // Alarm de- & aktivieren
+ if (zutritt && !karteDa) {					          	// Alarm de- & aktivieren
    karteDa = true;
    alarmScharf = !alarmScharf;					
-   Serial.print("Alarm jetzt: ");				      // Debugging Ausgaben
+   Serial.print("Alarm jetzt: ");				      	// Debugging Ausgaben
    Serial.println(alarmScharf ? "scharf" : "unscharf");
  }
 
@@ -107,7 +107,7 @@ digitalWrite(LED_ALARM, alarmScharf ? HIGH : LOW);		    // Visuelle Anzeige Alar
    digitalWrite(LED_SENS1, reed1 == LOW ? HIGH : LOW);		// Visuelle Anzeige Sensoren in Magnetfeld ?
    digitalWrite(LED_SENS2, reed2 == LOW ? HIGH : LOW);
  } else {
-   digitalWrite(LED_SENS1, LOW);				                  // Alarm funktionell deaktiviert = LEDS deaktivieren
+   digitalWrite(LED_SENS1, LOW);				            // Alarm funktionell deaktiviert = LEDS deaktivieren
    digitalWrite(LED_SENS2, LOW);
  }
 }
@@ -136,11 +136,11 @@ void pruefeSerielleEingabe() {
  if (Serial.available() > 0) {
    char input = Serial.read();
 				
-   if (input == '1') {							  // 1 zum funktionellen aktivieren
+   if (input == '1') {							  	// 1 zum funktionellen aktivieren
      alarmScharf = true;						
      Serial.println("Serieller Befehl: Alarm SCHARF");
    }
-   else if (input == '0') {						// 0 zum funktionellen deaktivieren
+   else if (input == '0') {							// 0 zum funktionellen deaktivieren
      alarmScharf = false;
      Serial.println("Serieller Befehl: Alarm UNSCHARF");
    }
@@ -151,15 +151,15 @@ void pruefeSerielleEingabe() {
 
 void setup() {
 
-pinMode(REED_PIN1, INPUT_PULLUP);		// initialisiere Magnetsensor pins
+pinMode(REED_PIN1, INPUT_PULLUP);			// initialisiere Magnetsensor pins
 pinMode(REED_PIN2, INPUT_PULLUP);
 
-pinMode(LED_BUILTIN, OUTPUT);			  // initialisiere LED pins
+pinMode(LED_BUILTIN, OUTPUT);			 	// initialisiere LED pins
 pinMode(LED_SENS1, OUTPUT);
 pinMode(LED_SENS2, OUTPUT);
 pinMode(LED_ALARM, OUTPUT);
 
-pinMode(BUZZER_PIN, OUTPUT);			  // initialisiere Buzzer pin
+pinMode(BUZZER_PIN, OUTPUT);			  	// initialisiere Buzzer pin
 
 digitalWrite(LED_BUILTIN, LOW);
 
