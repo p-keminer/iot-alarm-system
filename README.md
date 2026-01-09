@@ -33,7 +33,7 @@ This was my first hands-on embedded systems project, developed with minimal prio
 - Zwei ESP8266-Nodes zur Sensorerfassung und Kommunikation / Two ESP8266 nodes for sensor data acquisition and communication
 - Arduino R3 als zentrale Steuerung / Arduino R3 as central controller
 - Selbst entworfene PCB / Custom designed PCB  [![PCB Sending Nodes](https://img.shields.io/badge/PCB-Sending%20Nodes-blue)](hardware/pcb/r3_senderEsp/rückseite_r3_senderEsp.png)  [![PCB Receiving Nodes](https://img.shields.io/badge/PCB-Receiving%20Nodes-green)](hardware/pcb/empfaengerEsp/rückseiteEmpfaenger.png)
-- 3D-gedruckte Sensorgehäuse / 3D-printed housings for sensors [![3D Printed Reed Sensor Housing](https://img.shields.io/badge/3D%20Print-Reed%20Sensor-blueviolet)](mechanics/3d_prints/reed_sensor/reed_sensor_gehaeuse.png) [![3D Printed RFID Sensor Housing](https://img.shields.io/badge/3D%20Print-RFID%20Sensor-blueviolet)](mechanics/3d_prints/rfid_sensor/rfid_sensor_gehaeuse.png)
+- 3D-gedruckte Sensorgehäuse / 3D-printed housings for sensors
 
 **Ablauf / Workflow:** Sensoren → Arduino → Alarmlogik → ESP-Nodes → Kommunikation → Ausgabe   
 **Workflow:** Sensors → Arduino → Alarm logic → ESP-Nodes → Communication → Output 
@@ -57,7 +57,7 @@ This was my first hands-on embedded systems project, developed with minimal prio
 
 ## Mechanik / Mechanical Design
 - 3D-gedruckte Gehäuse für Sensoren / 3D-printed housings for sensors
-- STL-Dateien für den Druck / STL files for printing
+- STL-Dateien für den Druck / STL files for printing [![3D Printed Reed Sensor Housing](https://img.shields.io/badge/3D%20Print-Reed%20Sensor-blueviolet)](mechanics/3d_prints/reed_sensor/reed_sensor_gehaeuse.png) [![3D Printed RFID Sensor Housing](https://img.shields.io/badge/3D%20Print-RFID%20Sensor-blueviolet)](mechanics/3d_prints/rfid_sensor/rfid_sensor_gehaeuse.png)
 - G-Code-Datei für **Bambu Lab H2S** enthalten / G-code file for **Bambu Lab H2S** included
 - Alle Dateien befinden sich im Ordner `mechanics/` / All files are located in the `mechanics/` folder
 
