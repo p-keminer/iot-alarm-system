@@ -12,6 +12,7 @@
 - [Lessons Learned](#lessons-learned)
 - [Status](#status)
 - [Hinweis](#hinweis--notes)
+- [Verwendete Tools](#verwendete-tools--tools-used)
 
 ## Übersicht / Overview
 Dieses Projekt ist eine selbstentwickelte Basis-IoT-Alarmanlage mit zwei ESP8266-Nodes und einem Arduino R3.  
@@ -32,7 +33,7 @@ This was my first hands-on embedded system project, developed with minimal prior
 - Zwei ESP8266-Nodes zur Sensorerfassung und Kommunikation / Two ESP8266 nodes for sensor data acquisition and communication
 - Arduino R3 als zentrale Steuerung / Arduino R3 as central controller
 - Selbst entworfene PCB / Custom designed PCB  [![PCB Sending Nodes](https://img.shields.io/badge/PCB-Sending%20Nodes-blue)](hardware/pcb/r3_senderEsp/rückseite_r3_senderEsp.png)  [![PCB Receiving Nodes](https://img.shields.io/badge/PCB-Receiving%20Nodes-green)](hardware/pcb/empfaengerEsp/rückseiteEmpfaenger.png)
-- 3D-gedruckte Sensorgehäuse / 3D-printed housings for sensors 
+- 3D-gedruckte Sensorgehäuse / 3D-printed housings for sensors [![3D Printed Reed Sensor Housing](https://img.shields.io/badge/3D%20Print-Reed%20Sensor-blueviolet)](mechanics/3d_prints/reed_sensor/reed_sensor_gehaeuse.png) [![3D Printed RFID Sensor Housing](https://img.shields.io/badge/3D%20Print-RFID%20Sensor-blueviolet)](mechanics/3d_prints/rfid_sensor/rfid_sensor_gehaeuse.png)
 
 **Ablauf / Workflow:** Sensoren → Arduino → Alarmlogik → ESP-Nodes  → Kommunikation → Ausgabe   
 **Workflow:** Sensors → Arduino → Alarm logic → ESP-Nodes → Communication → Output 
@@ -77,7 +78,7 @@ This was my first hands-on embedded system project, developed with minimal prior
 ---
 
 ## Status
-- Prototyp abgeschlossen / Prototype completed
+- Prototyp abgeschlossen / Prototype completed [![Prototype Breadboard](https://img.shields.io/badge/Prototype-Breadboard-orange)](photos/prototyp_breadboards.png) [![Prototype Perfboard](https://img.shields.io/badge/Prototype-Perfboard-orange)](photos/prototyp_perforatedCircuitBoards.jpg) 
 - Optimierung für finale Hardware in Arbeit / Optimization for final hardware in progress
 
 ---
