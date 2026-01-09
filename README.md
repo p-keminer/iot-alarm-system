@@ -25,7 +25,7 @@ This project is a self-developed basic IoT alarm system using two ESP8266 nodes 
 It serves as a modular foundation, allowing additional nodes to be integrated as needed, making the system flexible and easily expandable.
 It includes sensor data acquisition, communication (UART&UDP) between nodes, a central control unit, and custom-designed PCB.  
 3D-printed housings were used for the sensors.  
-This was my first hands-on embedded systems project, developed with minimal prior experience in my first semester.
+This was my first hands-on embedded systems project, developed with minimal prior experience during my first semester.
 
 ---
 
@@ -35,7 +35,7 @@ This was my first hands-on embedded systems project, developed with minimal prio
 - Selbst entworfene PCB / Custom designed PCB  [![PCB Sending Nodes](https://img.shields.io/badge/PCB-Sending%20Nodes-blue)](hardware/pcb/r3_senderEsp/rückseite_r3_senderEsp.png)  [![PCB Receiving Nodes](https://img.shields.io/badge/PCB-Receiving%20Nodes-green)](hardware/pcb/empfaengerEsp/rückseiteEmpfaenger.png)
 - 3D-gedruckte Sensorgehäuse / 3D-printed housings for sensors [![3D Printed Reed Sensor Housing](https://img.shields.io/badge/3D%20Print-Reed%20Sensor-blueviolet)](mechanics/3d_prints/reed_sensor/reed_sensor_gehaeuse.png) [![3D Printed RFID Sensor Housing](https://img.shields.io/badge/3D%20Print-RFID%20Sensor-blueviolet)](mechanics/3d_prints/rfid_sensor/rfid_sensor_gehaeuse.png)
 
-**Ablauf / Workflow:** Sensoren → Arduino → Alarmlogik → ESP-Nodes  → Kommunikation → Ausgabe   
+**Ablauf / Workflow:** Sensoren → Arduino → Alarmlogik → ESP-Nodes → Kommunikation → Ausgabe   
 **Workflow:** Sensors → Arduino → Alarm logic → ESP-Nodes → Communication → Output 
 
 ---
@@ -43,7 +43,7 @@ This was my first hands-on embedded systems project, developed with minimal prio
 ## Firmware
 - Embedded C/C++ für ESP8266 und Arduino / Embedded C/C++ for ESP8266 and Arduino
 - Node-Kommunikation und Alarmlogik / Node communication and alarm logic
-- Strukturierter und kommentierter Code / Structured and commented code 
+- Strukturierter und kommentierter Code / Structured and well-commented code 
 - Einzeltests der Nodes / Individual node testing
 
 ---
@@ -65,11 +65,11 @@ This was my first hands-on embedded systems project, developed with minimal prio
 
 ## Assembly / Zusammenbau
 - Programmierung der Nodes und Test der Sensoren / Nodes programmed and sensors tested
-- Zusammenführung der Nodes und Test der Funktionalität / Integration of the nodes and functional testing
-- Komponenten montiert und funktionsfähigen Prototyp erstellt / Components assembled to form a functional prototype
-- Erstellen der PCB und abschließendes verlöten / Design and final soldering of the PCB
-- Erstellen der Gehäuse Entwürfe und anschließender Druck / Design and subsequent 3D printing of the enclosures
-- Zusammenbau der Funktionsfähigen Version für den Dauerbetrieb / Assembly of the fully functional version for continuous operation
+- Zusammenführung der Nodes und Test der Funktionalität / Nodes integrated and verified overall functionality
+- Komponenten montiert und funktionsfähigen Prototyp erstellt / Components assembled into a functional prototype
+- Erstellen der PCB und abschließendes verlöten / PCB designed and finally soldered
+- Erstellen der Gehäuse Entwürfe und anschließender Druck / Enclosure designs created and 3D printed
+- Zusammenbau der Funktionsfähigen Version für den Dauerbetrieb / Fully functional version assembled for continuous operation
 - Siehe Ordner `assembly/` für Fotos und Hinweise / See `assembly/` folder for photos and notes
 
 ---
@@ -88,7 +88,7 @@ This was my first hands-on embedded systems project, developed with minimal prio
 ---
 
 ## Hinweis / Notes
-- KI-Tools wurden unterstützend für Code und Debugging verwendet / AI tools were used to assist with code and debugging
+- KI-Tools wurden unterstützend für Code und Debugging verwendet / AI tools were used to assist with code, debugging, and idea generation
 - Alle Entscheidungen, Tests und Aufbau wurden persönlich durchgeführt / All decisions, testing, and assembly were performed personally
 
 ---
@@ -97,6 +97,6 @@ This was my first hands-on embedded systems project, developed with minimal prio
 
 - **KiCAD** – PCB-Design und Schaltpläne / PCB design and schematics  
 - **Tinkercad** – Simulation und Prototyping / Simulation and prototyping  
-- **DIY Layout Creator** – Layout-Erstellung für Prototypen / Layout creation for prototypes  
+- **DIY Layout Creator** – Layout-Erstellung für Lötpläne / Layout creation for soldering plans 
 - **Bambu Lab Studio** – 3D-Druck-Slicing für H2S / 3D printing slicing for H2S  
-- **ChatGPT & Google Gemini** – Unterstützende Tools für Code, Debugging und Ideen / Assistive tools for code, debugging, and ideas
+- **ChatGPT & Google Gemini** – Unterstützende Tools für Code, Debugging und Ideen / Assistive tools for code, debugging, and idea generation
