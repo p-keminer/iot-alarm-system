@@ -17,15 +17,15 @@
 ## Übersicht / Overview
 Dieses Projekt ist eine selbstentwickelte Basis-IoT-Alarmanlage mit zwei ESP8266-Nodes und einem Arduino R3.  
 Es dient als modularer Grundbaustein, der es ermöglicht, bei Bedarf weitere Nodes hinzuzufügen und das System so flexibel zu erweitern.
-Sie umfasst Sensorerfassung, Kommunikation (UART&UDP) zwischen den Nodes, eine zentrale Steuerungseinheit sowie selbst entworfene PCB.  
+Es umfasst Sensorerfassung, Kommunikation (UART&UDP) zwischen den Nodes, eine zentrale Steuerungseinheit sowie selbst entworfene PCB.  
 Für die Sensoren wurden 3D-gedruckte Gehäuse verwendet.  
-Dies war mein erstes praktisches Embedded-System-Projekt, umgesetzt mit minimaler Vorerfahrung.  
+Dies war mein erstes praktisches Embedded-System-Projekt, umgesetzt mit minimaler Vorerfahrung im ersten Semester.  
 
 This project is a self-developed basic IoT alarm system using two ESP8266 nodes and an Arduino R3.  
 It serves as a modular foundation, allowing additional nodes to be integrated as needed, making the system flexible and easily expandable.
 It includes sensor data acquisition, communication (UART&UDP) between nodes, a central control unit, and custom-designed PCB.  
 3D-printed housings were used for the sensors.  
-This was my first hands-on embedded system project, developed with minimal prior experience.
+This was my first hands-on embedded systems project, developed with minimal prior experience in my first semester.
 
 ---
 
@@ -43,14 +43,14 @@ This was my first hands-on embedded system project, developed with minimal prior
 ## Firmware
 - Embedded C/C++ für ESP8266 und Arduino / Embedded C/C++ for ESP8266 and Arduino
 - Node-Kommunikation und Alarmlogik / Node communication and alarm logic
-- Strukturierter und kommentierter Code erleichtert Debugging / Structured and commented code simplifies debugging
+- Strukturierter und kommentierter Code / Structured and commented code 
 - Einzeltests der Nodes / Individual node testing
 
 ---
 
 ## Hardware
 - Prototyp-PCB selbst gelötet / Custom PCB soldered as prototype
-- Sensoren verbunden und getestet / Sensors connected and tested
+- Funktionsweise getestet / Functionality tested
 - Schaltpläne und Lochrasterlayouts in `schematics/` und `pcb/` enthalten / Schematics and perfboard layouts included in `schematics/` and `pcb/`
 
 ---
@@ -64,8 +64,12 @@ This was my first hands-on embedded system project, developed with minimal prior
 ---
 
 ## Assembly / Zusammenbau
-- Komponenten montiert und funktionsfähiger Prototyp erstellt / Components assembled to form a functional prototype
-- Programmierung der Nodes und Test der Sensorwerte / Nodes programmed and sensor readings tested
+- Programmierung der Nodes und Test der Sensoren / Nodes programmed and sensors tested
+- Zusammenführung der Nodes und Test der Funktionalität / Integration of the nodes and functional testing
+- Komponenten montiert und funktionsfähigen Prototyp erstellt / Components assembled to form a functional prototype
+- Erstellen der PCB und abschließendes verlöten / Design and final soldering of the PCB
+- Erstellen der Gehäuse Entwürfe und anschließender Druck / Design and subsequent 3D printing of the enclosures
+- Zusammenbau der Funktionsfähigen Version für den Dauerbetrieb / Assembly of the fully functional version for continuous operation
 - Siehe Ordner `assembly/` für Fotos und Hinweise / See `assembly/` folder for photos and notes
 
 ---
