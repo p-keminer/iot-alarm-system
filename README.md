@@ -1,6 +1,6 @@
 # IoT-Basis-Alarmanlage / IoT Basic Alarm System
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md) [![PCB Sending Nodes](https://img.shields.io/badge/PCB-Sending%20Nodes-blue)](hardware/pcb/r3_senderEsp/rückseite_r3_senderEsp.png)  [![PCB Receiving Nodes](https://img.shields.io/badge/PCB-Receiving%20Nodes-blue)](hardware/pcb/empfaengerEsp/rückseiteEmpfaenger.png) [![UNO R3](https://img.shields.io/badge/Firmware-%20UNO%20R3-green)](firmware/elegoo_uno_r3/sketchR3/sketchR3.ino) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266_nodes/sketch_empfaengerESP/sketch_empfaengerESP.ino) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266_nodes/sketch_senderESP/sketch_senderESP.ino) [![3D Printed Reed Sensor Housing](https://img.shields.io/badge/3D%20Print-Reed%20Sensor-red)](mechanics/3d_prints/reed_sensor/reed_sensor_gehaeuse.stl) [![3D Printed RFID Sensor Housing](https://img.shields.io/badge/3D%20Print-RFID%20Sensor-red)](mechanics/3d_prints/rfid_sensor/rfid_sensor_gehaeuse.stl) [![Prototype Breadboard](https://img.shields.io/badge/Prototype-Breadboard-pink)](photos/prototyp_breadboards.png) [![Prototype Perfboard](https://img.shields.io/badge/Prototype-Perfboard-pink)](photos/prototyp_perforatedCircuitBoards.jpg) 
 
 ## 📑 Inhaltsverzeichnis
 - [Übersicht](#übersicht--overview)
@@ -8,8 +8,8 @@
 - [Firmware](#firmware)
 - [Hardware](#hardware)
 - [Mechanik](#mechanik--mechanical-design)
-- [Assembly](#assembly--zusammenbau)
-- [Lessons Learned](#lessons-learned)
+- [Assembly](#zusammenbau--assembly) 
+- [Lessons Learned](#reflektion--lessons-learned)
 - [Status](#status)
 - [Hinweis](#hinweis--notes)
 - [Verwendete Tools](#verwendete-tools--tools-used)
@@ -49,7 +49,7 @@ This was my first hands-on embedded systems project, developed with minimal prio
 ---
 
 ## Hardware
-- Prototyp-PCB selbst gelötet / Custom PCB soldered as prototype
+- Prototyp-PCBs selbst gelötet / Custom PCBs soldered as prototype
 - Funktionsweise getestet / Functionality tested
 - Schaltpläne und Lochrasterlayouts in `schematics/` und `pcb/` enthalten / Schematics and perfboard layouts included in `schematics/` and `pcb/`
 
@@ -67,22 +67,22 @@ This was my first hands-on embedded systems project, developed with minimal prio
 - Programmierung der Nodes und Test der Sensoren / Nodes programmed and sensors tested
 - Zusammenführung der Nodes und Test der Funktionalität / Nodes integrated and verified overall functionality
 - Komponenten montiert und funktionsfähigen Prototyp erstellt / Components assembled into a functional prototype
-- Erstellen der PCB und abschließendes verlöten / PCB designed and finally soldered
+- Erstellen der PCBs und abschließendes Verlöten / PCBs designed and finally soldered
 - Erstellen der Gehäuse Entwürfe und anschließender Druck / Enclosure designs created and 3D printed
-- Zusammenbau der Funktionsfähigen Version für den Dauerbetrieb / Fully functional version assembled for continuous operation
+- Zusammenbau der funktionsfähigen Version für den Dauerbetrieb / Fully functional version assembled for continuous operation
 - Siehe Ordner `assembly/` für Fotos und Hinweise / See `assembly/` folder for photos and notes
 
 ---
 
 ## Reflektion / Lessons Learned
-- Dokumentiert in `docs/lessonslearned.md` / Documented in `docs/lessonslearned.md`
+- Dokumentiert in `docs/lessonsLearned.md` / Documented in `docs/lessonsLearned.md`
 - Herausforderungen: Embedded Programming, Löten, Sensorintegration, Debugging / Challenges: embedded programming, soldering, sensor integration, debugging
 - Iteratives Vorgehen und Dokumentation entscheidend / Iterative approach and documentation are essential
 
 ---
 
 ## Status
-- Prototyp abgeschlossen / Prototype completed [![Prototype Breadboard](https://img.shields.io/badge/Prototype-Breadboard-yellow)](photos/prototyp_breadboards.png) [![Prototype Perfboard](https://img.shields.io/badge/Prototype-Perfboard-yellow)](photos/prototyp_perforatedCircuitBoards.jpg) 
+- Prototyp abgeschlossen / Prototype completed [![Prototype Breadboard](https://img.shields.io/badge/Prototype-Breadboard-pink)](photos/prototyp_breadboards.png) [![Prototype Perfboard](https://img.shields.io/badge/Prototype-Perfboard-pink)](photos/prototyp_perforatedCircuitBoards.jpg) 
 - Optimierung für finale Hardware in Arbeit / Optimization for final hardware in progress
 
 ---
@@ -94,9 +94,8 @@ This was my first hands-on embedded systems project, developed with minimal prio
 ---
 
 ## Verwendete Tools / Tools Used
-
-- **KiCAD** – PCB-Design und Schaltpläne / PCB design and schematics  
-- **Tinkercad** – Simulation und Prototyping / Simulation and prototyping  
-- **DIY Layout Creator** – Layout-Erstellung für Lötpläne / Layout creation for soldering plans 
-- **Bambu Lab Studio** – 3D-Druck-Slicing für H2S / 3D printing slicing for H2S  
-- **ChatGPT & Google Gemini** – Unterstützende Tools für Code, Debugging und Ideen / Assistive tools for code, debugging, and idea generation
+- **[KiCad](https://www.kicad.org/)** – PCB-Design und Schaltpläne / PCB design and schematics  
+- **[Tinkercad](https://www.tinkercad.com/)** – Simulation und Prototyping / Simulation and prototyping  
+- **[DIY Layout Creator](https://bancika.github.io/diy-layout-creator/)** – Layout-Erstellung für Lötpläne / Layout creation for soldering plans  
+- **[Bambu Lab Studio](https://bambulab.com/en/download/studio)** – 3D-Druck-Slicing für H2S / 3D printing slicing for H2S  
+- **[ChatGPT](https://chat.openai.com/) & [Google Gemini](https://gemini.google.com/)** – Unterstützende Tools für Code, Debugging und Ideen / Assistive tools for code, debugging, and idea generation
