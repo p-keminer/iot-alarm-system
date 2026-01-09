@@ -15,12 +15,12 @@
 
 ## Übersicht / Overview
 Dieses Projekt ist eine selbstentwickelte IoT-Alarmanlage mit zwei ESP8266-Nodes und einem Arduino R3.  
-Sie umfasst Sensorerfassung, Kommunikation zwischen den Nodes, eine zentrale Steuerungseinheit sowie selbst entworfene PCB.  
+Sie umfasst Sensorerfassung, Kommunikation (UART&UDP) zwischen den Nodes, eine zentrale Steuerungseinheit sowie selbst entworfene PCB.  
 Für die Sensoren wurden 3D-gedruckte Gehäuse verwendet.  
 Dies war mein erstes praktisches Embedded-System-Projekt, umgesetzt mit minimaler Vorerfahrung.  
 
 This project is a self-developed IoT alarm system using two ESP8266 nodes and an Arduino R3.  
-It includes sensor data acquisition, communication between nodes, a central control unit, and custom-designed PCB.  
+It includes sensor data acquisition, communication (UART&UDP) between nodes, a central control unit, and custom-designed PCB.  
 3D-printed housings were used for the sensors.  
 This was my first hands-on embedded system project, developed with minimal prior experience.
 
@@ -29,8 +29,8 @@ This was my first hands-on embedded system project, developed with minimal prior
 ## Systemarchitektur / System Architecture
 - Zwei ESP8266-Nodes zur Sensorerfassung und Kommunikation / Two ESP8266 nodes for sensor data acquisition and communication
 - Arduino R3 als zentrale Steuerung / Arduino R3 as central controller
-- Selbst entworfene PCB / Custom designed PCB
-- 3D-gedruckte Sensorgehäuse / 3D-printed housings for sensors
+- Selbst entworfene PCB / Custom designed PCB [PCB Sending Nodes](hardware/pcb/r3_senderEsp/rückseite_r3_senderEsp.png) [PCB Receiving Nodes](hardware/pcb/empfaengerEsp/rückseiteEmpfaenger.png)  
+- 3D-gedruckte Sensorgehäuse / 3D-printed housings for sensors 
 
 **Ablauf / Workflow:** Sensoren → Arduino → Alarmlogik → ESP-Nodes  → Kommunikation → Ausgabe   
 **Workflow:** Sensors → Arduino → Alarm logic → ESP-Nodes → Communication → Output 
