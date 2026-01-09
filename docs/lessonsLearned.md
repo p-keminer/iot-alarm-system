@@ -15,7 +15,7 @@ This document summarizes the key experiences and insights gained during the deve
 
 ---
 
-## 2. Prototyping auf Lochrasterplatine
+## 2. Prototyping on a perforated circuit board / Prototyping auf Lochrasterplatine
 - Prototyping auf Lochrasterplatinen ist optional; es ist möglich, direkt auf die PCB zu wechseln.  
   Prototyping on perfboard is optional; it is possible to go directly to the PCB.
 - Nicht jeder Lochrasterpunkt muss verwendet werden; Flexibilität ist möglich.  
@@ -25,13 +25,13 @@ This document summarizes the key experiences and insights gained during the deve
 
 ---
 
-## 3. Prototyping auf Breadboard
+## 3. Prototyping on a breadboard / Prototyping auf Breadboard 
 - Debugging über den Serial Monitor und LEDs ist äußerst hilfreich und erleichtert die Fehlersuche erheblich.  
   Debugging via the serial monitor and LEDs is extremely helpful and significantly facilitates troubleshooting.
 
 ---
 
-## 4. Löten
+## 4. Soldering / Löten
 - Die regelmäßige Pflege der Lötspitzen durch Reinigung und Verzinnen verlängert deren Lebensdauer.  
   Regular maintenance of soldering tips through cleaning and tinning extends their lifespan.
 - Sauberes Löten ist entscheidend für stabile Verbindungen und einen funktionierenden Prototypen.  
@@ -47,7 +47,14 @@ This document summarizes the key experiences and insights gained during the deve
 
 ---
 
-## 6. Allgemeine Erkenntnisse
+## 6. 3D Printed Housings / 3D-gedruckte Gehäuse
+- Den Zusammenbau bei zukünftigen Projekten erleichtern durch integrierte Clips, Steckverbindungen, Schraubverbindungen oder Magnetverbindungen.
+- Enable easier assembly in future projects by using integrated clips, snap-fit connections, screw fasteners, or magnetic fasteners.  
+
+---
+
+
+## 7. General Insights / Allgemeine Erkenntnisse
 - Iterative Tests auf Hardware- und Softwareebene sind entscheidend, insbesondere bei ersten Projekten.  
   Iterative testing on both hardware and software is crucial, especially in first projects.
 - Dokumentation unterstützt die Nachvollziehbarkeit von Fortschritten und erleichtert Fehleranalyse.  
@@ -57,8 +64,9 @@ This document summarizes the key experiences and insights gained during the deve
 
 ---
 
-## Fazit / Conclusion
+## Conclusion / Fazit 
 Dieses Projekt verdeutlicht, dass ein systematisches Vorgehen, saubere Dokumentation und iterative Tests entscheidend sind, um ein funktionierendes Embedded-System zu realisieren.  
 This project demonstrates that a systematic approach, clear documentation, and iterative testing are essential to successfully develop a functional embedded system.
+
 
 
