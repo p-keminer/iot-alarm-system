@@ -54,7 +54,7 @@ RC522 + KY-021 → Elegoo Uno R3 (Alarm-Logik / Alarm logic) → LED + Buzzer �
 ---
 
 ## Firmware
-- Embedded C/C++ für ESP8266 und Arduino / Embedded C/C++ for ESP8266 and Arduino
+- Embedded C/C++ für ESP8266 und Elegoo Uno R3 / Embedded C/C++ for ESP8266 and Elegoo Uno R3
 - Node-Kommunikation und Alarmlogik / Node communication and alarm logic
 - Strukturierter und kommentierter Code / Structured and well-commented code 
 - Einzeltests der Nodes / Individual node testing
