@@ -57,7 +57,7 @@ This was my first hands-on embedded systems project, developed with minimal prio
 
 ## Mechanik / Mechanical Design
 - 3D-gedruckte Gehäuse für Sensoren / 3D-printed housings for sensors
-- STL-Dateien für den Druck / STL files for printing [![3D Printed Reed Sensor Housing](https://img.shields.io/badge/3D%20Print-Reed%20Sensor-blueviolet)](mechanics/3d_prints/reed_sensor/reed_sensor_gehaeuse.png) [![3D Printed RFID Sensor Housing](https://img.shields.io/badge/3D%20Print-RFID%20Sensor-blueviolet)](mechanics/3d_prints/rfid_sensor/rfid_sensor_gehaeuse.png)
+- STL-Dateien für den Druck / STL files for printing [![3D Printed Reed Sensor Housing](https://img.shields.io/badge/3D%20Print-Reed%20Sensor-blueviolet)](mechanics/3d_prints/reed_sensor/reed_sensor_gehaeuse.stl) [![3D Printed RFID Sensor Housing](https://img.shields.io/badge/3D%20Print-RFID%20Sensor-blueviolet)](mechanics/3d_prints/rfid_sensor/rfid_sensor_gehaeuse.stl)
 - G-Code-Datei für **Bambu Lab H2S** enthalten / G-code file for **Bambu Lab H2S** included
 - Alle Dateien befinden sich im Ordner `mechanics/` / All files are located in the `mechanics/` folder
 
