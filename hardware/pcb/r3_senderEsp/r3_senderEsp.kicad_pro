@@ -451,7 +451,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "R3Sender.kicad_pro",
+    "filename": "r3_senderEsp.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -487,7 +487,7 @@
       "gencad": "",
       "idf": "",
       "netlist": "",
-      "plot": "Kicad Datein/GerberBohrungen/",
+      "plot": "r3_senderEsp_GerberBohrungen",
       "pos_files": "",
       "specctra_dsn": "",
       "step": "",
