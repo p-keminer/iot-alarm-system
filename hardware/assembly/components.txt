@@ -34,7 +34,8 @@ This is an overview of the main components used for the self-developed IoT alarm
 ## Hinweise / Notes
 - Die Bauteile wurden auf Lochrasterplatinen und Breadboard getestet.  
   All components were tested on perfboard and breadboard.  
-- Die Widerstände dienen zur Strombegrenzung für LEDs und Sensoren.  
-  Resistors are used to limit current for LEDs and sensors.  
+- Die Widerstände dienen zur Strombegrenzung für LEDs, Sensoren und einen Spannungsteiler.  
+  Resistors are used to limit current for LEDs and sensors and a Voltage Divider.  
 - Alle Komponenten wurden einzeln getestet, bevor sie in das Gesamtsystem integriert wurden.  
+
   All components were individually tested before integration into the complete system.
