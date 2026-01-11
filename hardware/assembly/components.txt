@@ -29,6 +29,13 @@ This is an overview of the main components used for the self-developed IoT alarm
 - **2-Pin Taster / 2-Pin push button** – für manuelle Steuerung / Reset / for manual control / reset  
 - **Steckbrücken / Jumper-Kabel / Breadboard** – zum Aufbau der Prototypenverbindungen / for prototyping connections
 
+## PCBs
+- **Stiftleisten / Male Header
+- ** 1 x 8 ** 1 Stück / 1 piece
+- ** 1 x 10 ** 1 Stück / 1 piece
+- ** 1 x 7 ** 1 Stück / 1 piece
+- ** 1 x 6 ** 1 Stück / 1 piece
+
 ---
 
 ## Hinweise / Notes
@@ -39,3 +46,4 @@ This is an overview of the main components used for the self-developed IoT alarm
 - Alle Komponenten wurden einzeln getestet, bevor sie in das Gesamtsystem integriert wurden.  
 
   All components were individually tested before integration into the complete system.
+
