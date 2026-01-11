@@ -16,10 +16,10 @@ Main components used are listed in `components.md`.
 ---
 
 ## Aufbau / Assembly Notes
-- Die Komponenten wurden auf dem Breadboard und der PCB-Prototypplatine montiert.  
-  Components were placed on the breadboard and PCB prototype.
-- Arduino R3 als zentrale Steuerung und die zwei ESP8266-Nodes als Kommunikationstools.  
-  Arduino R3 as central controller and the two ESP8266 nodes as communication tools.
+- Die Komponenten wurden auf dem Breadboard und der Lochraster-Prototypplatine montiert.  
+  Components were placed on the breadboard and perfboard-prototype.
+- Elegoo Uno R3 als zentrale Steuerung und die zwei ESP8266-Nodes als Kommunikationstools.  
+  Elegoo Uno R3 as central controller and the two ESP8266 nodes as communication tools.
 - Sensoren (RFID RC522 und KY-021 Bewegungssensoren) wurden angeschlossen und auf Funktion geprüft.  
   Sensors (RFID RC522 and KY-021 motion sensors) were connected and verified.
 - LEDs, Summer und Widerstände wurden entsprechend den Schaltplänen integriert.  
@@ -33,15 +33,6 @@ Main components used are listed in `components.md`.
 Alle Bilder des Aufbaus befinden sich im Ordner `media/photos/`.  
 All photos of the assembly can be found in the `media/photos/` folder.
 
----
-
-## Hinweise / Notes
-- Dieser Guide dient der Übersicht und Dokumentation, nicht als detaillierte Bauanleitung.  
-  This guide serves as an overview and documentation, not as a detailed step-by-step manual.
-- Alle Komponenten wurden persönlich getestet und integriert.  
-  All components were personally tested and integrated.
-- KI-Tools wurden unterstützend für Code und Debugging genutzt.  
-  AI tools were used to assist with code and debugging.
 
 ---
 
@@ -50,3 +41,4 @@ All photos of the assembly can be found in the `media/photos/` folder.
   Prototype completed
 - Optimierung für finale Hardware in Arbeit  
   Optimization for final hardware in progress
+
