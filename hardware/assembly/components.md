@@ -14,9 +14,9 @@ This is an overview of the main components used for the self-developed IoT alarm
 - **KY-021 Bewegungssensoren** (2x) – Erfassung von Bewegungen / motion detection sensors
 
 ## Widerstände / Resistors
-- **100 Ω** – 4 Stück / 4 piece  
+- **100 Ω** – 4 Stück / 4 pieces 
 - **1 kΩ** – 1 Stück / 1 piece  
-- **2 kΩ** – 1 Stück / 1 pieces  
+- **2 kΩ** – 1 Stück / 1 piece  
 - **330 Ω** – 3 Stück / 3 pieces
 
 ## LEDs
@@ -30,12 +30,16 @@ This is an overview of the main components used for the self-developed IoT alarm
 - **Steckbrücken / Jumper-Kabel / Breadboard** – zum Aufbau der Prototypenverbindungen / for prototyping connections
 
 ## PCBs
-- **Stiftleisten / Male Header
-- ** 1 x 8 ** 1 Stück / 1 piece
-- ** 1 x 10 ** 1 Stück / 1 piece
-- ** 1 x 7 ** 1 Stück / 1 piece
-- ** 1 x 6 ** 1 Stück / 1 piece
+**Stiftleisten / Male Header**
+- **1 x 8** 1 Stück / 1 piece                              
+- **1 x 10** 1 Stück / 1 piece
+- **1 x 7** 1 Stück / 1 piece
+- **1 x 6** 1 Stück / 1 piece
 
+optional:
+
+**Buchsenleisten / Female Header**
+- **1x15** 2 Stück / 2 pieces
 ---
 
 ## Hinweise / Notes
@@ -46,4 +50,5 @@ This is an overview of the main components used for the self-developed IoT alarm
 - Alle Komponenten wurden einzeln getestet, bevor sie in das Gesamtsystem integriert wurden.  
 
   All components were individually tested before integration into the complete system.
+
 
