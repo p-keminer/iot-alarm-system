@@ -129,8 +129,9 @@ RC522 + KY-021 → Elegoo Uno R3 (Alarm-Logik / Alarm logic) → LED + Buzzer �
 ---
 
 ## Hinweis / Notes
-- KI-Tools wurden unterstützend für Code und Debugging verwendet / AI tools were used to assist with code, debugging, and idea generation
-- Alle Entscheidungen, Tests und Aufbau wurden persönlich durchgeführt / All decisions, testing, and assembly were performed personally
+- Entwicklungsmethode:  Das Projekt wurde nach dem Prinzip des 'AI-assisted Engineering' umgesetzt. Während die      Systemarchitektur, die Hardware-Auswahl und das Logik-Konzept (Redundanz, Master-Slave-Struktur) von mir entworfen wurden, kam KI zur Code-Optimierung und zum Rapid Prototyping der Netzwerk-Schnittstellen zum Einsatz.
+
+  Development Method: The project was carried out following the 'AI-assisted Engineering' approach. I was       responsible for designing the   system architecture, selecting the hardware, and defining the logic concept     (including redundancy and a master-      slave structure), while AI was employed to optimize code and accelerate prototyping of the network interfaces.
 
 ---
 
