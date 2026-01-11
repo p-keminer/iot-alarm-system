@@ -40,7 +40,7 @@ uint8_t reed2=HIGH;
   // Funktionen Magnetsensoren
 
 /* Zustaende der Magnetsensoren einlesen
-(HIGH = geschlossen, LOW = geöffnet) */
+(HIGH = geöffnet , LOW = geschlossen) */
 
 void pruefeSensor1(){
  reed1 = digitalRead(REED_PIN1);	
