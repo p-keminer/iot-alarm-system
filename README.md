@@ -8,7 +8,7 @@ Basic IoT alarm system based on ESP8266 and Elegoo Uno R3, featuring magnetic Ha
 ---
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE.md) [![PCB Sending Nodes](https://img.shields.io/badge/PCB-Sending%20Nodes-blue)](hardware/pcb/r3_senderEsp/rückseite_r3_senderEsp.png)  [![PCB Receiving Nodes](https://img.shields.io/badge/PCB-Receiving%20Nodes-blue)](hardware/pcb/empfaengerEsp/rückseiteEmpfaenger.png) [![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3/sketchR3/sketchR3.ino) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266_nodes/sketch_empfaengerESP/sketch_empfaengerESP.ino) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266_nodes/sketch_senderESP/sketch_senderESP.ino) [![3D Printed Reed Sensor Housing](https://img.shields.io/badge/3D%20Print-Reed%20Sensor-red)](mechanics/3d_prints/reed_sensor/reed_sensor_gehaeuse.stl) [![3D Printed RFID Sensor Housing](https://img.shields.io/badge/3D%20Print-RFID%20Sensor-red)](mechanics/3d_prints/rfid_sensor/rfid_sensor_gehaeuse.stl) [![Prototype Breadboard](https://img.shields.io/badge/Prototype-Breadboard-pink)](photos/prototyp_breadboards.png) [![Prototype Perfboard](https://img.shields.io/badge/Prototype-Perfboard-pink)](photos/prototyp_perforatedCircuitBoards.jpg) [![Schematic: Sending](https://img.shields.io/badge/Schematic-%20Sending-orange)](hardware/schematics/circuitDiagram/r3_senderEsp.png) 
-[![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving-orange)](hardware/schematics/circuitDiagram/empfaengerEsp.png) [![Hardware: Components](https://img.shields.io/badge/Hardware-%20Components-violet)](hardware/assembly/components.md)
+[![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving-orange)](hardware/schematics/circuitDiagram/empfaengerEsp.png) [![Hardware: Components](https://img.shields.io/badge/Hardware-%20Components-violet)](hardware/assembly/components.md) [![Prototyp: Gehäuse](https://img.shields.io/badge/Prototyp-%20Gehäuse-white)](photos/gehauesePrototyp.png)
 
 ---
 
@@ -46,7 +46,7 @@ This was my first hands-on embedded systems project, developed with minimal prio
 - Zwei ESP8266-Nodes zur Kommunikation / Two ESP8266-Nodes for communication
 - Elegoo Uno R3 als zentrale Steuerung / Elegoo Uno R3 as central controller
 - Selbst entworfene PCBs / Custom designed PCBs  [![PCB Sending Nodes](https://img.shields.io/badge/PCB-Sending%20Nodes-blue)](hardware/pcb/r3_senderEsp/rückseite_r3_senderEsp.png)  [![PCB Receiving Nodes](https://img.shields.io/badge/PCB-Receiving%20Nodes-blue)](hardware/pcb/empfaengerEsp/rückseiteEmpfaenger.png)
-- 3D-gedruckte Sensorgehäuse / 3D-printed housings for sensors
+- 3D-gedruckte Sensorgehäuse / 3D-printed housings for sensors [![Prototyp: Gehäuse](https://img.shields.io/badge/Prototyp-%20Gehäuse-white)](photos/gehauesePrototyp.png)
 
 Der folgende Workflow zeigt, wie Sensoren und Aktoren über die Steuerungseinheit und ESP-Nodes interagieren.  
 The following workflow shows how sensors and actuators interact via the control unit and ESP nodes.
