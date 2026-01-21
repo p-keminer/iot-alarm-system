@@ -41,6 +41,10 @@ This document summarizes the key experiences and insights gained during the deve
 
   Manual soldering highlights the importance of correct **traces** for current peaks. Regular maintenance of soldering tips (cleaning/tinning) is essential for      the quality of solder joints.
 
+- **Masseflächen als Wärmesenken / Ground planes as heat sinks:** Erfordert leistungsstarke Lötkolben, breitere Lötspitzen, Vor- und Nachbehandlung, sowie ein professionelleres Setup für professionelle Ergebnisse.
+
+  Requires high-power soldering irons, broader soldering tips, pre- and post-treatment, and a more professional setup for professional results.
+
 - **3D-Druck / 3D Printing:** Die Gehäuse erfordern präzise Toleranzen für eine finale Version. Zukünftige Projekte sollten integrierte Clips, Magnet- oder Schraubverbindungen nutzen, um den Zusammenbau weiter zu vereinfachen.  
 
   The housings require precise tolerances for a final version. Future projects should use integrated clips, magnet- or screw connections to further simplify assembly.
@@ -73,4 +77,5 @@ This document summarizes the key experiences and insights gained during the deve
 Dieses Projekt verdeutlicht, dass ein systematisches Vorgehen – von der Datenblatt-Analyse bis zum fertigen PCB – entscheidend ist, um ein funktionsfähiges und erweiterbares Embedded-System zu realisieren.  
 
 This project demonstrates that a systematic approach – from datasheet analysis to the finished PCB – is essential to realize a functional and expandable       embedded system.
+
 
