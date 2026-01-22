@@ -11,7 +11,7 @@ Basic IoT alarm system based on ESP8266 and Elegoo Uno R3, featuring magnetic Ha
 
 ---
 
-## 📑 Inhaltsverzeichnis
+## Inhaltsverzeichnis
 - [Übersicht / Overview](#übersicht--overview)
 - [Systemarchitektur / System Architecture](#systemarchitektur--system-architecture)
 - [Firmware](#firmware)
@@ -44,13 +44,16 @@ This was my first hands-on embedded systems project, developed with minimal prio
 ## Systemarchitektur / System Architecture
 - Zwei ESP8266-Nodes zur Kommunikation / Two ESP8266-Nodes for communication
 - Elegoo Uno R3 als zentrale Steuerung / Elegoo Uno R3 as central controller
-- Selbst entworfene PCBs / Custom designed PCBs  [![PCB Sending Nodes](https://img.shields.io/badge/PCB-Sending%20Nodes-blue)](hardware/pcb/r3_senderEsp/rückseite_r3_senderEsp.png)  [![PCB Receiving Nodes](https://img.shields.io/badge/PCB-Receiving%20Nodes-blue)](hardware/pcb/empfaengerEsp/rückseiteEmpfaenger.png)
-- 3D-gedruckte Sensorgehäuse / 3D-printed housings for sensors [![Prototyp: Gehäuse](https://img.shields.io/badge/Prototyp-%20Gehäuse-white)](photos/gehauesePrototyp.png)
+- Selbst entworfene PCBs / Custom designed PCBs
+- 3D-gedruckte Sensorgehäuse / 3D-printed housings for sensors
 
+[![PCB Sending Nodes](https://img.shields.io/badge/PCB-Sending%20Nodes-blue)](hardware/pcb/r3_senderEsp/rückseite_r3_senderEsp.png)  [![PCB Receiving Nodes](https://img.shields.io/badge/PCB-Receiving%20Nodes-blue)](hardware/pcb/empfaengerEsp/rückseiteEmpfaenger.png) [![Prototyp: Gehäuse](https://img.shields.io/badge/Prototyp-%20Gehäuse-white)](photos/gehauesePrototyp.png)
+
+
+**Workflow / Ablauf:**  
 Der folgende Workflow zeigt, wie Sensoren und Aktoren über die Steuerungseinheit und ESP-Nodes interagieren.  
 The following workflow shows how sensors and actuators interact via the control unit and ESP nodes.
 
-**Workflow / Ablauf:**  
 RC522 + KY-021 → Elegoo Uno R3 (Alarm-Logik / Alarm logic) → LED + Buzzer → Kommunikation / Communication (UART) →  ESP-Nodes → Kommunikation / Communication (WLAN/UDP) → LED + Buzzer
 
 ---
@@ -60,6 +63,7 @@ RC522 + KY-021 → Elegoo Uno R3 (Alarm-Logik / Alarm logic) → LED + Buzzer �
 - Node-Kommunikation und Alarmlogik / Node communication and alarm logic
 - Strukturierter und kommentierter Code / Structured and well-commented code 
 - Einzeltests der Nodes / Individual node testing
+
 [![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3/sketchR3/sketchR3.ino) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266_nodes/sketch_empfaengerESP/sketch_empfaengerESP.ino) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266_nodes/sketch_senderESP/sketch_senderESP.ino)
 
 ---
@@ -96,9 +100,11 @@ RC522 + KY-021 → Elegoo Uno R3 (Alarm-Logik / Alarm logic) → LED + Buzzer �
 
 ## Mechanik / Mechanical Design
 - 3D-gedruckte Gehäuse für Sensoren / 3D-printed housings for sensors
-- STL-Dateien für den Druck / STL files for printing [![3D Printed Reed Sensor Housing](https://img.shields.io/badge/3D%20Print-Reed%20Sensor-red)](mechanics/3d_prints/reed_sensor/reed_sensor_gehaeuse.stl) [![3D Printed RFID Sensor Housing](https://img.shields.io/badge/3D%20Print-RFID%20Sensor-red)](mechanics/3d_prints/rfid_sensor/rfid_sensor_gehaeuse.stl)
+- STL-Dateien für den Druck / STL files for printing 
 - G-Code-Datei für **Bambu Lab H2S** enthalten / G-code file for **Bambu Lab H2S** included
 - Alle Dateien befinden sich im Ordner `mechanics/` / All files are located in the `mechanics/` folder
+
+[![3D Printed Reed Sensor Housing](https://img.shields.io/badge/3D%20Print-Reed%20Sensor-red)](mechanics/3d_prints/reed_sensor/reed_sensor_gehaeuse.stl) [![3D Printed RFID Sensor Housing](https://img.shields.io/badge/3D%20Print-RFID%20Sensor-red)](mechanics/3d_prints/rfid_sensor/rfid_sensor_gehaeuse.stl)
 
 ---
 
@@ -114,15 +120,19 @@ RC522 + KY-021 → Elegoo Uno R3 (Alarm-Logik / Alarm logic) → LED + Buzzer �
 ---
 
 ## Reflektion / Lessons Learned
-- Dokumentiert in `docs/lessonsLearned.md` / Documented in `docs/lessonsLearned.md` [![Docs: Lessons Learned](https://img.shields.io/badge/Docs-Lessons%20Learned-yellow)](docs/lessonsLearned.md)
+- Dokumentiert in `docs/lessonsLearned.md` / Documented in `docs/lessonsLearned.md` 
 - Herausforderungen: Embedded Programming, Löten, Sensorintegration, Debugging / Challenges: embedded programming, soldering, sensor integration, debugging
 - Iteratives Vorgehen und Dokumentation entscheidend / Iterative approach and documentation are essential
+
+[![Docs: Lessons Learned](https://img.shields.io/badge/Docs-Lessons%20Learned-yellow)](docs/lessonsLearned.md)
 
 ---
 
 ## Status
-- Prototyp abgeschlossen / Prototype completed [![Prototype Breadboard](https://img.shields.io/badge/Prototype-Breadboard-pink)](photos/prototyp_breadboards.png) [![Prototype Perfboard](https://img.shields.io/badge/Prototype-Perfboard-pink)](photos/prototyp_perforatedCircuitBoards.jpg) 
+- Prototyp abgeschlossen / Prototype completed 
 - Optimierung für finale Hardware in Arbeit / Optimization for final hardware in progress
+
+[![Prototype Breadboard](https://img.shields.io/badge/Prototype-Breadboard-pink)](photos/prototyp_breadboards.png) [![Prototype Perfboard](https://img.shields.io/badge/Prototype-Perfboard-pink)](photos/prototyp_perforatedCircuitBoards.jpg) 
 
 ---
 
@@ -138,4 +148,4 @@ RC522 + KY-021 → Elegoo Uno R3 (Alarm-Logik / Alarm logic) → LED + Buzzer �
 - **[Tinkercad](https://www.tinkercad.com/)** – Simulation und Prototyping / Simulation and prototyping  
 - **[DIY Layout Creator](https://bancika.github.io/diy-layout-creator/)** – Layout-Erstellung für Lötpläne / Layout creation for soldering plans  
 - **[Bambu Lab Studio](https://bambulab.com/en/download/studio)** – 3D-Druck-Slicing für H2S / 3D printing slicing for H2S  
-- **[ChatGPT](https://chat.openai.com/) & [Google Gemini](https://gemini.google.com/)** – Unterstützende Tools für Code, Debugging und Ideen / Assistive tools for code, debugging, and idea generation
+- **[Claude](https://claude.ai/), [ChatGPT](https://chat.openai.com/) & [Google Gemini](https://gemini.google.com/)** – Unterstützende Tools für Code, Debugging und Ideen / Assistive tools for code, debugging, and idea generation
