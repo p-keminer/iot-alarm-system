@@ -1,1 +1,22 @@
-X
+# --- PlatformIO / IDE Müll ---
+.pio/
+.vscode/.browse.vc.db
+.vscode/ipch/
+.vscode/launch.json
+node_modules/
+
+# --- Kompilate ---
+*.bin
+*.elf
+*.hex
+*.o
+*.d
+
+# --- Sicherheit ---
+include/secrets.h
+src/secrets.h
+.env
+
+# --- System-Dateien ---
+.DS_Store
+Thumbs.db
