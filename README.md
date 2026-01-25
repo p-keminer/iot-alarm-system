@@ -5,6 +5,19 @@ IoT-Alarmanlagen-Basissystem auf ESP8266 und Elegoo Uno R3-Basis mit magnetische
 
 Basic IoT alarm system based on ESP8266 and Elegoo Uno R3, featuring magnetic Hall-effect sensors (KY-021) and RFID access control (RC522). The system processes sensor data locally, controls outputs such as LEDs and buzzers, communicates via UART and UDP, and is designed for modular expansion. This project serves as a hands-on Embedded/IoT application developed by a student at THGA Bochum.
 
+<div align="center">
+  <table style="border-collapse: collapse; border: none;">
+    <tr>
+      <td style="padding: 10px; border: none; vertical-align: middle;">
+        <img src="media/videos/gifs/PCB_R3_Sender.gif" alt="Sender" width="100%" style="border-radius: 8px;">
+      </td>
+      <td style="padding: 10px; border: none; vertical-align: middle;">
+        <img src="media/videos/gifs/PCB_Empfaenger.gif" alt="Empfänger" width="32%" style="border-radius: 8px;">
+      </td>
+    </tr>
+  </table>
+</div>
+
 ---
 
 [![Docs: Lessons Learned](https://img.shields.io/badge/Docs-Lessons%20Learned-yellow)](docs/lessonsLearned.md) [![PCB Sending Nodes](https://img.shields.io/badge/PCB-Sending%20Nodes-blue)](hardware/pcb/r3_senderEsp/rückseite_r3_senderEsp.png) [![PCB Receiving Nodes](https://img.shields.io/badge/PCB-Receiving%20Nodes-blue)](hardware/pcb/empfaengerEsp/rückseiteEmpfaenger.png) [![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3/sketchR3/sketchR3.ino) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266_nodes/sketch_empfaengerESP/sketch_empfaengerESP.ino) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266_nodes/sketch_senderESP/sketch_senderESP.ino) [![3D Printed Reed Sensor Housing](https://img.shields.io/badge/3D%20Print-Reed%20Sensor-red)](mechanics/3d_prints/reed_sensor/reed_sensor_gehaeuse.stl) [![3D Printed RFID Sensor Housing](https://img.shields.io/badge/3D%20Print-RFID%20Sensor-red)](mechanics/3d_prints/rfid_sensor/rfid_sensor_gehaeuse.stl) [![Prototyp: Gehäuse](https://img.shields.io/badge/Prototyp-%20Gehäuse-white)](photos/gehauesePrototyp.png) [![Prototype Breadboard](https://img.shields.io/badge/Prototype-Breadboard-pink)](photos/prototyp_breadboards.png) [![Prototype Perfboard](https://img.shields.io/badge/Prototype-Perfboard-pink)](photos/prototyp_perforatedCircuitBoards.jpg) ![Schematic: Sending](https://img.shields.io/badge/Schematic-%20Sending-orange)[![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving-orange)](hardware/schematics/circuitDiagram/empfaengerEsp.png) [![Schematic: Sending](https://img.shields.io/badge/Schematic-%20Sending_KiCad-blueviolet)](hardware/pcb/r3_senderEsp/schaltplan_r3_senderEsp.png) [![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving_KiCad-blueviolet)](hardware/pcb/empfaengerEsp/schaltplanEmpfaenger.png) [![Hardware: Components](https://img.shields.io/badge/Hardware-%20Components-violet)](hardware/assembly/components.md) [![Pinmapping: Elegoo Uno R3](https://img.shields.io/badge/Pinmapping-Elegoo%20Uno%20R3-lightgrey)](docs/pinmapping/ElegooUnoR3.md) [![Pinmapping: Empfänger ESP](https://img.shields.io/badge/Pinmapping-Empfänger%20ESP-lightgrey)](docs/pinmapping/EmpfängerEsp.md) [![Pinmapping: Sender ESP](https://img.shields.io/badge/Pinmapping-Sender%20ESP-lightgrey)](docs/pinmapping/SenderEsp.md)
@@ -149,3 +162,6 @@ RC522 + KY-021 → Elegoo Uno R3 (Alarm-Logik / Alarm logic) → LED + Buzzer �
 - **[DIY Layout Creator](https://bancika.github.io/diy-layout-creator/)** – Layout-Erstellung für Lötpläne / Layout creation for soldering plans  
 - **[Bambu Lab Studio](https://bambulab.com/en/download/studio)** – 3D-Druck-Slicing für H2S / 3D printing slicing for H2S  
 - **[Claude](https://claude.ai/), [ChatGPT](https://chat.openai.com/) & [Google Gemini](https://gemini.google.com/)** – Unterstützende Tools für Code, Debugging und Ideen / Assistive tools for code, debugging, and idea generation
+
+
+[def]: rivate/media/videos/gifs/PCB_Empfaenger.gi
