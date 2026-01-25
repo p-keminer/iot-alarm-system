@@ -1,22 +1,21 @@
 # Pinmapping – ESP8266 (Empfänger)
 
 Dieses Dokument beschreibt die **Pinbelegung für ein ESP8266-Board**  
-(Status-LEDs, Buzzer und Taster).  
+(LEDs, Buzzer und Taster).  
 Die Zuordnung ist für eine übersichtliche Statusanzeige und einfache Benutzerinteraktion ausgelegt.
 
 ---
 
-## Status-LEDs
+## LEDs
 
 | Funktion | GPIO (ESP8266) | Board-Pin | Hinweis |
 |--------|---------------|-----------|--------|
-| LED Rot | GPIO5 | D1 | Status-/Fehleranzeige |
-| LED Gelb | GPIO4 | D2 | System-/Betriebsstatus |
+| LED Rot | GPIO5 | D1 | Alarmanzeige |
+| LED Gelb | GPIO4 | D2 | Alarmanzeige |
 | LED WLAN | GPIO0 | D3 | WLAN-Status |
 
-> **Hinweis:**  
-> GPIO0 (D3) ist ein **Boot-Strapping-Pin**.  
-> Die LED darf den Pin **beim Start nicht auf LOW ziehen**, sonst startet das ESP nicht korrekt.
+ 
+
 
 ---
 
@@ -27,17 +26,13 @@ Die Zuordnung ist für eine übersichtliche Statusanzeige und einfache Benutzeri
 | Buzzer 1 | GPIO14 | D5 | PWM-fähig |
 | Buzzer 2 | GPIO12 | D6 | PWM-fähig |
 
-> Beide Pins sind unkritisch und gut für akustische Signale geeignet.
-
 ---
 
 ## Taster
 
 | Funktion | GPIO (ESP8266) | Board-Pin | Hinweis |
 |--------|---------------|-----------|--------|
-| Taster | GPIO13 | D7 | Digital Input |
-
-> Empfehlung: internen Pull-Up verwenden (`INPUT_PULLUP`) und Taster gegen GND schalten.
+| Taster | GPIO13 | D7 | Input |
 
 ---
 
