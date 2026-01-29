@@ -17,7 +17,6 @@ Dieses Dokument beschreibt die vollständige **Pinbelegung** des Systems auf Bas
 | VCC | 3.3 V | **Nur 3.3 V verwenden** |
 | GND | GND | Masse |
 
-> Die Pins D11–D13 sind hardwareseitig für SPI festgelegt und dürfen nicht anderweitig verwendet werden.
 
 ---
 
@@ -25,20 +24,17 @@ Dieses Dokument beschreibt die vollständige **Pinbelegung** des Systems auf Bas
 
 | Sensor | Arduino Pin | Typ |
 |------|-------------|----|
-| Reed Sensor 1 | D2 | Digital Input |
-| Reed Sensor 2 | D3 | Digital Input |
+| Reed Sensor 1 | D2 | Input |
+| Reed Sensor 2 | D3 | Input |
 
-> Die Pins D2 und D3 sind interruptfähig und ermöglichen spätere Erweiterungen.
 
 ---
 
 ## Buzzer
 
-| Funktion | Arduino Pin |
-|--------|-------------|
-| Buzzer | D5 |
-
-> PWM-fähiger Pin, geeignet für Ton- und Signalgenerierung.
+| Funktion | Arduino Pin | Typ | Hinweis |
+|--------|-------------|----|--------|
+| Buzzer | D5 | Output | PWM-fähig |
 
 ---
 

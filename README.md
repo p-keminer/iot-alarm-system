@@ -5,17 +5,13 @@ IoT-Alarmanlagen-Basissystem auf ESP8266 und Elegoo Uno R3-Basis mit magnetische
 
 Basic IoT alarm system based on ESP8266 and Elegoo Uno R3, featuring magnetic Hall-effect sensors (KY-021) and RFID access control (RC522). The system processes sensor data locally, controls outputs such as LEDs and buzzers, communicates via UART and UDP, and is designed for modular expansion. This project serves as a hands-on Embedded/IoT application developed by a student at THGA Bochum.
 
-<div align="center">
-  <table style="border-collapse: collapse; border: none;">
-    <tr>
-      <td style="padding: 10px; border: none; vertical-align: middle;">
-        <img src="media/videos/gifs/PCB_R3_Sender.gif" alt="Sender" width="100%" style="border-radius: 8px;">
-      </td>
-      <td style="padding: 10px; border: none; vertical-align: middle;">
-        <img src="media/videos/gifs/PCB_Empfaenger.gif" alt="Empfänger" width="32%" style="border-radius: 8px;">
-      </td>
-    </tr>
-  </table>
+<div align="center" >
+  <a href="#">
+    <img src="media/videos/gifs/PCB_R3_Sender.gif" style="height: 350px; ">
+  </a>
+  <a href="#">
+    <img src="media/videos/gifs/PCB_Empfaenger.gif" style="height: 350px; ">
+  </a>
 </div>
 
 ---
