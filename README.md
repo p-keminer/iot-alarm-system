@@ -157,6 +157,7 @@ RC522 + KY-021 → Elegoo Uno R3 (Alarm-Logik / Alarm logic) → LED + Buzzer �
 - **[Tinkercad](https://www.tinkercad.com/)** – Simulation und Prototyping / Simulation and prototyping  
 - **[DIY Layout Creator](https://bancika.github.io/diy-layout-creator/)** – Layout-Erstellung für Lötpläne / Layout creation for soldering plans  
 - **[Bambu Lab Studio](https://bambulab.com/en/download/studio)** – 3D-Druck-Slicing für H2S / 3D printing slicing for H2S  
+- **[Visual Studio Code](https://code.visualstudio.com/)** – Entwicklungsumgebung für Code und Dokumentation / Development environment for code and documentation
 - **[Claude](https://claude.ai/), [ChatGPT](https://chat.openai.com/) & [Google Gemini](https://gemini.google.com/)** – Unterstützende Tools für Code, Debugging und Ideen / Assistive tools for code, debugging, and idea generation
 
 

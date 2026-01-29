@@ -30,6 +30,11 @@ This document summarizes the key experiences and insights gained during the deve
 
   Integrating a **ground plane** in the KiCAD design secures signal integrity against EMI effects from the ESP8266 transmission pulses.
 
+-**Ressourceneffizienz / Resource Efficiency:**
+Die kompakte Gestaltung der PCB erleichtert den Gehäusebau sowie manuelle Lötvorgänge und schont Ressourcen. 
+  
+  Keeping The PCB design compact facilitates enclosure construction as well as manual soldering processes and conserves resources.
+
 - **KiCAD Workflow:** Gleichnamige Netze (GND, +5V) müssen im Schaltplan nicht mehrfach manuell verbunden werden. Die Nutzung von Shortcuts beschleunigt das     Routing und sorgt für saubere Leiterbahnen.  
 
   Identical nets (GND, +5V) do not need to be connected multiple times manually. Using shortcuts speeds up routing and ensures clean traces.
