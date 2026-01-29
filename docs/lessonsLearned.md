@@ -30,7 +30,7 @@ This document summarizes the key experiences and insights gained during the deve
 
   Integrating a **ground plane** in the KiCAD design secures signal integrity against EMI effects from the ESP8266 transmission pulses.
 
--**Ressourceneffizienz / Resource Efficiency:**
+- **Ressourceneffizienz / Resource Efficiency:**
 Die kompakte Gestaltung der PCB erleichtert den Gehäusebau sowie manuelle Lötvorgänge und schont Ressourcen. 
   
   Keeping The PCB design compact facilitates enclosure construction as well as manual soldering processes and conserves resources.
@@ -54,6 +54,9 @@ Die kompakte Gestaltung der PCB erleichtert den Gehäusebau sowie manuelle Lötv
 
   The housings require precise tolerances for a final version. Future projects should use integrated clips, magnet- or screw connections to further simplify assembly.
 
+- **Gehäuseentwicklung / Housing Design:** Ein Entwurf oder 3D-Scan des zu modifizierenden Objekts vereinfacht den Konstruktionsprozess und die Fehlerbehebung erheblich. 
+  
+  A draft or 3D scan of the object to be modified significantly simplifies the design process and troubleshooting.
 ---
 
 ## 4. Firmware & Debugging / Firmware & Debugging
