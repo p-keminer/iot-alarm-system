@@ -92,7 +92,7 @@ Ein Ki-Assisted selbstentwickeltes, professionelles Web-Dashboard ermöglicht di
 
 A Ki Assisted-developed professional web dashboard enables central monitoring and control of all system components. The dashboard runs on a Raspberry Pi Zero 2 W and provides a modern, responsive user interface for desktop and mobile devices.
 
-[![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-brightgreen)](../web/README.md)
+[![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-brightgreen)](web/README.md)
 
 ### Technischer Stack / Technical Stack
 
