@@ -1,4 +1,4 @@
-# 📑 Lessons Learned – IoT-Alarmanlage / IoT Alarm System
+#  Lessons Learned – IoT-Alarmanlage / IoT Alarm System
 
 Dieses Dokument fasst die wichtigsten Erfahrungen und Erkenntnisse zusammen, die während der Entwicklung des IoT-Alarmanlagen-Prototyps gesammelt wurden.  
 
@@ -9,15 +9,15 @@ This document summarizes the key experiences and insights gained during the deve
 ## 1. Konzeption & Systemarchitektur / Conception & System Architecture
 - **Modulare Struktur / Modular Structure:** Die Trennung von Alarmlogik (Arduino Master) und Kommunikation (ESP8266 Nodes) bewährt sich. Das System ist gezielt auf eine **Erweiterung über WLAN** ausgelegt, sodass neue Nodes als eigenständige Einheiten hinzugefügt werden können, ohne die Master-Hardware physisch zu ändern.  
 
-  The separation of alarm logic (Arduino Master) and communication (ESP8266 Nodes) is effective. The system is specifically designed for **expansion via Wi-Fi**,   allowing new nodes to be added as independent units without physical changes to the master hardware.
+  The separation of alarm logic (Arduino Master) and communication (ESP8266 Nodes) is effective. The system is specifically designed for **expansion via Wi-Fi**, allowing new nodes to be added as independent units without physical changes to the master hardware.
 
 - **Datenblatt-Analyse / Datasheet Analysis:** Das aufmerksame Studium der Datenblätter ist entscheidend, um die unterschiedlichen **Logikpegel (5V vs. 3.3V)** und Betriebsspannungen korrekt zu erfassen. Dies gewährleistet eine sichere Kommunikation zwischen Arduino, ESP und Sensoren wie dem RC522 RFID-Modul via SPI-Schnittstelle.
 
-  Careful study of datasheets is crucial to correctly capture the different **logic levels (5V vs. 3.3V)** and operating voltages. This ensures safe communication   between Arduino, ESP, and sensors like RC522 RFID-Modul via SPI-Bus.
+  Careful study of datasheets is crucial to correctly capture the different **logic levels (5V vs. 3.3V)** and operating voltages. This ensures safe communication between Arduino, ESP, and sensors like RC522 RFID-Modul via SPI-Bus.
 
 - **Redundanz / Redundancy:** Die Wahl fällt auf KY-021 Magnetschalter statt optischer Sensoren. Eine **UND-Logik** stellt sicher, dass ein Alarm nur ausgelöst wird, wenn beide Sensoren korrelieren, was Fehlauslösungen durch Erschütterungen minimiert.  
 
-  Magnetic reed switches (KY-021) were chosen over optical sensors. An **AND logic** ensures that an alarm is only triggered if both sensors correlate, minimizing   false alarms caused by vibrations.
+  Magnetic reed switches (KY-021) were chosen over optical sensors. An **AND logic** ensures that an alarm is only triggered if both sensors correlate, minimizing false alarms caused by vibrations.
 
 ---
 
@@ -35,7 +35,7 @@ Die kompakte Gestaltung der PCB erleichtert den Gehäusebau sowie manuelle Lötv
   
   Keeping The PCB design compact facilitates enclosure construction as well as manual soldering processes and conserves resources.
 
-- **KiCAD Workflow:** Gleichnamige Netze (GND, +5V) müssen im Schaltplan nicht mehrfach manuell verbunden werden. Die Nutzung von Shortcuts beschleunigt das     Routing und sorgt für saubere Leiterbahnen.  
+- **KiCAD Workflow:** Gleichnamige Netze (GND, +5V) müssen im Schaltplan nicht mehrfach manuell verbunden werden. Die Nutzung von Shortcuts beschleunigt das Routing und sorgt für saubere Leiterbahnen.  
 
   Identical nets (GND, +5V) do not need to be connected multiple times manually. Using shortcuts speeds up routing and ensures clean traces.
 
@@ -44,7 +44,7 @@ Die kompakte Gestaltung der PCB erleichtert den Gehäusebau sowie manuelle Lötv
 ## 3. Fertigung & Mechanik / Assembly & Mechanical Design
 - **Löten / Soldering:** Das manuelle Löten verdeutlicht die Bedeutung korrekter **Leiterbahnen** für Stromspitzen. Die regelmäßige Pflege der Lötspitzen (Reinigen/Verzinnen) ist für die Qualität der Lötstellen essenziell.  
 
-  Manual soldering highlights the importance of correct **traces** for current peaks. Regular maintenance of soldering tips (cleaning/tinning) is essential for      the quality of solder joints.
+  Manual soldering highlights the importance of correct **traces** for current peaks. Regular maintenance of soldering tips (cleaning/tinning) is essential for the quality of solder joints.
 
 - **Masseflächen als Wärmesenken / Ground planes as heat sinks:** Erfordert leistungsstarke Lötkolben, breitere Lötspitzen, Vor- und Nachbehandlung, sowie ein professionelleres Setup für professionelle Ergebnisse.
 
@@ -70,7 +70,30 @@ Die kompakte Gestaltung der PCB erleichtert den Gehäusebau sowie manuelle Lötv
 
 ---
 
-## 5. Allgemeine Erkenntnisse / General Insights
+## 5. Web-Entwicklung & Server-Administration / Web Development & Server Administration
+- **Technologie-Auswahl / Technology Selection:** PHP + Lighttpd bewährt sich für ressourcenlimitierte Hardware (512MB RAM). JSON-Dateien statt Datenbank reduzieren Overhead und Latenz bei wenigen Schreibvorgängen pro Sekunde.  
+
+  PHP + Lighttpd proves effective for resource-limited hardware (512MB RAM). JSON files instead of database reduce overhead and latency with few writes per second.
+
+- **RESTful API-Design / RESTful API Design:** Strikte Trennung von Frontend (HTML/JS) und Backend (PHP API) ermöglicht zukünftige Erweiterungen wie Mobile Apps ohne Code-Duplikation.  
+
+  Strict separation of frontend (HTML/JS) and backend (PHP API) enables future extensions like mobile apps without code duplication.
+
+- **Session-Management / Session Management:** Aktivitätsbasiertes Timeout verhindert Session-Hijacking bei längerer Inaktivität. Activity-Heartbeat via AJAX alle 30 Sekunden hält Sessions bei aktiver Nutzung am Leben.  
+
+  Activity-based timeout prevents session hijacking during extended inactivity. Activity heartbeat via AJAX every 30 seconds keeps sessions alive during active use.
+
+- **Debugging & Troubleshooting:** Browser Developer Tools (F12 Console) und `tail -f` für PHP-Logs sind essenziell. Systematisches Prüfen von PHP-FPM, Lighttpd-Status und Dateiberechtigungen beschleunigt Fehlersuche erheblich.  
+
+  Browser developer tools (F12 console) and `tail -f` for PHP logs are essential. Systematic checking of PHP-FPM, Lighttpd status, and file permissions significantly speeds up troubleshooting.
+
+- **Performance-Optimierung / Performance Optimization:** Lazy Loading von Chart.js (nur bei Bedarf), minimales CSS ohne Frameworks, und Inline-SVGs reduzieren Ladezeiten auf Zero 2 W. AJAX-Updates nur geänderter Daten statt vollständiger Seitenneuladung.  
+
+  Lazy loading of Chart.js (only when needed), minimal CSS without frameworks, and inline SVGs reduce load times on Zero 2 W. AJAX updates only changed data instead of full page reload.
+
+---
+
+## 6. Allgemeine Erkenntnisse / General Insights
 - **Iteratives Vorgehen / Iterative Approach:** Iterative Tests auf Hardware- und Softwareebene sind entscheidend. Dokumentation unterstützt dabei die Fehleranalyse und die Nachvollziehbarkeit des Fortschritts.  
 
   Iterative testing on hardware and software levels is crucial. Documentation supports error analysis and the traceability of progress.
@@ -82,8 +105,6 @@ Die kompakte Gestaltung der PCB erleichtert den Gehäusebau sowie manuelle Lötv
 ---
 
 ## Fazit / Conclusion
-Dieses Projekt verdeutlicht, dass ein systematisches Vorgehen – von der Datenblatt-Analyse bis zum fertigen PCB – entscheidend ist, um ein funktionsfähiges und erweiterbares Embedded-System zu realisieren.  
+Dieses Projekt verdeutlicht, dass ein systematisches Vorgehen – von der Datenblatt-Analyse bis zum fertigen PCB und Web-Dashboard – entscheidend ist, um ein funktionsfähiges und erweiterbares Embedded-System zu realisieren.  
 
-This project demonstrates that a systematic approach – from datasheet analysis to the finished PCB – is essential to realize a functional and expandable       embedded system.
-
-
+This project demonstrates that a systematic approach – from datasheet analysis to the finished PCB and web dashboard – is essential to realize a functional and expandable embedded system.

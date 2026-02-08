@@ -246,7 +246,6 @@ sudo chmod 775 data/
 
 ```
 data/
-├── .gitkeep               (Git-Tracking für leeren Ordner)
 ├── README.md              (Diese Datei)
 ├── settings.json          (Dashboard-Config)
 ├── status.json            (Gerätestatus)
