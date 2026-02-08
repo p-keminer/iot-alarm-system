@@ -4,6 +4,8 @@
 .vscode/ipch/
 .vscode/launch.json
 node_modules/
+.vscode/
+.idea/
 
 # --- Kompilate ---
 *.bin
@@ -20,3 +22,14 @@ src/secrets.h
 # --- System-Dateien ---
 .DS_Store
 Thumbs.db
+
+# --- Lokale Dashboard-Daten (NICHT committen) ---
+embedded/private/web/data/*.json
+embedded/private/web/data/*.csv
+embedded/private/web/data/*.txt
+embedded/private/web/data/*.log
+embedded/private/web/data/
+
+# Erlauben von strukturellen Dateien
+!embedded/private/web/data/.gitkeep
+!embedded/private/web/data/README.md
