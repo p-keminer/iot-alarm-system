@@ -349,6 +349,6 @@ sudo chmod 775 /var/www/html/data
 - **[SSH](https://www.openssh.com/)** – Remote-Zugriff und Verwaltung / Remote access and management
 
 ### AI-Assisted Development
-- **[Claude-Sonnet 4.5/Opus 4.5/4.6](https://claude.ai/)** – Code-Optimierung und Debugging-Unterstützung / Code optimization and debugging support
+- **[Claude-Sonnet 4.5 & Opus 4.5/4.6](https://claude.ai/)** – Code-Optimierung und Debugging-Unterstützung / Code optimization and debugging support
 - **[ChatGPT 5.2](https://chat.openai.com/)** – Konzeptentwicklung und Problemlösung / Concept development and problem solving
 - **[Google Gemini](https://gemini.google.com/)** – Alternative Perspektiven und Validierung / Alternative perspectives and validation
