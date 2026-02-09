@@ -30,6 +30,7 @@ Here are some impressions of the user interface.
   <br>
   <em>Sicherheits-Audit-Log / Security Audit Log</em>
 </div>
+
 ---
 
 ## Technischer Stack / Technical Stack
