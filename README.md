@@ -182,9 +182,19 @@ Der Sender (`sketch_senderESP`) ist auf zuverlässige Befehlsübermittlung ausge
   - **OTA & Remote Debug:** Firmware-Updates und Debugging via Telnet over-the-air möglich.
 
 ### Elegoo Uno R3 (Controller)
-- Fungiert als lokaler Hardware-Controller für Sensoren (RFID RC522, Reed KY-021).
-- Kommuniziert Statusänderungen seriell an den ESP-Sender.
-- Implementiert die lokale Vorfilterung von Sensordaten zur Entlastung des ESPs.
+Der Uno R3 fungiert als **intelligenter Sensor-Hub** und wurde softwareseitig von einem monolithischen Ansatz auf eine professionelle **Schichtenarchitektur** refaktioniert. Dies gewährleistet Wartbarkeit und deterministisches Verhalten.
+
+- **Modulare Architektur (HAL):**
+  - **Hardware Abstraction Layer:** Der direkte Hardware-Zugriff ist strikt von der Anwendungslogik getrennt. Treiber für RFID, I/O, Kommunikation und Zeitmanagement sind in dedizierte Module gekapselt (`hal_rfid`, `hal_io`, `hal_comm`, `hal_time`).
+  - **Portabilität:** Durch die HAL-Kapselung kann die Kernlogik mit minimalem Aufwand auf andere Mikrocontroller portiert werden.
+
+- **Deterministische Logik (FSM):**
+  - **Finite State Machine:** Die Systemsteuerung erfolgt nicht mehr linear, sondern über einen Zustandsautomaten (`alarm_fsm`). Dies definiert klare Übergänge zwischen Zuständen (z.B. *IDLE, ARMED, COUNTDOWN, TRIGGERED*) und verhindert *undefined behaviour* oder Race Conditions.
+
+- **System-Sicherheit & Robustheit:**
+  - **System Health:** Das Modul `hal_system` implementiert Überwachungsmechanismen (Watchdog), um den Controller bei Hängern im Main-Loop automatisch zurückzusetzen.
+  - **Zugriffskontrolle:** Die Validierung von Berechtigungen ist in `uid_check` ausgelagert, um Authentifizierungslogik zentral und sicher zu verwalten.
+  - **Alarm Logik Isolation:** Auf die Haupt-Alarm-Logik kann lediglich per USB (Serieller Kommunikation) oder physisch Einfluss genommen werden. (Attack Surface Reduction)
 
 *Alle Sketche sind modular aufgebaut, ausführlich kommentiert und nutzen moderne C++ Standards.*
 
