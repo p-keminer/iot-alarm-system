@@ -124,12 +124,12 @@ A Ki Assisted-developed professional web dashboard enables central monitoring an
 - Scroll-to-Bottom-Funktion für neue Nachrichten
 - Clear-Funktion für einzelne Logs
 
-#### Konfigurationsverwaltung / Configuration Management**
+#### Konfigurationsverwaltung / Configuration Management
 - Dashboard-Einstellungen (Seitentitel, Passwort, Refresh-Rate)
 - Remote-Node-Konfiguration (API-IP, WLAN-Credentials, Telnet-Passwort)
 - Konfiguration wird nur an Online-Nodes gesendet
 
-#### Sicherheit & Audit / Security & Audit**
+#### Sicherheit & Audit / Security & Audit
 - Passwort-geschützter Zugang mit Session-Management
 - Inaktivitäts-basierter Auto-Logout (konfigurierbar 1-60 Min)
 - Vollständiger Audit-Log für Admin-Aktivitäten
