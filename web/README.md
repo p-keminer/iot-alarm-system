@@ -14,23 +14,22 @@ Hier einige Eindrücke der Benutzeroberfläche.
 
 Here are some impressions of the user interface.
 
+
 <div align="center">
-  <img src="../web/screenshots/status.png" alt="Desktop Dashboard Main View" width="800px" style="border-radius: 10px; margin-bottom: 20px;">
+  <img src="../web/screenshots/status.png" alt="Dashboard Main View" width="700px" style="border-radius: 10px; margin-bottom: 10px;">
   <br>
-  <em>Hauptansicht Dashboard</em>
-</div>
+  <em>Hauptansicht Dashboard / Main Dashboard View</em>
+  <br><br>
 
-<div align="center" style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
-  <div>
-    <img src="../web/screenshots/settings.png" alt="Mobile View" height="400px" style="border-radius: 10px;">
-    <br><em>Logs & Einstellungen / Logs & Settings</em>
-  </div>
-  <div>
-    <img src="../web/screenshots/security.png" alt="Settings & Logs" height="400px" style="border-radius: 10px;">
-    <br><em>Security audit Log</em>
-  </div>
-</div>
+  <img src="../web/screenshots/settings.png" alt="Logs & Settings" width="700px" style="border-radius: 10px; margin-bottom: 10px;">
+  <br>
+  <em>Logs & Einstellungen / Logs & Settings</em>
+  <br><br>
 
+  <img src="../web/screenshots/security.png" alt="Security Audit Log" width="700px" style="border-radius: 10px; margin-bottom: 10px;">
+  <br>
+  <em>Sicherheits-Audit-Log / Security Audit Log</em>
+</div>
 ---
 
 ## Technischer Stack / Technical Stack
