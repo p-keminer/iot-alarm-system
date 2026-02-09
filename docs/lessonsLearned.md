@@ -71,6 +71,10 @@ Die kompakte Gestaltung der PCB erleichtert den Gehäusebau sowie manuelle Lötv
 ---
 
 ## 5. Web-Entwicklung & Server-Administration / Web Development & Server Administration
+- **Linux-Kommandozeile (Bash) / Linux Command Line (Bash):** Die Konfiguration des Raspberry Pi als Webserver erfolgt primär über das Terminal (Headless). Fundierte Bash-Kenntnisse – insbesondere zur Rechteverwaltung (`chmod`, `chown`) und Prozesssteuerung (`systemctl`) – sind für einen sicheren Betrieb unverzichtbar.
+
+  Setting up the Raspberry Pi as a web server is primarily done via the terminal (headless). Solid Bash knowledge – especially regarding permission management (`chmod`, `chown`) and process control (`systemctl`) – is indispensable for secure operation.
+
 - **Technologie-Auswahl / Technology Selection:** PHP + Lighttpd bewährt sich für ressourcenlimitierte Hardware (512MB RAM). JSON-Dateien statt Datenbank reduzieren Overhead und Latenz bei wenigen Schreibvorgängen pro Sekunde.  
 
   PHP + Lighttpd proves effective for resource-limited hardware (512MB RAM). JSON files instead of database reduce overhead and latency with few writes per second.
@@ -86,10 +90,6 @@ Die kompakte Gestaltung der PCB erleichtert den Gehäusebau sowie manuelle Lötv
 - **Debugging & Troubleshooting:** Browser Developer Tools (F12 Console) und `tail -f` für PHP-Logs sind essenziell. Systematisches Prüfen von PHP-FPM, Lighttpd-Status und Dateiberechtigungen beschleunigt Fehlersuche erheblich.  
 
   Browser developer tools (F12 console) and `tail -f` for PHP logs are essential. Systematic checking of PHP-FPM, Lighttpd status, and file permissions significantly speeds up troubleshooting.
-
-- **Performance-Optimierung / Performance Optimization:** Lazy Loading von Chart.js (nur bei Bedarf), minimales CSS ohne Frameworks, und Inline-SVGs reduzieren Ladezeiten auf Zero 2 W. AJAX-Updates nur geänderter Daten statt vollständiger Seitenneuladung.  
-
-  Lazy loading of Chart.js (only when needed), minimal CSS without frameworks, and inline SVGs reduce load times on Zero 2 W. AJAX updates only changed data instead of full page reload.
 
 ---
 

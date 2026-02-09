@@ -8,6 +8,7 @@ This is an overview of the main components used for the self-developed IoT alarm
 ## Mikrocontroller / Microcontrollers
 - **Elegoo Uno R3** – zentrale Steuerungseinheit / central control unit  
 - **ESP8266 Nodes v2** (2x) – Sensor-Datenverarbeitung und Kommunikation / sensor data processing and communication
+- **Raspberry Pi Zero 2 W** – Webserver & Backend-Host / web server & backend host
 
 ## Sensoren / Sensors
 - **RFID RC522** – RFID-Leser für Zutrittskontrolle / RFID reader for access control  
@@ -39,7 +40,7 @@ This is an overview of the main components used for the self-developed IoT alarm
 optional:
 
 **Buchsenleisten / Female Header**
-- **1x15** 2 Stück / 2 pieces
+- **1x15** 4 Stück / 4 pieces
 ---
 
 ## Hinweise / Notes

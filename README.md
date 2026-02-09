@@ -69,17 +69,17 @@ Der folgende Workflow zeigt, wie Sensoren und Aktoren über die Steuerungseinhei
 The following workflow shows how sensors and actuators interact via the control unit and ESP nodes.
 
 ```
-RC522 + KY-021 → Elegoo Uno R3 (Alarm-Logik) → LED + Buzzer
-                        ↓
-                   UART (9600 baud)
-                        ↓
-                   ESP8266 Sender 
+RC522 + KY-021 → Elegoo Uno R3 (Alarm-Logik) → LED + Buzzer     ← →
+                        ↓                                           ↑
+                   UART (9600 baud)                                USB
+                        ↓                                           ↓
+                   ESP8266 Sender  →   MQTT/HTTP/JSON API   →  Raspberry Pi Zero 2 W 
                         ↓
                    ESP8266 Empfänger (UDP)
                         ↓                    
                    LED + Buzzer         
                         ↓
-                   HTTP/JSON API
+                   MQTT/HTTP/JSON API
                         ↓
                 Raspberry Pi Zero 2 W 
 ```
@@ -262,7 +262,7 @@ sudo chmod 775 /var/www/html/data
 - RFID-basierte Zugangskontrolle über RC522 / RFID-based access control via RC522  
 - Ereignisbasierte Auslösung von LED und Buzzer / Event-based triggering of LED and buzzer  
 - Lokale Alarm-Logik auf Elegoo Uno R3 / Local alarm logic on Elegoo Uno R3  
-- Kommunikation zwischen ESP8266-Nodes für verteilte Sensorik / Communication between ESP8266 nodes for distributed sensing
+- Kommunikation zwischen ESP8266-Nodes für Alarm-Logik / Communication between ESP8266 nodes for alarm logic
 - Professionelles Web-Dashboard mit Echtzeit-Monitoring / Professional web dashboard with real-time monitoring
 - Fernsteuerung und Konfiguration über Webinterface / Remote control and configuration via web interface
 - Detaillierte Telemetrie-Analyse mit Zeitreihen-Visualisierung / Detailed telemetry analysis with time-series visualization
@@ -291,14 +291,13 @@ sudo chmod 775 /var/www/html/data
 - Raspberry Pi Zero 2 W Setup mit DietPi und Dashboard-Installation / Raspberry Pi Zero 2 W setup with DietPi and dashboard installation
 - Integration der ESP-Nodes mit Dashboard-API / Integration of ESP nodes with dashboard API
 - Zusammenbau der funktionsfähigen Version für den Dauerbetrieb / Fully functional version assembled for continuous operation
-- Siehe Ordner `assembly/` für Fotos und Hinweise / See `assembly/` folder for photos and notes
+- Siehe Ordner `assembly/` für Hinweise / See `assembly/` folder for notes
 
 ---
 
 ## Reflektion / Lessons Learned
 - Dokumentiert in `docs/lessonsLearned.md` / Documented in `docs/lessonsLearned.md` 
-- Herausforderungen: Embedded Programming, Löten, Sensorintegration, Debugging, Full-Stack Web Development / Challenges: embedded programming, soldering, sensor integration, debugging, full-stack web development
-- Neu erlernte Technologien: PHP Backend-Entwicklung, RESTful API-Design, Linux-Server-Administration / Newly learned technologies: PHP backend development, RESTful API design, Linux server administration
+- Herausforderungen: Embedded Programming, Löten, Sensorintegration, Debugging, Full-Stack Web Development, PHP Backend-Entwicklung, RESTful API-Design, Linux-Server-Administration / Challenges: embedded programming, soldering, sensor integration, debugging, full-stack web development, PHP backend development, RESTful API design, Linux server administration
 - Iteratives Vorgehen und Dokumentation entscheidend / Iterative approach and documentation are essential
 
 [![Docs: Lessons Learned](https://img.shields.io/badge/Docs-Lessons%20Learned-yellow)](docs/lessonsLearned.md)
@@ -317,10 +316,10 @@ sudo chmod 775 /var/www/html/data
 
 ## Hinweis / Notes
 - **Entwicklungsmethode:**  
-  Das Projekt wurde nach dem Prinzip des 'AI-assisted Engineering' umgesetzt. Während die Systemarchitektur, die Hardware-Auswahl und das Logik-Konzept (Redundanz, Master-Slave-Struktur) von mir entworfen wurden, kam KI zur Code-Optimierung und zum Rapid Prototyping der Netzwerk-Schnittstellen zum Einsatz. Das Web-Dashboard wurde vollständig eigenständig konzipiert und implementiert, wobei moderne Web-Technologien und Best Practices für IoT-Monitoring-Systeme zur Anwendung kamen.
+  Das Projekt wurde nach dem Prinzip des 'AI-assisted Engineering' umgesetzt. Während die Systemarchitektur, die Hardware-Auswahl und das Logik-Konzept (Redundanz, Master-Slave-Struktur) von mir entworfen wurden, kam KI zur Code-Optimierung und zum Rapid Prototyping der Netzwerk-Schnittstellen zum Einsatz. Das Web-Dashboard wurde KI-Assisted konzipiert und implementiert, wobei moderne Web-Technologien und Best Practices für IoT-Monitoring-Systeme zur Anwendung kamen.
 
   **Development Method:**  
-  The project was carried out following the 'AI-assisted Engineering' approach. I was responsible for designing the system architecture, selecting the hardware, and defining the logic concept (including redundancy and a master-slave structure), while AI was employed to optimize code and accelerate prototyping of the network interfaces. The web dashboard was fully independently designed and implemented, applying modern web technologies and best practices for IoT monitoring systems.
+  The project was carried out following the 'AI-assisted Engineering' approach. I was responsible for designing the system architecture, selecting the hardware, and defining the logic concept (including redundancy and a master-slave structure), while AI was employed to optimize code and accelerate prototyping of the network interfaces. The web dashboard was KI-assisted designed and implemented, applying modern web technologies and best practices for IoT monitoring systems.
 
 ---
 

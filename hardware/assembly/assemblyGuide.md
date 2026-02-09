@@ -1,7 +1,7 @@
 # Assembly Guide – IoT-Alarmanlage / IoT Alarm System
 
 ## Übersicht / Overview
-Dieses Dokument beschreibt die physische Montage des IoT-Alarmanlagen-Prototyps.  
+Dieses Dokument fasst die physische Montage des IoT-Alarmanlagen-Prototyps zusammen.  
 This document describes the physical assembly of the IoT alarm system prototype.
 
 Der Prototyp wurde als erstes Embedded-System-Projekt entwickelt und getestet.  
@@ -26,6 +26,8 @@ Main components used are listed in `components.md`.
   LEDs, buzzers, and resistors were integrated according to the schematics.
 - Der Prototyp wurde mehrfach getestet, um die Kommunikation zwischen Nodes und die Alarmlogik zu prüfen.  
   The prototype was tested multiple times to verify node communication and alarm logic.
+- Der Raspberry Pi Zero 2 W wurde als Webserver-Host integriert und über eine USB-Verbindung an den Elegoo Uno R3 gekoppelt (Serielle Kommunikation).  
+The Raspberry Pi Zero 2 W was integrated as the web server host and coupled to the Elegoo Uno R3 via a USB connection (serial communication).
 
 ---
 
