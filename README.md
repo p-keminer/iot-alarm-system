@@ -151,11 +151,42 @@ A Ki Assisted-developed professional web dashboard enables central monitoring an
 ---
 
 ## Firmware
-- Embedded C/C++ für ESP8266 und Elegoo Uno R3 / Embedded C/C++ for ESP8266 and Elegoo Uno R3
-- Node-Kommunikation und Alarmlogik / Node communication and alarm logic
-- HTTP-Client-Implementierung für Dashboard-Integration / HTTP client implementation for dashboard integration
-- Strukturierter und kommentierter Code / Structured and well-commented code 
-- Einzeltests der Nodes / Individual node testing
+
+Die Firmware für beide ESP8266-Nodes (`firmware/esp8266_nodes/`) ist auf **maximale Ausfallsicherheit, Sicherheit und geringe Latenz** optimiert. Sie implementiert ein robustes Master-Slave-Konzept mit kryptografischer Absicherung.
+
+### ESP8266 Receiver Node (Empfänger)
+Der Empfänger (`sketch_empfaengerESP`) priorisiert lokale Alarm-Logik über Netzwerk-Funktionen ("Priority Mode"), um ein stotterfreies Auslösen der Aktoren zu garantieren.
+
+- **Sicherheit (Security Hardening):**
+  - **HMAC-SHA256 Signierung:** Authentifiziert Sender via `BearSSL` und Secret Token.
+  - **Anti-Replay Protection:** Validierung von Sequenznummern verhindert Wiederholungsangriffe.
+  - **Traffic Obfuscation:** Verschleierte Payloads (z.B. `NICE_TRY_WIRESHARK_USER`) erschweren Paketanalyse.
+  - **DoS-Protection:** Rate-Limiting (Max. 60 Pakete/Min) und Brute-Force-Schutz für Telnet.
+
+- **Netzwerk & Resilienz:**
+  - **Priority Mode:** Blockiert unkritische Netzwerk-Tasks während eines Alarms ("Stop-the-World").
+  - **WLAN Failover:** Asynchroner Wechsel auf Backup-SSID bei Verbindungsverlust.
+  - **Watchdog V2:** Dedizierter Hardware-Timer überwacht den Loop-Zyklus und erzwingt bei Hängern einen Reboot.
+
+### ESP8266 Sender Node
+Der Sender (`sketch_senderESP`) ist auf zuverlässige Befehlsübermittlung ausgelegt, selbst in instabilen Netzwerken.
+
+- **Zuverlässige Kommunikation:**
+  - **Retry-Logik:** Sendet Befehle bis zu 10x wiederholt, bis ein kryptografisch signiertes `ACK` (Acknowledgement) vom Empfänger eintrifft.
+  - **Non-Blocking Architecture:** Wartet auf Bestätigung, ohne den restlichen Systembetrieb (z.B. LEDs) zu blockieren.
+  - **mDNS Discovery:** Löst die IP des Empfängers dynamisch auf (`alarm-receiver.local`), um IP-Änderungen automatisch zu verkraften.
+
+- **System-Features:**
+  - **Safe Reset Pattern:** Werksreset erfordert langes Drücken (>10s) mit visuellem LED-Feedback, um Fehlbedienung zu verhindern.
+  - **Telemetrie:** Übermittelt RSSI, Heap-Auslastung und Reset-Gründe an das Dashboard.
+  - **OTA & Remote Debug:** Firmware-Updates und Debugging via Telnet over-the-air möglich.
+
+### Elegoo Uno R3 (Controller)
+- Fungiert als lokaler Hardware-Controller für Sensoren (RFID RC522, Reed KY-021).
+- Kommuniziert Statusänderungen seriell an den ESP-Sender.
+- Implementiert die lokale Vorfilterung von Sensordaten zur Entlastung des ESPs.
+
+*Alle Sketche sind modular aufgebaut, ausführlich kommentiert und nutzen moderne C++ Standards.*
 
 [![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3/sketchR3/sketchR3.ino) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266_nodes/sketch_empfaengerESP/sketch_empfaengerESP.ino) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266_nodes/sketch_senderESP/sketch_senderESP.ino)
 
