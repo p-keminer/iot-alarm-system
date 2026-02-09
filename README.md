@@ -17,7 +17,7 @@ Basic IoT alarm system based on ESP8266 and Elegoo Uno R3, featuring magnetic Ha
 
 ---
 
-[![Docs: Lessons Learned](https://img.shields.io/badge/Docs-Lessons%20Learned-yellow)](docs/lessonsLearned.md) [![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-brightgreen)](embedded/private/web/README.md) [![PCB Sending Nodes](https://img.shields.io/badge/PCB-Sending%20Nodes-blue)](hardware/pcb/r3_senderEsp/rückseite_r3_senderEsp.png) [![PCB Receiving Nodes](https://img.shields.io/badge/PCB-Receiving%20Nodes-blue)](hardware/pcb/empfaengerEsp/rückseiteEmpfaenger.png) [![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3/sketchR3/sketchR3.ino) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266_nodes/sketch_empfaengerESP/sketch_empfaengerESP.ino) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266_nodes/sketch_senderESP/sketch_senderESP.ino) [![Gehäuse: Sensoren](https://img.shields.io/badge/Gehäuse-%20Sensoren-white)](media/photos/gehauesePrototyp.png) [![Gehäuse: Empfänger](https://img.shields.io/badge/Gehäuse-%20Empfänger-white)](mechanics/3d_prints/receiving_pcb/EmpfaengerGehaeusePCB.jpg) [![Prototype Breadboard](https://img.shields.io/badge/Prototype-Breadboard-pink)](media/photos/prototyp_breadboards.png) [![Prototype Perfboard](https://img.shields.io/badge/Prototype-Perfboard-pink)](media/photos/prototyp_perforatedCircuitBoards.jpg) [![Schematic: Sending](https://img.shields.io/badge/Schematic-%20Sending-orange)](hardware/schematics/circuitDiagram/r3_senderEsp.png) [![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving-orange)](hardware/schematics/circuitDiagram/empfaengerEsp.png) [![Schematic: Sending](https://img.shields.io/badge/Schematic-%20Sending_KiCad-blueviolet)](hardware/pcb/r3_senderEsp/schaltplan_r3_senderEsp.png) [![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving_KiCad-blueviolet)](hardware/pcb/empfaengerEsp/schaltplanEmpfaenger.png) [![Hardware: Components](https://img.shields.io/badge/Hardware-%20Components-violet)](hardware/assembly/components.md) [![Pinmapping: Elegoo Uno R3](https://img.shields.io/badge/Pinmapping-Elegoo%20Uno%20R3-lightgrey)](docs/pinmapping/ElegooUnoR3.md) [![Pinmapping: Empfänger ESP](https://img.shields.io/badge/Pinmapping-Empfänger%20ESP-lightgrey)](docs/pinmapping/EmpfängerEsp.md) [![Pinmapping: Sender ESP](https://img.shields.io/badge/Pinmapping-Sender%20ESP-lightgrey)](docs/pinmapping/SenderEsp.md)
+[![Docs: Lessons Learned](https://img.shields.io/badge/Docs-Lessons%20Learned-yellow)](docs/lessonsLearned.md) [![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-blue)](web/README.md) [![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3/sketchR3/sketchR3.ino) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266_nodes/sketch_empfaengerESP/sketch_empfaengerESP.ino) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266_nodes/sketch_senderESP/sketch_senderESP.ino) [![Schematic: Sending](https://img.shields.io/badge/Schematic-%20Sending_KiCad-blueviolet)](hardware/pcb/r3_senderEsp/schaltplan_r3_senderEsp.png) [![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving_KiCad-blueviolet)](hardware/pcb/empfaengerEsp/schaltplanEmpfaenger.png) 
 
 ---
 
@@ -41,14 +41,14 @@ Basic IoT alarm system based on ESP8266 and Elegoo Uno R3, featuring magnetic Ha
 Dieses Projekt ist eine selbstentwickelte Basis-IoT-Alarmanlage mit zwei ESP8266-Nodes und einem Elegoo Uno R3.  
 Es dient als modularer Grundbaustein, der es ermöglicht, bei Bedarf weitere Nodes hinzuzufügen und das System so flexibel und einfach zu erweitern.
 Es umfasst Sensorerfassung, Kommunikation (UART & UDP) zwischen den Nodes, eine zentrale Steuerungseinheit sowie selbst entworfene PCBs.  
-Ein professionelles Web-Dashboard auf Raspberry Pi Zero 2 W ermöglicht die Echtzeit-Überwachung, Fernsteuerung und detaillierte Telemetrie-Analyse aller Systemkomponenten.
+Ein Web-Dashboard auf Raspberry Pi Zero 2 W ermöglicht die Echtzeit-Überwachung, Fernsteuerung und detaillierte Telemetrie-Analyse aller Systemkomponenten.
 Für die Sensoren wurden 3D-gedruckte Gehäuse verwendet.  
 Dies war mein erstes praktisches Embedded-System-Projekt, umgesetzt mit minimaler Vorerfahrung im ersten Semester.  
 
 This project is a self-developed basic IoT alarm system using two ESP8266 nodes and an Elegoo Uno R3.  
 It serves as a modular foundation, allowing additional nodes to be integrated as needed, making the system flexible and easily expandable.
 It includes sensor data acquisition, communication (UART & UDP) between nodes, a central control unit, and custom-designed PCBs.  
-A professional web dashboard on Raspberry Pi Zero 2 W enables real-time monitoring, remote control, and detailed telemetry analysis of all system components.
+A web dashboard on Raspberry Pi Zero 2 W enables real-time monitoring, remote control, and detailed telemetry analysis of all system components.
 3D-printed housings were used for the sensors.  
 This was my first hands-on embedded systems project, developed with minimal prior experience during my first semester.
 
@@ -92,20 +92,9 @@ Ein Ki-Assisted selbstentwickeltes, professionelles Web-Dashboard ermöglicht di
 
 A Ki Assisted-developed professional web dashboard enables central monitoring and control of all system components. The dashboard runs on a Raspberry Pi Zero 2 W and provides a modern, responsive user interface for desktop and mobile devices.
 
-[![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-brightgreen)](web/README.md)
+[![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-blue)](web/README.md)
 
-### Technischer Stack / Technical Stack
-
-| Komponente / Component | Technologie / Technology | Beschreibung / Description |
-|------------------------|-------------------------|----------------------------|
-| Hardware | Raspberry Pi Zero 2 W | ARM Cortex-A53, 512MB RAM, WiFi/Bluetooth 4.2 BLE |
-| Betriebssystem / OS | DietPi (Debian-basiert) | Optimiertes Linux für Einplatinencomputer |
-| Webserver | Lighttpd 1.4.76 | Leichtgewichtiger Webserver mit FastCGI |
-| Backend | PHP 8.4.16 | Server-seitige Logik, API-Endpoints, Session-Management |
-| Frontend | HTML5, CSS3, Vanilla JavaScript | Custom Design System ohne externe Frameworks |
-| Datenvisualisierung / Data Visualization | Chart.js | Echtzeit-Charts für RSSI und Heap-Auslastung |
-| Icons | Lucide Icons | SVG-basierte Icon-Bibliothek via CDN |
-| Fonts | Google Fonts (Inter) | Moderne, gut lesbare Schriftart |
+---
 
 ### Dashboard-Features
 
@@ -159,70 +148,6 @@ A Ki Assisted-developed professional web dashboard enables central monitoring an
   - System-Log-Anzahl
   - Gesamt-Uptime aller Nodes
 
-### Architektur & Design-Entscheidungen / Architecture & Design Decisions
-
-**Backend-Architektur:**
-- Zwei Hauptkomponenten: `index.php` (Dashboard) und `api.php` (RESTful API)
-- JSON-Dateien statt Datenbank für niedrige Latenz und minimalen Overhead
-- Session-basierte Authentifizierung mit Activity-Tracking
-
-**Frontend-Design:**
-- Custom Design System ohne externe CSS-Frameworks
-- Vanilla JavaScript für maximale Performance
-- Responsive Grid-Layout mit Glasmorphism-Effekten
-
-#### Datenstruktur / Data Structure
-
-**Persistente Daten in `/data/` Verzeichnis:**
-
-### Installation & Setup
-
-**Schnellinstallation:**
-```bash
-# System aktualisieren
-sudo apt update && sudo apt upgrade -y
-
-# Lighttpd und PHP installieren
-sudo apt install lighttpd php8.2-fpm -y
-
-# PHP-FPM aktivieren
-sudo lighttpd-enable-mod fastcgi-php
-sudo systemctl restart lighttpd
-
-# Dashboard-Dateien kopieren
-sudo cp -r embedded/private/web/* /var/www/html/
-
-# Berechtigungen setzen
-sudo chown -R www-data:www-data /var/www/html/
-sudo mkdir -p /var/www/html/data
-sudo chmod 775 /var/www/html/data
-```
-
-### Performance & Ressourcen / Performance & Resources
-
-**Manuelle Wartung über Dashboard:**
-- Export von Telemetrie-Daten (CSV)
-- Export von Audit-Logs (CSV)
-- System-Reset-Funktion (löscht alle Daten außer Audit-Logs)
-- Clear-Funktionen für einzelne Log-Kategorien
-
-**System-Monitoring:**
-- Raspberry Pi Temperatur-Überwachung via `vcgencmd`
-- Disk-Space-Monitoring empfohlen
-- Webserver-Logs in `/var/log/lighttpd/`
-- PHP-FPM-Logs in `/var/log/php8.2-fpm.log`
-
-## Weiterentwicklung / Future Development
-
-**Kurzfristig:**
-- SQLite-Datenbank für bessere Daten-Persistenz
-- Benachrichtigungen bei Alarmen
-- Multi-User mit Basis-Rollen (Admin/User)
-- Automatische Backups
-
-**Langfristig (benötigt stärkere Hardware):**
-- Mobile App (iOS/Android)
-- Erweiterte Video-Analyse mit Bewegungserkennung
 ---
 
 ## Firmware
@@ -327,7 +252,7 @@ sudo chmod 775 /var/www/html/data
 
 ### Hardware & PCB Design
 - **[KiCad](https://www.kicad.org/)** – PCB-Design und Schaltpläne / PCB design and schematics  
-- **[Tinkercad](https://www.tinkercad.com/)** – Simulation und Prototyping / Simulation and prototyping  
+- **[Tinkercad](https://www.tinkercad.com/)** – Simulation Prototyping und Gehäuse-Entwürfe / Simulation, prototyping and building houses  
 - **[DIY Layout Creator](https://bancika.github.io/diy-layout-creator/)** – Layout-Erstellung für Lötpläne / Layout creation for soldering plans  
 - **[Bambu Lab Studio](https://bambulab.com/en/download/studio)** – 3D-Druck-Slicing für H2S / 3D printing slicing for H2S  
 
@@ -335,7 +260,9 @@ sudo chmod 775 /var/www/html/data
 - **[Visual Studio Code](https://code.visualstudio.com/)** – Entwicklungsumgebung für Code und Dokumentation / Development environment for code and documentation
 - **[PlatformIO](https://platformio.org/)** – Embedded-Entwicklung für ESP8266 / Embedded development for ESP8266
 - **[Arduino IDE](https://www.arduino.cc/en/software)** – Firmware-Entwicklung / Firmware development
--  **[Oracle VM VirtualBox](https://www.virtualbox.org/)** – Virtualisierungsumgebung für Server-Testläufe unter Xubuntu / Virtualization environment for server testing on Xubuntu
+- **[Oracle VM VirtualBox](https://www.virtualbox.org/)** – Virtualisierungsumgebung für Server-Testläufe unter Xubuntu / Virtualization environment for server testing on Xubuntu
+- **[SillyTavern](https://github.com/SillyTavern/SillyTavern)** – Frontend-Schnittstelle zur Nutzung und Orchestrierung verschiedener KI-Modelle über APIs / Frontend interface for using and orchestrating various AI models via APIs
+- **[Ventoy](https://www.ventoy.net/)** – Erstellung bootfähiger USB-Medien zur Auslagerung und Nutzung von VM-Daten, -Images und ISOs / Creation of bootable USB media for offloading and using VM data, -images and ISOs
 
 ### Web Development
 - **[PHP 8.4](https://www.php.net/)** – Backend-Logik und API / Backend logic and API
@@ -349,5 +276,5 @@ sudo chmod 775 /var/www/html/data
 
 ### AI-Assisted Development
 - **[Claude-Sonnet 4.5 & Opus 4.5/4.6](https://claude.ai/)** – Code-Optimierung und Debugging-Unterstützung / Code optimization and debugging support
-- **[ChatGPT 5.2](https://chat.openai.com/)** – Konzeptentwicklung und Problemlösung / Concept development and problem solving
-- **[Google Gemini](https://gemini.google.com/)** – Alternative Perspektiven und Validierung / Alternative perspectives and validation
+- **[ChatGPT 5.2 & 4o](https://chat.openai.com/)** – Konzeptentwicklung und Problemlösung / Concept development and problem solving
+- **[Google Gemini 3](https://gemini.google.com/)** – Alternative Perspektiven und Validierung / Alternative perspectives and validation
