@@ -15,19 +15,19 @@ Hier einige Eindrücke der Benutzeroberfläche.
 Here are some impressions of the user interface.
 
 <div align="center">
-  <img src="../media/screenshots/dashboard_desktop_main.png" alt="Desktop Dashboard Main View" width="800px" style="border-radius: 10px; margin-bottom: 20px;">
+  <img src="../web/screenshots/status.png" alt="Desktop Dashboard Main View" width="800px" style="border-radius: 10px; margin-bottom: 20px;">
   <br>
-  <em>Hauptansicht Desktop: Echtzeit-Monitoring und RSSI-Charts / Main Desktop View: Real-time monitoring and RSSI charts</em>
+  <em>Hauptansicht Dashboard</em>
 </div>
 
 <div align="center" style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
   <div>
-    <img src="../media/screenshots/dashboard_mobile.png" alt="Mobile View" height="400px" style="border-radius: 10px;">
-    <br><em>Mobile Ansicht / Mobile View</em>
+    <img src="../web/screenshots/settings.png" alt="Mobile View" height="400px" style="border-radius: 10px;">
+    <br><em>Logs & Einstellungen / Logs & Settings</em>
   </div>
   <div>
-    <img src="../media/screenshots/dashboard_settings.png" alt="Settings & Logs" height="400px" style="border-radius: 10px;">
-    <br><em>Logs & Einstellungen / Logs & Settings</em>
+    <img src="../web/screenshots/security.png" alt="Settings & Logs" height="400px" style="border-radius: 10px;">
+    <br><em>Security audit Log</em>
   </div>
 </div>
 
