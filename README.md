@@ -69,19 +69,19 @@ Der folgende Workflow zeigt, wie Sensoren und Aktoren über die Steuerungseinhei
 The following workflow shows how sensors and actuators interact via the control unit and ESP nodes.
 
 ```
-RC522 + KY-021 → Elegoo Uno R3 (Alarm-Logik) → LED + Buzzer     ← →
-                        ↓                                           ↑
-                   UART (9600 baud)                                USB
-                        ↓                                           ↓
-                   ESP8266 Sender  →   MQTT/HTTP/JSON API   →  Raspberry Pi Zero 2 W 
-                        ↓
-                   ESP8266 Empfänger (UDP)
-                        ↓                    
-                   LED + Buzzer         
-                        ↓
-                   MQTT/HTTP/JSON API
-                        ↓
-                Raspberry Pi Zero 2 W 
+                              LED + Buzzer        
+                                   ↑ 
+         RC522 + KY-021 →  Elegoo Uno R3 (Alarm-Logik)              ←           USB
+                                   ↓                                             
+                             UART (9600 baud)                                    ↓
+                                   ↓                                             
+                             ESP8266 Sender  ← →  MQTT/HTTP/JSON API  ← →  Raspberry Pi Zero 2 W 
+                                   ↑                                             
+                                 (UDP)                                           ↑
+                                   ↓                                             
+                           ESP8266 Empfänger             ←                MQTT/HTTP/JSON API  
+                                   ↓                    
+                              LED + Buzzer         
 ```
 
 ---
