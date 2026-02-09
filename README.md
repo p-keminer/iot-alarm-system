@@ -75,7 +75,7 @@ The following workflow shows how sensors and actuators interact via the control 
                                    ↓                                             
                              UART (9600 baud)                                    ↓
                                    ↓                                             
-                             ESP8266 Sender  ← →  MQTT/HTTP/JSON API  ← →  Raspberry Pi Zero 2 W 
+                             ESP8266 Sender   ←   MQTT/HTTP/JSON API   →   Raspberry Pi Zero 2 W 
                                    ↑                                             
                                  (UDP)                                           ↑
                                    ↓                                             
