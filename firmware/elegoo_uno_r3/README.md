@@ -247,19 +247,20 @@ Alarm wird NUR ausgeloest wenn **beide** Sensoren offen sind:
 
 ---
 
-## Schaltplan
+## Schaltplan (vereinfacht)
+Hinweis: Widerstandswerte bitte den Schaltplänen unter ```hardware/schematics``` entnehmen.
 
 ```
                           Elegoo Uno
                          ┌────────────┐
-                         │        TX  │────► ESP Sender
+                         │        TX  │────► Spannungsteiler  ──── ESP Sender
                          │        D2  │◄──── Reed-Sensor 1 ────┐
                          │        D3  │◄──── Reed-Sensor 2 ────┤
                          │            │                        │
-                         │        D5  │────► Buzzer (+)        │
-                         │        D6  │────► LED Alarm         │
-                         │        D7  │────► LED Sensor 1      │
-                         │        D8  │────► LED Sensor 2      │
+                         │        D5  │────► Buzzer (+)    ────┤
+                         │        D6  │────► LED Alarm     ────┤
+                         │        D7  │────► LED Sensor 1  ────┤
+                         │        D8  │────► LED Sensor 2  ────┤
                          │            │                        │
                          │        D9  │────► RFID RST          │
                          │       D10  │────► RFID SDA          │

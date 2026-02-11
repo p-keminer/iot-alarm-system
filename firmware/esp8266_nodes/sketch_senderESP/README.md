@@ -1,4 +1,4 @@
-# ESP8266 UDP Alarm-System — Sender V12
+# ESP8266 UDP Alarm-System — Sender V13
 
 **Kryptografisch gesicherter Alarm-Sender mit HAL/FSM-Architektur**
 
@@ -29,7 +29,7 @@
 ┌──────────────────────────────────────────────────────┐
 │  FSM (Finite State Machine)                          │
 │  fsmUpdate() → Dispatcher für alle Zustände          │
-│  INIT → WLAN_VERBINDEN → BEREIT ↔ SENDEN            │
+│  INIT → WLAN_VERBINDEN → BEREIT ↔ SENDEN             │
 │                              ↓                       │
 │                         WERKSRESET                   │
 ├──────────────────────────────────────────────────────┤
@@ -79,9 +79,9 @@
               │ • Reset-Taster       │                      │
               └───┬──────────┬───────┘                      │
     Taster >10s   │          │ ALARM_ON/OFF                 │
-                  │          │ über Serial                   │
-                  ▼          ▼                               │
-         ┌────────────┐  ┌───────────────────┐              │
+                  │          │ über Serial                  │
+                  ▼          ▼                              │
+         ┌────────────┐   ┌───────────────────┐             │
          │ WERKSRESET  │  │     SENDEN        │─────────────┘
          │             │  │                   │
          │ Flash       │  │ PRIORITY MODE:    │
@@ -207,23 +207,23 @@ return ergebnis == 0;
     SENDER                                    EMPFÄNGER
       │                                          │
       │  1. Serial: "ALARM_ON"                   │
-      │  2. sequenceNumber++                      │
-      │  3. Sequenz → Flash (/seq.dat)            │
-      │  4. Payload = "NICE_TRY...:42"            │
-      │  5. HMAC = SHA256(payload, secret)        │
+      │  2. sequenceNumber++                     │
+      │  3. Sequenz → Flash (/seq.dat)           │
+      │  4. Payload = "NICE_TRY...:42"           │
+      │  5. HMAC = SHA256(payload, secret)       │
       │                                          │
-      │──── "NICE_TRY...:42:a1b2c3..." ────────>│
+      │──── "NICE_TRY...:42:a1b2c3..."  ────────>│
       │                                          │  6. HMAC prüfen
       │                                          │  7. Replay-Window prüfen
       │                                          │  8. Befehl ausführen
-      │<──── "ACK_SECURE:42" ───────────────────│
+      │<──── "ACK_SECURE:42"  ───────────────────│
       │                                          │
       │  9. Constant-Time ACK-Vergleich          │
       │ 10. LED setzen                           │
       │ 11. → ZUSTAND_BEREIT                     │
       │                                          │
 
-  Bei Timeout (1s ohne ACK):
+             Bei Timeout (1s ohne ACK):
       │──── Wiederholung 1/10 ──────────────────>│
       │──── Wiederholung 2/10 ──────────────────>│
       │  ...                                     │
@@ -244,10 +244,12 @@ return ergebnis == 0;
 | `D3` | GPIO0 | Reset-Taster | INPUT_PULLUP, >10s gedrückt = Factory Reset |
 
 ### Schaltplan (vereinfacht)
+Hinweis: Reale Widerstandswerte bitte den Schaltplänen unter ```hardware/schematics``` entnehmen.
 
 ```
                 NodeMCU V2
          ┌──────────────────┐
+         |              RX  ├──── Spannungsteiler ──── UNO R3
          │              D5  ├──── [R 220Ω] ──── LED (WLAN) ──── GND
          │                  │
          │       BUILTIN    ├──── (Onboard LED, invertiert)
@@ -267,7 +269,7 @@ Beim ersten Start (oder nach Factory Reset) öffnet der Sender einen Access Poin
 
 ```
 SSID: "Alarm-Sender-Konfig"
-PW:   (konfigurierbar, Standard: "12345678")
+PW:   (konfigurierbar)
 ```
 
 Über das Captive Portal werden folgende Parameter konfiguriert:
