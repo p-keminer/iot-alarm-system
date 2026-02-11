@@ -1,808 +1,1033 @@
 /*
- * PROJEKT: ESP8266 UDP Alarm-System (Empfänger)
- * ---------------------------------------------
- * Beschreibung: Empfängt kryptografisch signierte UDP-Pakete und steuert Alarm-Hardware.
- * Priorisiert Hardware-Signale über Netzwerk-Tasks für minimale Latenz.
+ * PROJEKT: ESP8266 UDP Alarm-System (Empfaenger)
+ * -----------------------------------------------
+ * Architektur: Hardware Abstraction Layer (HAL) + Finite State Machine (FSM)
  *
- * Features & Funktionen:
- * ----------------------
- * 1. NETZWERK & PERFORMANCE
- * - Priority-Mode: Bei aktivem Alarm werden API/Heartbeats pausiert (Stop-the-World).
- * - Resultat: Kein "Stottern" der LEDs/Summer, selbst wenn Server offline ist.
- * - WLAN Failover (Backup-SSID) & asynchroner Reconnect.
+ * Schichten-Modell:
+ *   [FSM]      - Zustandslogik: INIT -> WLAN_VERBINDEN -> BEREIT <-> ALARM -> WERKSRESET
+ *   [Service]  - Sicherheit (HMAC, Replay-Window), Protokoll, Heartbeat, UDP-Verarbeitung
+ *   [HAL]      - Hardware-Abstraktion: GPIO, WiFi, UDP, Flash, Timer, Telnet, mDNS
  *
- * 2. SICHERHEIT (SECURITY HARDENING)
- * - HMAC-SHA256: Authentifiziert Sender via Secret Token (BearSSL C-API).
- * - Anti-Replay: Sequenznummern-Validierung gegen Aufzeichnungs-Angriffe.
- * - Traffic Obfuscation: Erwartet "NICE_TRY_WIRESHARK_USER" statt Klartext-Befehle.
- * - DoS-Schutz: Rate-Limiting für eingehende UDP-Pakete.
- * - Telnet Härtung: Auto-Logout, Brute-Force-Schutz & Easter Egg.
+ * Security: HMAC-SHA256, Sliding-Window Replay-Schutz (25 Pakete, LittleFS-persistent),
+ *           Constant-Time Signatur-Vergleich, isdigit-Validierung, Traffic Obfuscation,
+ *           DoS Rate-Limiting, Telnet Brute-Force-Schutz
  *
- * 3. SYSTEM & STABILITÄT
- * - Watchdog V2: Ausgelagert ("fuettereWauWau"), überwacht Loop-Zykluszeit.
- * - Safe Reset: Werksreset nur bei bewusstem Loslassen des Tasters (>10s).
- * - Telemetrie: Sendet Vitaldaten (RSSI, Heap, Reset-Reason) im Leerlauf.
+ * Priority-Mode: Im ALARM-Zustand werden Heartbeat, Telnet und WLAN-Scan pausiert.
+ *                Nur Hardware-Steuerung und UDP-Empfang laufen (Stop-the-World).
  *
  * Hardware:   NodeMCU V2 (ESP8266)
  * Autor:      Philip Keminer
- * Version:    V10.0 (Receiver - Final)
- * Datum:      2026-02-03
+ * Version:    V13.0 (Receiver - HAL/FSM, OTA entfernt)
+ * Datum:      2026-02-11
  */
 
-// --- BIBLIOTHEKEN ---
-#include <FS.h>                 // Dateisystem-Basisklasse für Abstraktionsschicht
-#include <LittleFS.h>           // Flash-Dateisystem für Config-Persistierung
-#include <ArduinoJson.h>        // JSON De/Serialisierung für Config und API-Kommunikation
-#include <ESP8266WiFi.h>        // WiFi Stack mit TCP/IP Implementation
-#include <WiFiManager.h>        // Captive Portal für initiale WLAN-Konfiguration über Smartphone
-#include <WiFiUdp.h>            // User Datagram Protocol - verbindungslos, schnell für Echtzeit-Commands
-#include <ESP8266mDNS.h>        // Multicast DNS für lokale Namensauflösung ohne DNS-Server
-#include <ESP8266HTTPClient.h>  // HTTP Client für REST API Kommunikation
-#include <WiFiClient.h>         // Basis TCP Client Implementation
-#include <ArduinoOTA.h>         // Over-The-Air Firmware Updates ohne USB-Kabel
-#include <TelnetStream.h>       // Remote Debugging Console über Telnet-Protokoll
-#include <Ticker.h>             // Hardware-Timer für periodische Interrupts
-#include <WiFiClientSecure.h>   // TLS/SSL Support für verschlüsselte Verbindungen
-#include <bearssl/bearssl.h>    // Low-Level Krypto-Bibliothek für HMAC-Berechnung
+// ============================================================================
+// BIBLIOTHEKEN
+// ============================================================================
 
-// --- KONSTANTEN ---
-const char* DEVICE_NAME = "alarm-receiver"; 
+#include <FS.h>
+#include <LittleFS.h>
+#include <ArduinoJson.h>
+#include <ESP8266WiFi.h>
+#include <WiFiManager.h>
+#include <WiFiUdp.h>
+#include <ESP8266mDNS.h>
+#include <ESP8266HTTPClient.h>
+#include <WiFiClient.h>
+#include <WiFiClientSecure.h>   // Fuer BearSSL HMAC-Bibliothek
+#include <TelnetStream.h>
+#include <Ticker.h>
+#include <bearssl/bearssl.h>
 
-// --- TIMING & GRENZWERTE ---
-const unsigned long ALARM_TOGGLE_INTERVALL = 200;    // Blink-Frequenz: LED/Summer wechseln alle 200ms (5 Hz)
-const unsigned long WLAN_WIEDERHOLUNGS_INTERVALL = 20000; // Nach Verbindungsabbruch: 20 Sekunden warten vor Reconnect
-const unsigned long WLAN_SCAN_INTERVALL = 30000;     // Alle 30 Sekunden nach besserem Hauptnetz scannen
-const uint8_t STABILITAETS_SCHWELLWERT = 3;          // Hauptnetz muss 3x hintereinander erkannt werden bevor Wechsel
-const int8_t RSSI_SCHWELLWERT = -75;                 // Signal muss besser als -75dBm sein (je näher 0 desto besser)
-const unsigned long TASTER_LANG_DRUCK = 1000;        // Drücke unter 1 Sekunde = Toggle Alarm
-const unsigned long TASTER_RESET_DRUCK = 10000;      // Drücke über 10 Sekunden = Factory Reset (Sicherheitsfeature)
-const unsigned long BLINK_INTERVALL = 500;           // WLAN-LED blinkt alle 500ms wenn nicht verbunden
-const unsigned long HEARTBEAT_INTERVALL = 2000;      // Alle 2 Sekunden Vitaldaten an Server senden
-const int WATCHDOG_TIMEOUT_SEK = 30;                 // System rebootet nach 30 Sekunden ohne Loop-Durchlauf
-const unsigned long TELNET_TIMEOUT = 300000;         // Telnet-Session timeout nach 5 Minuten Inaktivität
+// ============================================================================
+// KONSTANTEN
+// ============================================================================
 
-// --- SICHERHEIT ---
-const uint8_t UDP_MAX_PAKETE_PRO_MINUTE = 60;        // DoS-Schutz: Max 60 Pakete/Min (1 pro Sekunde)
-const uint8_t MAX_TELNET_VERSUCHE = 3;               // Brute-Force-Schutz: Nach 3 Fehlversuchen 5min Sperre
+const char* DEVICE_NAME = "alarm-receiver";
 
-// --- OBFUSCATED PAYLOADS (Traffic Verschleierung) ---
-// Diese Strings verbergen die tatsächliche Funktion vor einfacher Paketanalyse
-// Angreifer sehen nicht "ALARM_ON" sondern kryptische Strings
+// --- Timing ---
+const unsigned long ALARM_TOGGLE_INTERVALL = 200;          // LED/Summer-Wechsel: 5 Hz
+const unsigned long WLAN_WIEDERHOLUNGS_INTERVALL = 20000;  // Reconnect-Pause
+const unsigned long WLAN_SCAN_INTERVALL = 30000;           // Scan nach Hauptnetz
+const uint8_t STABILITAETS_SCHWELLWERT = 3;                // Hauptnetz muss 3x stabil sein
+const int8_t RSSI_SCHWELLWERT = -75;                       // Mindest-Signalstaerke
+const unsigned long TASTER_LANG_DRUCK = 1000;              // Kurzdruck-Schwelle: <1s = Toggle
+const unsigned long TASTER_RESET_DRUCK = 10000;            // Langdruck: >10s = Factory Reset
+const unsigned long BLINK_INTERVALL = 500;                 // WLAN-LED Blink-Intervall
+const unsigned long HEARTBEAT_INTERVALL = 2000;            // Telemetrie-Intervall
+const int WATCHDOG_TIMEOUT_SEK = 30;                       // Loop-Ueberwachung
+const unsigned long TELNET_TIMEOUT = 300000;               // Session-Timeout: 5 Minuten
+
+// --- Sicherheit ---
+const uint8_t UDP_MAX_PAKETE_PRO_MINUTE = 60;             // DoS Rate-Limit
+const uint8_t MAX_TELNET_VERSUCHE = 3;                    // Brute-Force-Schutz
+const uint8_t REPLAY_FENSTER_GROESSE = 25;                // Sliding-Window Breite
+const unsigned long SEQ_PERSIST_SCHWELLE = 5;              // Flash-Write alle N Sequenzen
+
+// --- Obfuscated Payloads (Muss mit Sender uebereinstimmen!) ---
 const char* CMD_ALARM_AN  = "NICE_TRY_WIRESHARK_USER";
 const char* CMD_ALARM_AUS = "ENCRYPTION_IS_YOUR_FRIEND";
 
-// --- PINS ---
-// NodeMCU Pin-Mapping: D1-D7 sind GPIO-Nummern
-#define PIN_LED_ROT D1      // Alarm-LED 1 (wechselt mit Gelb)
-#define PIN_LED_GELB D2     // Alarm-LED 2 (wechselt mit Rot)
-#define PIN_LED_WLAN D3     // Status-LED für WiFi-Verbindung
-#define PIN_SUMMER_1 D5     // Akustischer Alarm 1 (wechselt mit Summer 2)
-#define PIN_SUMMER_2 D6     // Akustischer Alarm 2 (wechselt mit Summer 1)
-#define PIN_TASTER D7       // Multifunktions-Taster: Toggle (<1s), Reset (>10s)
+// --- Pins ---
+#define PIN_LED_ROT  D1   // Alarm-LED 1 (wechselt mit Gelb)
+#define PIN_LED_GELB D2   // Alarm-LED 2 (wechselt mit Rot)
+#define PIN_LED_WLAN D3   // WLAN-Status-LED
+#define PIN_SUMMER_1 D5   // Akustischer Alarm 1
+#define PIN_SUMMER_2 D6   // Akustischer Alarm 2
+#define PIN_TASTER   D7   // Toggle (<1s) / Reset (>10s)
 
-// --- KONFIGURATIONS-STRUCT ---
-// Alle persistenten Einstellungen in einer Datenstruktur
-struct SystemKonfiguration {
-    char udpToken[41] = "";             // 40 Zeichen HMAC Secret + Nullterminator
-    char mdnsName[33] = "alarm-receiver"; // Hostname für lokales Netzwerk (max 32 + \0)
-    char telnetPasswort[21] = "";       // Passwort für Debug-Konsole
-    char backupSsid[33] = "";           // Fallback-WLAN wenn Hauptnetz ausfällt
-    char backupPasswort[65] = "";       // WPA2-Passwort kann bis 64 Zeichen lang sein
-    char hauptWlanName[33] = "";        // Primäres WLAN mit bester Performance
-    char hauptWlanPasswort[65] = ""; 
-    char apPasswort[65] = "12345678";   // Passwort für Setup-Access-Point (mindestens 8 Zeichen)
-    char apiServer[33] = "";            // IP oder Hostname des Backend-Servers
+// ============================================================================
+// QUELLTEXT-VERSCHLEIERUNG (Kein Klartext in der Firmware)
+// ============================================================================
+// Wer das hier reverse-engineered: Respekt, du hast es dir verdient.
+
+// Diese Defaults hier sind nur Fallbacks fuer den allerersten Start.
+
+
+const char DECODER_TABLE[128] PROGMEM = {
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+    16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+    32, '1', 34, '3', '4', '5', '7', 39, '9', '0', '8', 43, 44, 45, 46, 47,
+    48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+    '2', 'V', 'F', 'Z', 'B', 'G', 'E', 'D', 'L', 'R', 'U', 'X', 'I', 'J', 'W', 'Q',
+    'S', 'C', 'N', 'P', 'A', 'M', 'H', 'Y', 'T', 'O', 'K', 91, 92, 93, '6', 95,
+    96, 'm', 'd', 'h', 'f', 'z', 'v', 'e', 'c', 'k', 'q', 'j', 'w', 'r', 'p', 'n',
+    'i', 'o', 'u', 'g', 'x', 'b', 'y', 'l', 't', 's', 'a', 123, 124, 125, 126, 127
 };
 
-SystemKonfiguration config; // Globale Instanz der Konfiguration
-
-// --- GLOBALE VARIABLEN ---
-bool konfigurationSpeichern = false; // Flag: Wurde Config in WiFiManager geändert?
-bool telnetAutorisiert = false;      // Zugriffskontrolle für Debug-Konsole
-bool darfLoggen = false;             // Server-gesteuertes Logging (kann remote deaktiviert werden)
-bool otaLauft = false;               // Verhindert andere Operationen während Firmware-Update
-
-// Timing-Variablen für nicht-blockierende Operationen
-unsigned long letzterVerbindungsVersuch = 0; // Timestamp für Reconnect-Logik
-unsigned long letzterScanStart = 0;           // Timestamp für WLAN-Scan
-unsigned long letzterHeartbeat = 0;           // Timestamp für letzte Telemetrie
-unsigned long letzterTelnetInput = 0;         // Timestamp für Session-Timeout
-int scanStatus = -1;                          // -1=Idle, 0=Läuft, >0=Ergebnisse
-
-unsigned long aktuellesHeartbeatIntervall = 2000; // Dynamisch: 2s normal, 60s bei Serverfehler
-
-// Sicherheits-Zähler
-uint8_t telnetFehlversuche = 0;      // Zählt Falsch-Logins für Brute-Force-Schutz
-unsigned long telnetSperreBis = 0;   // Timestamp bis wann Telnet gesperrt ist
-uint8_t udpPaketZaehler = 0;         // Zählt Pakete pro Minute für Rate-Limiting
-unsigned long udpZaehlerReset = 0;   // Timestamp für 60-Sekunden-Fenster
-unsigned long letzteSequenceNumber = 0; // Anti-Replay: Verhindert erneutes Abspielen alter Pakete
-
-// Netzwerk Objekte
-WiFiUDP udp;                         // UDP Socket für schnelle Command-Übertragung
-const unsigned int lokalerPort = 4210; // Port auf dem der Empfänger lauscht
-
-// Hardware Status
-volatile bool alarmAktiv = false;    // volatile: Kann durch ISR geändert werden
-bool ledStatus = false;              // Aktueller Zustand des Blink-Zyklus
-unsigned long letzterToggle = 0;     // Timestamp für LED/Summer-Wechsel
-unsigned long letztesBlinken = 0;    // Timestamp für WLAN-Status-LED
-
-// Watchdog Objekte
-Ticker watchdogTicker;               // Hardware-Timer der jede Sekunde auslöst
-volatile int watchdogZaehler = 0;    // Zählt hoch wenn Loop hängt
-volatile bool mussNeustarten = false; // Flag für sauberen Reboot
-
-// --- VORDEKLARATIONEN ---
-// Funktionen die vor ihrer Definition aufgerufen werden müssen deklariert sein
-void sendeLogAnApi(String nachricht);
-void sendeHeartbeatAnApi();
-
-// --- KRYPTO HELFER (C-API) ---
-// HMAC-SHA256: Hash-based Message Authentication Code
-// Erstellt digitale Signatur mit Secret Key - nur Besitzer des Keys können gültige Signaturen erzeugen
-String berechneHMAC(String nachricht, String secret) {
-    br_hmac_key_context kc;  // Key-Kontext speichert Hash-Algorithmus und Secret
-    br_hmac_context ctx;      // Hash-Kontext für die eigentliche Berechnung
-    
-    // 1. Key-Kontext initialisieren mit SHA256 und Secret
-    br_hmac_key_init(&kc, &br_sha256_vtable, secret.c_str(), secret.length());
-    
-    // 2. Hash-Kontext mit Key verknüpfen (0 = Output-Länge automatisch)
-    br_hmac_init(&ctx, &kc, 0);
-    
-    // 3. Nachricht in Hash einarbeiten (kann mehrfach aufgerufen werden für große Daten)
-    br_hmac_update(&ctx, nachricht.c_str(), nachricht.length());
-    
-    // 4. Hash finalisieren - 32 Bytes für SHA256
-    uint8_t result[32];
-    br_hmac_out(&ctx, result);
-    
-    // 5. Binäre Bytes in Hexadezimal-String konvertieren für einfache Übertragung
-    String hexString = "";
-    for (int i = 0; i < 32; i++) {
-        if (result[i] < 16) hexString += "0"; // Führende Null für 0x00-0x0F
-        hexString += String(result[i], HEX);
-    }
-    return hexString;
-}
-
-// --- WATCHDOG SYSTEM ---
-// Interrupt Service Routine - wird jede Sekunde vom Hardware-Timer aufgerufen
-void ICACHE_RAM_ATTR watchdogInterrupt() {
-    watchdogZaehler++; // Zählt hoch wenn loop() nicht reagiert
-    if (watchdogZaehler >= WATCHDOG_TIMEOUT_SEK) mussNeustarten = true;
-}
-
-// Watchdog zurücksetzen - beweist dass loop() noch läuft
-void fuettereWauWau() {
-    watchdogZaehler = 0; // Zähler nullen = System lebt noch
-}
-
-// Prüft ob Watchdog ausgelöst wurde und führt Reboot durch
-void beissZu(){
-    if (mussNeustarten) {
-        Serial.println("WATCHDOG RESET!"); // Letzte Nachricht vor dem Neustart
-        delay(100); // Sicherstellen dass Nachricht gesendet wurde
-        ESP.restart(); // Hardware-Reset
+void deobfuscate(char* text) {
+    for (int i = 0; text[i] != '\0'; i++) {
+        unsigned char idx = (unsigned char)text[i];
+        if (idx < 128) {
+            char decoded = (char)pgm_read_byte(&DECODER_TABLE[idx]);
+            if (decoded != (char)idx) text[i] = decoded;
+        }
     }
 }
 
-// --- LOGGING ---
-// Sendet Log-Nachrichten an Backend-Server (wenn verfügbar)
-void sendeLogAnApi(String nachricht) {
-  if (otaLauft || !darfLoggen) return; // Während OTA oder wenn Logging deaktiviert: Skip
-  
-  // PERFORMANCE: Wenn Alarm aktiv, kein Logging (außer UDP-Events)
-  // Verhindert HTTP-Blockierung während zeitkritischer Alarm-Steuerung
-  if (alarmAktiv && !nachricht.startsWith("UDP")) return;
+// ============================================================================
+// DATENSTRUKTUREN
+// ============================================================================
 
-  if (WiFi.status() == WL_CONNECTED) {
-    WiFiClient client; 
-    client.setTimeout(1000); // Nur 1 Sekunde warten statt Standard 5s
-    HTTPClient http; 
-    http.setTimeout(1000); // HTTP-Request muss in 1s fertig sein
-    
+struct SystemKonfiguration {
+    char udpToken[41] = "";
+    char mdnsName[33] = "";
+    char telnetPasswort[21] = "y!Q#u_pPx_%L9gI";
+    char backupSsid[33] = "";
+    char backupPasswort[65] = "";
+    char hauptWlanName[33] = "";
+    char hauptWlanPasswort[65] = "";
+    char apPasswort[65] = "y!Q#u_pPx_%L9gI";
+    char apiServer[33] = "";
+    char apiToken[33] = "";    
+};
+
+// FSM-Zustaende
+enum SystemZustand {
+    ZUSTAND_INIT,            // Einmalige Initialisierung
+    ZUSTAND_WLAN_VERBINDEN,  // Captive Portal oder Direktverbindung
+    ZUSTAND_BEREIT,          // Normalbetrieb: UDP empfangen, Heartbeat, Telnet
+    ZUSTAND_ALARM,           // Priority Mode: Nur Hardware + UDP
+    ZUSTAND_WERKSRESET       // Factory Reset
+};
+
+// ============================================================================
+// HAL - HARDWARE ABSTRACTION LAYER
+// ============================================================================
+
+namespace HAL {
+
+    // --- GPIO ---
+
+    void gpioInit() {
+        pinMode(PIN_LED_WLAN, OUTPUT);
+        pinMode(PIN_LED_ROT, OUTPUT);
+        pinMode(PIN_LED_GELB, OUTPUT);
+        pinMode(PIN_SUMMER_1, OUTPUT);
+        pinMode(PIN_SUMMER_2, OUTPUT);
+        pinMode(PIN_TASTER, INPUT_PULLUP);
+
+        digitalWrite(PIN_LED_WLAN, LOW);
+        digitalWrite(PIN_LED_ROT, LOW);
+        digitalWrite(PIN_LED_GELB, LOW);
+        digitalWrite(PIN_SUMMER_1, LOW);
+        digitalWrite(PIN_SUMMER_2, LOW);
+    }
+
+    void wlanLed(bool an) {
+        digitalWrite(PIN_LED_WLAN, an ? HIGH : LOW);
+    }
+
+    void wlanLedToggle() {
+        digitalWrite(PIN_LED_WLAN, !digitalRead(PIN_LED_WLAN));
+    }
+
+    // Alarm-Hardware: Abwechselnd Rot/Gelb + Summer im 200ms-Takt
+    void alarmHardwareSetzen(bool phase) {
+        digitalWrite(PIN_LED_ROT,  phase ? HIGH : LOW);
+        digitalWrite(PIN_SUMMER_2, phase ? HIGH : LOW);
+        digitalWrite(PIN_LED_GELB, phase ? LOW : HIGH);
+        digitalWrite(PIN_SUMMER_1, phase ? HIGH : LOW);
+    }
+
+    void alarmHardwareAus() {
+        digitalWrite(PIN_SUMMER_1, LOW);
+        digitalWrite(PIN_SUMMER_2, LOW);
+        digitalWrite(PIN_LED_ROT, LOW);
+        digitalWrite(PIN_LED_GELB, LOW);
+    }
+
+    bool tasterGedrueckt() {
+        return digitalRead(PIN_TASTER) == LOW;
+    }
+
+    // --- Watchdog ---
+
+    Ticker watchdogTicker;
+    volatile int watchdogZaehler = 0;
+    volatile bool mussNeustarten = false;
+
+    void ICACHE_RAM_ATTR watchdogISR() {
+        watchdogZaehler++;
+        if (watchdogZaehler >= WATCHDOG_TIMEOUT_SEK) mussNeustarten = true;
+    }
+
+    void watchdogStarten() {
+        watchdogTicker.attach(1.0, watchdogISR);
+    }
+
+    void watchdogStoppen() {
+        watchdogTicker.detach();
+    }
+
+    void watchdogFuettern() {
+        watchdogZaehler = 0;
+    }
+
+    bool watchdogAusgeloest() {
+        return mussNeustarten;
+    }
+
+    // --- System ---
+
+    void init() {
+        Serial.begin(9600);
+        gpioInit();
+    }
+
+    void neustart() {
+        delay(100);
+        ESP.restart();
+    }
+
+    unsigned long zeitMs() { return millis(); }
+    uint32_t freierHeap() { return ESP.getFreeHeap(); }
+    String resetGrund() { return ESP.getResetReason(); }
+    void cpuFreigeben() { yield(); }
+
+    // --- Flash (LittleFS) ---
+
+    bool flashInit() { return LittleFS.begin(); }
+    void flashFormatieren() { LittleFS.format(); }
+
+    // --- WiFi ---
+
+    bool wlanVerbunden() { return WiFi.status() == WL_CONNECTED; }
+    String wlanSsid() { return WiFi.SSID(); }
+    int wlanRssi() { return WiFi.RSSI(); }
+    String wlanIp() { return WiFi.localIP().toString(); }
+
+    void wlanVerbinden(const char* ssid, const char* pw) { WiFi.begin(ssid, pw); }
+    void wlanTrennen() { WiFi.disconnect(true); }
+
+    int wlanScanStarten() { WiFi.scanNetworks(true); return 0; }
+    int wlanScanErgebnis() { return WiFi.scanComplete(); }
+    String wlanScanSsid(int i) { return WiFi.SSID(i); }
+    int wlanScanRssi(int i) { return WiFi.RSSI(i); }
+    void wlanScanLoeschen() { WiFi.scanDelete(); }
+
+    void wlanCredentialsLoeschen() {
+        WiFiManager wm;
+        wm.resetSettings();
+    }
+
+    // --- UDP ---
+
+    WiFiUDP udpSocket;
+    const unsigned int LOKALER_PORT = 4210;
+
+    // Zwischenspeicher fuer Sender-Adresse (vor strtok sichern!)
+    IPAddress letzterSenderIp;
+    unsigned int letzterSenderPort = 0;
+
+    void udpStarten() { udpSocket.begin(LOKALER_PORT); }
+
+    int udpPaketVerfuegbar() { return udpSocket.parsePacket(); }
+
+    // Liest Paket und merkt sich Absender-Info fuer ACK
+    int udpLesen(char* buf, size_t maxLen) {
+        letzterSenderIp = udpSocket.remoteIP();
+        letzterSenderPort = udpSocket.remotePort();
+        return udpSocket.read(buf, maxLen);
+    }
+
+    void udpAntworten(const char* daten) {
+        udpSocket.beginPacket(letzterSenderIp, letzterSenderPort);
+        udpSocket.print(daten);
+        udpSocket.endPacket();
+    }
+
+    void udpFlush() { udpSocket.flush(); }
+
+    // --- mDNS ---
+
+    bool mdnsStarten(const char* hostname) { return MDNS.begin(hostname); }
+    void mdnsUpdate() { MDNS.update(); }
+
+    // --- Telnet ---
+
+    void telnetStarten() { TelnetStream.begin(); }
+    bool telnetVerfuegbar() { return TelnetStream.available(); }
+    String telnetLesen() { String s = TelnetStream.readStringUntil('\n'); s.trim(); return s; }
+    void telnetSchreiben(const char* msg) { TelnetStream.println(msg); TelnetStream.flush(); }
+    void telnetStoppen() { TelnetStream.stop(); }
+
+} // namespace HAL
+
+// ============================================================================
+// SECURITY - Sicherheitsfunktionen (plattformunabhaengig)
+// ============================================================================
+
+namespace Security {
+
+    // Constant-Time Vergleich gegen Timing-Seitenkanalangriffe
+    bool sichererVergleich(const char* a, const char* b, size_t laenge) {
+        volatile uint8_t ergebnis = 0;
+        for (size_t i = 0; i < laenge; i++) {
+            ergebnis |= (uint8_t)a[i] ^ (uint8_t)b[i];
+        }
+        return ergebnis == 0;
+    }
+
+    // Prueft ob String nur aus Dezimalziffern besteht
+    bool nurZiffern(const char* str) {
+        if (str == NULL || str[0] == '\0') return false;
+        for (size_t i = 0; str[i] != '\0'; i++) {
+            if (!isdigit((unsigned char)str[i])) return false;
+        }
+        return true;
+    }
+
+    // HMAC-SHA256 -> 64 Hex-Zeichen in hexOut (min. 65 Bytes)
+    void berechneHMAC(const char* nachricht, size_t nachrichtLen,
+                      const char* secret, size_t secretLen,
+                      char* hexOut) {
+        br_hmac_key_context kc;
+        br_hmac_context ctx;
+        br_hmac_key_init(&kc, &br_sha256_vtable, secret, secretLen);
+        br_hmac_init(&ctx, &kc, 0);
+        br_hmac_update(&ctx, nachricht, nachrichtLen);
+        uint8_t result[32];
+        br_hmac_out(&ctx, result);
+        for (int i = 0; i < 32; i++)
+            sprintf(hexOut + (i * 2), "%02x", result[i]);
+        hexOut[64] = '\0';
+    }
+
+    // --- Sliding-Window Replay-Schutz ---
+
+    unsigned long replayWindowBase = 0;
+    uint32_t replayBitmap = 0;
+    unsigned long letztePersistedSeq = 0;
+
+    bool pruefeReplay(unsigned long seq) {
+        // Fall 1: Neues Paket (vor dem Fenster)
+        if (seq > replayWindowBase) {
+            unsigned long shift = seq - replayWindowBase;
+            if (shift >= REPLAY_FENSTER_GROESSE)
+                replayBitmap = 0;
+            else
+                replayBitmap <<= shift;
+            replayWindowBase = seq;
+            replayBitmap |= 1;
+            return true;
+        }
+        // Fall 2: Innerhalb des Fensters
+        unsigned long diff = replayWindowBase - seq;
+        if (diff >= REPLAY_FENSTER_GROESSE) return false; // Zu alt
+        uint32_t maske = 1UL << diff;
+        if (replayBitmap & maske) return false; // Bereits gesehen
+        replayBitmap |= maske;
+        return true;
+    }
+
+    // Flash-Wear-Schutz: Nur alle N Inkremente schreiben
+    void speichereSequenz() {
+        if (replayWindowBase - letztePersistedSeq < SEQ_PERSIST_SCHWELLE) return;
+        File f = LittleFS.open("/seq.dat", "w");
+        if (f) {
+            char buf[12];
+            snprintf(buf, sizeof(buf), "%lu", replayWindowBase);
+            f.print(buf);
+            f.close();
+            letztePersistedSeq = replayWindowBase;
+        }
+    }
+
+    void ladeSequenz() {
+        if (!LittleFS.exists("/seq.dat")) return;
+        File f = LittleFS.open("/seq.dat", "r");
+        if (f) {
+            char buf[12];
+            size_t len = f.readBytes(buf, sizeof(buf) - 1);
+            buf[len] = '\0';
+            f.close();
+            if (nurZiffern(buf)) {
+                replayWindowBase = strtoul(buf, NULL, 10);
+                letztePersistedSeq = replayWindowBase;
+            }
+        }
+    }
+
+} // namespace Security
+
+// ============================================================================
+// GLOBALER ZUSTAND
+// ============================================================================
+
+SystemKonfiguration config;
+SystemZustand aktuellerZustand = ZUSTAND_INIT;
+
+// Flags
+bool konfigurationSpeichern = false;
+bool telnetAutorisiert = false;
+bool darfLoggen = false;
+
+// Alarm
+volatile bool alarmAktiv = false;
+bool ledPhase = false;
+unsigned long letzterToggle = 0;
+
+// Timing
+unsigned long letzterVerbindungsVersuch = 0;
+unsigned long letzterScanStart = 0;
+unsigned long letzterHeartbeat = 0;
+unsigned long letzterTelnetInput = 0;
+unsigned long letztesBlinken = 0;
+unsigned long aktuellesHeartbeatIntervall = 2000;
+int scanStatus = -1;
+
+// Sicherheit
+uint8_t telnetFehlversuche = 0;
+unsigned long telnetSperreBis = 0;
+uint8_t udpPaketZaehler = 0;
+unsigned long udpZaehlerReset = 0;
+
+// ============================================================================
+// CONFIG PERSISTENZ
+// ============================================================================
+
+void konfigurationSpeichernCallback() {
+    konfigurationSpeichern = true;
+}
+
+void ladeKonfiguration() {
+    if (LittleFS.begin()) {
+        if (LittleFS.exists("/config.json")) {
+            File datei = LittleFS.open("/config.json", "r");
+            if (datei) {
+                DynamicJsonDocument doc(1024);
+                DeserializationError fehler = deserializeJson(doc, datei);
+                if (!fehler) {
+                    strlcpy(config.udpToken, doc["token"] | "", sizeof(config.udpToken));
+                    strlcpy(config.mdnsName, doc["name"] | "", sizeof(config.mdnsName));
+                    strlcpy(config.telnetPasswort, doc["tpass"] | "", sizeof(config.telnetPasswort));
+                    strlcpy(config.backupSsid, doc["bssid"] | "", sizeof(config.backupSsid));
+                    strlcpy(config.backupPasswort, doc["bpass"] | "", sizeof(config.backupPasswort));
+                    strlcpy(config.hauptWlanName, doc["hssid"] | "", sizeof(config.hauptWlanName));
+                    strlcpy(config.hauptWlanPasswort, doc["hpass"] | "", sizeof(config.hauptWlanPasswort));
+                    strlcpy(config.apPasswort, doc["appw"] | "", sizeof(config.apPasswort));
+                    strlcpy(config.apiServer, doc["apiip"] | "", sizeof(config.apiServer));
+                    strlcpy(config.apiToken, doc["apitoken"] | "", sizeof(config.apiToken));
+                }
+            }
+        }
+    }
+}
+
+void speichereKonfiguration() {
+    DynamicJsonDocument doc(1024);
+    doc["token"] = config.udpToken;
+    doc["name"] = config.mdnsName;
+    doc["tpass"] = config.telnetPasswort;
+    doc["bssid"] = config.backupSsid;
+    doc["bpass"] = config.backupPasswort;
+    doc["hssid"] = config.hauptWlanName;
+    doc["hpass"] = config.hauptWlanPasswort;
+    doc["appw"]  = config.apPasswort;
+    doc["apiip"] = config.apiServer;
+    doc["apitoken"] = config.apiToken; 
+    File datei = LittleFS.open("/config.json", "w");
+    if (datei) {
+        serializeJson(doc, datei);
+        datei.close();
+    }
+}
+
+// ============================================================================
+// LOGGING & PROTOKOLL
+// ============================================================================
+
+void sendeLogAnApi(const char* nachricht) {
+    if (!darfLoggen || !HAL::wlanVerbunden()) return;
+    // Im Alarm nur Alarm/UDP/Button-Logs durchlassen (kein Heartbeat-Spam)
+    if (alarmAktiv && strncmp(nachricht, "ALARM", 5) != 0
+                   && strncmp(nachricht, "UDP", 3) != 0
+                   && strncmp(nachricht, "Btn", 3) != 0) return;
+
+    WiFiClient client;
+    client.setTimeout(1000);
+    HTTPClient http;
+    http.setTimeout(1000);
     String serverPath = "http://" + String(config.apiServer) + "/api.php";
-    
     if (http.begin(client, serverPath)) {
         http.addHeader("Content-Type", "application/json");
-        
-        // JSON-Payload bauen: StaticJsonDocument = Stack-Allokation (schneller als Heap)
+        if (strlen(config.apiToken) > 0) {
+            http.addHeader("Authorization", String("Bearer ") + config.apiToken);
+            http.addHeader("X-ESP-Token", config.apiToken);
+        }
         StaticJsonDocument<256> doc;
-        doc["source"] = "receiver"; // Identifiziert dieses Gerät am Backend
+        doc["source"] = "receiver";
         doc["log"] = nachricht;
-        
-        String requestBody; 
-        serializeJson(doc, requestBody); // JSON zu String serialisieren
-        
-        http.POST(requestBody); // Fire & Forget - Antwort ignorieren für Speed
-        http.end(); // Verbindung schließen
+        String body;
+        serializeJson(doc, body);
+        http.POST(body);
+        http.end();
     }
-  }
 }
 
-// Vereinheitlichte Log-Funktion: Serial + Telnet + API gleichzeitig
-void sendeProtokoll(const String &nachricht) {
-  Serial.println(nachricht); // Immer auf serieller Konsole ausgeben
-  
-  // Telnet nur wenn Verbindung steht UND User eingeloggt
-  if (WiFi.status() == WL_CONNECTED && telnetAutorisiert) {
-    TelnetStream.println(nachricht); 
-    TelnetStream.flush(); // Sofort senden statt im Buffer halten
-  }
-  
-  sendeLogAnApi(nachricht); // Parallel auch an Backend
+void sendeProtokoll(const char* nachricht) {
+    Serial.println(nachricht);
+    if (HAL::wlanVerbunden() && telnetAutorisiert)
+        HAL::telnetSchreiben(nachricht);
+    sendeLogAnApi(nachricht);
 }
 
-// --- HEARTBEAT & TELEMETRIE (Priority optimized) ---
-void sendeHeartbeatAnApi() {
-    if (otaLauft) return; // Während Firmware-Update keine Netzwerk-Aktivität
-    
-    // !!! WICHTIG: PRIORITY MODE !!!
-    // Alarmsteuerung hat absolute Priorität über alle Netzwerk-Operationen
-    // HTTP-Requests können 100-500ms dauern -> LED würde stottern
-    if (alarmAktiv) return; 
+// ============================================================================
+// SERVICE-FUNKTIONEN
+// ============================================================================
 
-    // Nicht-blockierendes Timing: Nur alle X Millisekunden ausführen
-    if (millis() - letzterHeartbeat > aktuellesHeartbeatIntervall) {
-        if (WiFi.status() == WL_CONNECTED) {
-            WiFiClient client; 
-            client.setTimeout(1000); // Kurzer Timeout für Echtzeit-Feeling
-            HTTPClient http; 
-            http.setTimeout(1000);
-            
-            String serverPath = "http://" + String(config.apiServer) + "/api.php";
-            
-            if (http.begin(client, serverPath)) {
-                http.addHeader("Content-Type", "application/json");
-                
-                // Umfangreiches Telemetrie-Paket mit Systemzustand
-                StaticJsonDocument<384> doc; 
-                doc["source"] = "receiver";
-                doc["ip"] = WiFi.localIP().toString(); // Aktuelle IP für dynamische IPs
-                doc["status_msg"] = "Bereit";
-                doc["alarm_state"] = false; // Immer false hier wegen Priority Mode
-                doc["rssi"] = WiFi.RSSI(); // Signal-Stärke in dBm (wichtig für Diagnose)
-                doc["heap"] = ESP.getFreeHeap(); // Freier RAM in Bytes (Memory Leak Detektion)
+// --- UDP-Empfang und Validierung ---
+// Rueckgabe: 1 = ALARM_ON, -1 = ALARM_OFF, 0 = nichts/ungueltig
+int verarbeiteUdpEmpfang() {
+    int paketGroesse = HAL::udpPaketVerfuegbar();
+    if (!paketGroesse) return 0;
 
-                String requestBody; 
-                serializeJson(doc, requestBody);
-                int httpResponseCode = http.POST(requestBody);
-                
-                // Server antwortet mit 200 OK
-                if (httpResponseCode > 0) {
-                    aktuellesHeartbeatIntervall = HEARTBEAT_INTERVALL; // Zurück auf normale Frequenz
-                    
-                    // Server kann Commands in der Antwort mitschicken
-                    if (http.getSize() > 0) {
-                        DynamicJsonDocument antwortDoc(1024); // Heap-Allokation für variable Größe
-                        deserializeJson(antwortDoc, http.getStream()); // Direkt aus HTTP-Stream parsen
-                        
-                        if (!antwortDoc.isNull()) {
-                            // Server kann Logging remote an/ausschalten
-                            if (antwortDoc.containsKey("logging_active")) 
-                                darfLoggen = antwortDoc["logging_active"];
-                            
-                            // Config-Update über die Luft (ohne Captive Portal)
-                            if (antwortDoc.containsKey("new_config")) {
-                                JsonObject newConf = antwortDoc["new_config"];
-                                bool neustartNoetig = false;
-                                
-                                // WLAN-Credentials ändern erfordert Reconnect
-                                if (newConf.containsKey("mssid")) { 
-                                    strlcpy(config.hauptWlanName, newConf["mssid"] | "", sizeof(config.hauptWlanName)); 
-                                    neustartNoetig = true; 
-                                }
-                                // ... weitere Parameter ...
-                                
-                                if (neustartNoetig) { 
-                                    speichereKonfiguration(); // Flash schreiben
-                                    delay(500); // Flash-Write abschließen lassen
-                                    ESP.restart(); // Neustart mit neuer Config
-                                }
-                            }
-                            
-                            // Remote-Befehle vom Server
-                            if (antwortDoc.containsKey("command")) {
-                                String befehl = antwortDoc["command"];
-                                if (befehl == "REBOOT") { 
-                                    delay(500); 
-                                    ESP.restart(); 
-                                }
-                                else if (befehl == "RESET") { 
-                                    LittleFS.format(); // Flash löschen
-                                    WiFiManager wm; 
-                                    wm.resetSettings(); // WiFi-Credentials löschen
-                                    ESP.restart(); 
-                                }
-                                else if (befehl == "ALARM_ON") { 
-                                    alarmAktiv = true; // Server kann Alarm auch auslösen
-                                }
-                            }
+    // DoS-Schutz: Rate Limiting
+    if (udpPaketZaehler >= UDP_MAX_PAKETE_PRO_MINUTE) {
+        if (HAL::zeitMs() - udpZaehlerReset > 60000) {
+            udpPaketZaehler = 0;
+            udpZaehlerReset = HAL::zeitMs();
+        } else {
+            HAL::udpFlush();
+            return 0;
+        }
+    }
+    udpPaketZaehler++;
+
+    // char-Array basiertes Parsing (kein Arduino String auf dem Hot-Path)
+    char puffer[512];
+    int laenge = HAL::udpLesen(puffer, sizeof(puffer) - 1);
+    if (laenge <= 0) return 0;
+    puffer[laenge] = '\0';
+
+    // Whitespace trimmen
+    while (laenge > 0 && (puffer[laenge-1] == '\n' || puffer[laenge-1] == '\r' || puffer[laenge-1] == ' '))
+        puffer[--laenge] = '\0';
+
+    // Arbeitskopie fuer strtok (destruktiv)
+    char arbeitskopie[512];
+    strlcpy(arbeitskopie, puffer, sizeof(arbeitskopie));
+
+    // Format: "BEFEHL:SEQUENZNUMMER:HMAC_SIGNATUR"
+    char* befehl = strtok(arbeitskopie, ":");
+    char* seqString = strtok(NULL, ":");
+    char* empfangeneSignatur = strtok(NULL, ":");
+
+    if (befehl == NULL || seqString == NULL || empfangeneSignatur == NULL) return 0;
+    if (strtok(NULL, ":") != NULL) return 0; // Keine Extra-Felder
+
+    // isdigit-Validierung
+    if (!Security::nurZiffern(seqString)) return 0;
+
+    // HMAC berechnen und vergleichen
+    char payload[256];
+    int payloadLen = snprintf(payload, sizeof(payload), "%s:%s", befehl, seqString);
+    if (payloadLen < 0 || (size_t)payloadLen >= sizeof(payload)) return 0;
+
+    char berechneteSignatur[65];
+    Security::berechneHMAC(payload, (size_t)payloadLen,
+                           config.udpToken, strlen(config.udpToken),
+                           berechneteSignatur);
+
+    // Signaturlaenge pruefen
+    size_t sigLen = strlen(empfangeneSignatur);
+    if (sigLen != 64) return 0;
+
+    // Lowercase normalisieren
+    char sigLower[65];
+    for (size_t i = 0; i < 64; i++)
+        sigLower[i] = (char)tolower((unsigned char)empfangeneSignatur[i]);
+    sigLower[64] = '\0';
+
+    // Constant-Time Vergleich
+    if (!Security::sichererVergleich(berechneteSignatur, sigLower, 64))
+        return 0; // Falsche Signatur -> stillschweigend ignorieren
+
+    // Replay-Window pruefen
+    unsigned long empfangeneSeq = strtoul(seqString, NULL, 10);
+    if (!Security::pruefeReplay(empfangeneSeq)) return 0;
+
+    // Sequenz periodisch in Flash sichern
+    Security::speichereSequenz();
+
+    // ACK senden
+    char ack[32];
+    snprintf(ack, sizeof(ack), "ACK_SECURE:%s", seqString);
+
+    if (strcmp(befehl, CMD_ALARM_AN) == 0) {
+        if (!alarmAktiv) sendeProtokoll("ALARM ON (UDP)");
+        HAL::udpAntworten(ack);
+        return 1;
+    }
+    else if (strcmp(befehl, CMD_ALARM_AUS) == 0) {
+        if (alarmAktiv) sendeProtokoll("ALARM OFF (UDP)");
+        HAL::udpAntworten(ack);
+        return -1;
+    }
+
+    return 0; // Unbekannter Befehl
+}
+
+// --- Alarm-Hardware aktualisieren ---
+void aktualisiereAlarmHardware() {
+    if (alarmAktiv) {
+        if (HAL::zeitMs() - letzterToggle >= ALARM_TOGGLE_INTERVALL) {
+            letzterToggle = HAL::zeitMs();
+            ledPhase = !ledPhase;
+            HAL::alarmHardwareSetzen(ledPhase);
+        }
+    } else {
+        if (ledPhase) {
+            HAL::alarmHardwareAus();
+            ledPhase = false;
+        }
+    }
+}
+
+// --- Taster (Toggle + Reset) ---
+// Rueckgabe: 1 = Toggle, 2 = Werksreset, 0 = nichts
+int verarbeiteTaster() {
+    static unsigned long druckStart = 0;
+
+    if (HAL::tasterGedrueckt()) {
+        if (druckStart == 0) druckStart = HAL::zeitMs();
+        return 0;
+    }
+
+    if (druckStart == 0) return 0;
+
+    unsigned long dauer = HAL::zeitMs() - druckStart;
+    druckStart = 0;
+
+    if (dauer > TASTER_RESET_DRUCK) return 2;        // Factory Reset
+    if (dauer < TASTER_LANG_DRUCK) return 1;          // Toggle Alarm
+    return 0;
+}
+
+// --- Heartbeat mit Server-Befehlen ---
+void verarbeiteHeartbeat() {
+    if (HAL::zeitMs() - letzterHeartbeat < aktuellesHeartbeatIntervall) return;
+    if (!HAL::wlanVerbunden()) { letzterHeartbeat = HAL::zeitMs(); return; }
+
+    WiFiClient client;
+    client.setTimeout(1000);
+    HTTPClient http;
+    http.setTimeout(1000);
+    String serverPath = "http://" + String(config.apiServer) + "/api.php";
+
+    if (http.begin(client, serverPath)) {
+        http.addHeader("Content-Type", "application/json");
+        if (strlen(config.apiToken) > 0) {
+            http.addHeader("Authorization", String("Bearer ") + config.apiToken);
+            http.addHeader("X-ESP-Token", config.apiToken);
+        }
+        StaticJsonDocument<384> doc;
+        doc["source"] = "receiver";
+        doc["ip"] = HAL::wlanIp();
+        doc["status_msg"] = alarmAktiv ? "ALARM" : "Bereit";
+        doc["alarm_state"] = alarmAktiv;
+        doc["rssi"] = HAL::wlanRssi();
+        doc["heap"] = HAL::freierHeap();
+        doc["uptime"] = millis() / 1000;              // NEU
+        doc["reset_reason"] = ESP.getResetReason(); 
+
+        String body;
+        serializeJson(doc, body);
+        int code = http.POST(body);
+
+        if (code > 0) {
+            aktuellesHeartbeatIntervall = HEARTBEAT_INTERVALL;
+
+            if (code == 200) {
+                String payload = http.getString();
+                DynamicJsonDocument antwort(1024);
+                deserializeJson(antwort, payload);
+
+                if (!antwort.isNull()) {
+                    if (antwort.containsKey("logging_active"))
+                        darfLoggen = antwort["logging_active"];
+
+                    // Remote-Konfigurationsupdate
+                    if (antwort.containsKey("new_config")) {
+                        JsonObject newConf = antwort["new_config"];
+                        bool neustartNoetig = false;
+                        if (newConf.containsKey("mssid")) {
+                            strlcpy(config.hauptWlanName, newConf["mssid"] | "", sizeof(config.hauptWlanName));
+                            neustartNoetig = true;
+                        }
+                        if (newConf.containsKey("mpass")) {
+                            strlcpy(config.hauptWlanPasswort, newConf["mpass"] | "", sizeof(config.hauptWlanPasswort));
+                            neustartNoetig = true;
+                        }
+                        if (newConf.containsKey("bssid")) {
+                           strlcpy(config.backupSsid, newConf["bssid"] | "", sizeof(config.backupSsid));
+                            neustartNoetig = true;
+                        }
+                        if (newConf.containsKey("bpass")) {
+                         strlcpy(config.backupPasswort, newConf["bpass"] | "", sizeof(config.backupPasswort));
+                            neustartNoetig = true;
+                        }
+                        if (newConf.containsKey("apiip")) {
+                            strlcpy(config.apiServer, newConf["apiip"] | "", sizeof(config.apiServer));
+                            neustartNoetig = true;
+                        }
+                        if (newConf.containsKey("tpass")) {
+                            strlcpy(config.telnetPasswort, newConf["tpass"] | "", sizeof(config.telnetPasswort));
+                            neustartNoetig = true;
+                        }
+                        speichereKonfiguration();
+                        if (neustartNoetig) {
+                            delay(500);
+                            HAL::neustart();
                         }
                     }
-                } else { 
-                    // Server nicht erreichbar -> Backoff-Strategie
-                    aktuellesHeartbeatIntervall = 60000; // Nur alle 60s probieren statt alle 2s
+
+                    // Remote-Befehle
+                    if (antwort.containsKey("command")) {
+                        String befehl = antwort["command"];
+                        if (befehl == "REBOOT") { delay(500); HAL::neustart(); }
+                        else if (befehl == "RESET") {
+                            HAL::flashFormatieren();
+                            HAL::wlanCredentialsLoeschen();
+                            HAL::neustart();
+                        }
+                        else if (befehl == "ALARM_ON") { alarmAktiv = true; }
+                        else if (befehl == "ALARM_OFF") { alarmAktiv = false; }
+                    }
                 }
-                http.end();
-            } else { 
-                // Verbindungsaufbau fehlgeschlagen
-                aktuellesHeartbeatIntervall = 60000; 
             }
+        } else {
+            aktuellesHeartbeatIntervall = 60000;
         }
-        letzterHeartbeat = millis(); // Timestamp aktualisieren
+        http.end();
+    } else {
+        aktuellesHeartbeatIntervall = 60000;
     }
+    letzterHeartbeat = HAL::zeitMs();
 }
 
-// --- CONFIG PERSISTENZ ---
-// Callback vom WiFiManager wenn User Config geändert hat
-void konfigurationSpeichernCallback() { 
-    konfigurationSpeichern = true; 
-}
-
-// Lädt gespeicherte Konfiguration aus Flash-Dateisystem
-void ladeKonfiguration() {
-  if (LittleFS.begin()) { // Dateisystem mounten
-    if (LittleFS.exists("/config.json")) { // Prüfen ob Config existiert
-      File datei = LittleFS.open("/config.json", "r"); // Read-Only öffnen
-      
-      if (datei) {
-        DynamicJsonDocument doc(1024); // JSON Parser mit 1KB Buffer
-        DeserializationError fehler = deserializeJson(doc, datei);
-        
-        if (!fehler) {
-            // Alle Werte aus JSON in Config-Struct kopieren
-            // strlcpy = sichere String-Kopie mit Längen-Limitierung (Buffer Overflow Schutz)
-            // doc["key"] | "" = Fallback auf leeren String wenn Key nicht existiert
-            strlcpy(config.udpToken, doc["token"] | "", sizeof(config.udpToken));
-            strlcpy(config.mdnsName, doc["name"] | "", sizeof(config.mdnsName));
-            strlcpy(config.telnetPasswort, doc["tpass"] | "", sizeof(config.telnetPasswort));
-            strlcpy(config.backupSsid, doc["bssid"] | "", sizeof(config.backupSsid));
-            strlcpy(config.backupPasswort, doc["bpass"] | "", sizeof(config.backupPasswort));
-            strlcpy(config.hauptWlanName, doc["hssid"] | "", sizeof(config.hauptWlanName)); 
-            strlcpy(config.hauptWlanPasswort, doc["hpass"] | "", sizeof(config.hauptWlanPasswort)); 
-            strlcpy(config.apPasswort, doc["appw"] | "", sizeof(config.apPasswort));
-            strlcpy(config.apiServer, doc["apiip"] | "", sizeof(config.apiServer));
-        }
-      }
-    }
-  }
-}
-
-// Schreibt aktuelle Config zurück ins Flash
-void speichereKonfiguration() {
-  DynamicJsonDocument doc(1024);
-  
-  // Config-Struct in JSON umwandeln
-  doc["token"] = config.udpToken; 
-  doc["name"] = config.mdnsName; 
-  doc["tpass"] = config.telnetPasswort;
-  doc["bssid"] = config.backupSsid; 
-  doc["bpass"] = config.backupPasswort; 
-  doc["hssid"] = config.hauptWlanName; 
-  doc["hpass"] = config.hauptWlanPasswort; 
-  doc["appw"]  = config.apPasswort; 
-  doc["apiip"] = config.apiServer;
-  
-  File datei = LittleFS.open("/config.json", "w"); // Write-Mode (überschreibt alte Datei)
-  if (datei) { 
-    serializeJson(doc, datei); // JSON direkt in Datei schreiben
-    datei.close(); // Wichtig: Datei schließen um Flash-Write abzuschließen
-  }
-}
-
-// --- OTA DIENST ---
-// Initialisiert Over-The-Air Firmware-Update Dienst
-void starteOtaDienst() {
-  ArduinoOTA.setPort(8266); // Standard OTA-Port
-  ArduinoOTA.setHostname("alarm-receiver"); // Hostname für OTA-Discovery
-  
-  // Passwortschutz wenn Telnet-Passwort gesetzt (gleiches PW für beide)
-  if (strlen(config.telnetPasswort) > 0) 
-    ArduinoOTA.setPassword(config.telnetPasswort);
-  
-  // Callbacks für Update-Prozess
-  ArduinoOTA.onStart([]() { 
-    watchdogTicker.detach(); // Watchdog deaktivieren während Update
-    otaLauft = true; // Verhindert andere Operationen
-  });
-  
-  ArduinoOTA.onEnd([]() { 
-    delay(1000); // Kurz warten
-    otaLauft = false; 
-  });
-  
-  // Bei Fehler: Sauberer Neustart statt hängen bleiben
-  ArduinoOTA.onError([](ota_error_t fehler) { 
-    otaLauft = false; 
-    delay(1000); 
-    ESP.restart(); 
-  });
-  
-  ArduinoOTA.begin(); // OTA-Dienst aktivieren
-}
-
-// Aktualisiert WLAN-Status-LED (blinkt wenn nicht verbunden)
+// --- WLAN-LED ---
 void aktualisiereWlanLed() {
-    if (WiFi.status() == WL_CONNECTED) {
-        digitalWrite(PIN_LED_WLAN, HIGH); // Dauerhaft an wenn verbunden
-    } else { 
-        // Nicht-blockierendes Blinken mit millis()
-        if (millis() - letztesBlinken >= BLINK_INTERVALL) { 
-            digitalWrite(PIN_LED_WLAN, !digitalRead(PIN_LED_WLAN)); // Toggle LED
-            letztesBlinken = millis(); 
+    if (HAL::wlanVerbunden()) {
+        HAL::wlanLed(true);
+    } else {
+        if (HAL::zeitMs() - letztesBlinken >= BLINK_INTERVALL) {
+            HAL::wlanLedToggle();
+            letztesBlinken = HAL::zeitMs();
         }
     }
 }
 
-// --- WLAN FAILOVER ---
-// Automatischer Wechsel zwischen Haupt- und Backup-WLAN
+// --- WLAN Failover ---
 void verwalteWlanVerbindung() {
-    static int stabilitaetsZaehler = 0; // Persistent zwischen Aufrufen
-    
-    // Performance: Keine Scans während Alarm (WLAN-Scan dauert ~1 Sekunde)
-    if (alarmAktiv) return;
+    static int stabilitaetsZaehler = 0;
 
-    if (WiFi.status() == WL_CONNECTED) {
-        String aktuelleSsid = WiFi.SSID(); // Name des aktuellen Netzwerks
-        
-        // Nur aktiv wenn auf Backup-Netzwerk und Hauptnetz konfiguriert
-        if (aktuelleSsid == String(config.backupSsid) && strlen(config.backupSsid) > 0) {
-            
-            // Asynchroner WLAN-Scan starten (nicht-blockierend)
-            if (millis() - letzterScanStart > WLAN_SCAN_INTERVALL && scanStatus == -1) { 
-                letzterScanStart = millis(); 
-                WiFi.scanNetworks(true); // true = asynchron
-                scanStatus = 0; // 0 = Scan läuft
+    if (HAL::wlanVerbunden()) {
+        String ssid = HAL::wlanSsid();
+        if (ssid == String(config.backupSsid) && strlen(config.backupSsid) > 0) {
+            if (HAL::zeitMs() - letzterScanStart > WLAN_SCAN_INTERVALL && scanStatus == -1) {
+                letzterScanStart = HAL::zeitMs();
+                HAL::wlanScanStarten();
+                scanStatus = 0;
             }
-            
-            // Scan-Ergebnisse abrufen wenn fertig
             if (scanStatus == 0) {
-                int n = WiFi.scanComplete(); // -1=noch nicht fertig, -2=fehlgeschlagen, >=0=Anzahl Netze
-                
+                int n = HAL::wlanScanErgebnis();
                 if (n >= 0) {
-                    bool hauptNetzGefunden = false;
-                    
-                    // Alle gefundenen Netze durchsuchen
+                    bool gefunden = false;
                     for (int i = 0; i < n; i++) {
-                        if (WiFi.SSID(i) == String(config.hauptWlanName) && String(config.hauptWlanName).length() > 0) {
-                          // Signal-Qualität prüfen (nur wechseln wenn gut genug)
-                          if (WiFi.RSSI(i) > RSSI_SCHWELLWERT) { 
-                            hauptNetzGefunden = true; 
-                            break; 
-                          }
+                        if (HAL::wlanScanSsid(i) == String(config.hauptWlanName) &&
+                            String(config.hauptWlanName).length() > 0 &&
+                            HAL::wlanScanRssi(i) > RSSI_SCHWELLWERT) {
+                            gefunden = true;
+                            break;
                         }
                     }
-                    
-                    // Stabilitäts-Filter: Hauptnetz muss mehrfach erkannt werden
-                    if (hauptNetzGefunden) {
+                    if (gefunden) {
                         stabilitaetsZaehler++;
-                        
-                        // Nach 3 erfolgreichen Scans: Wechsel durchführen
                         if (stabilitaetsZaehler >= STABILITAETS_SCHWELLWERT) {
-                            watchdogTicker.detach(); // Watchdog deaktivieren (Reconnect kann dauern)
-                            
-                            // Visuelles Feedback: Schnelles LED-Blinken
-                            for(int k=0; k<10; k++) { 
-                                digitalWrite(PIN_LED_WLAN, !digitalRead(PIN_LED_WLAN)); 
-                                delay(50); 
-                            }
-                            
-                            // Zum Hauptnetz wechseln
-                            if(strlen(config.hauptWlanPasswort) > 0) 
-                                WiFi.begin(config.hauptWlanName, config.hauptWlanPasswort);
-                            else 
-                                ESP.restart(); // Ohne Passwort: Neustart (sollte nicht vorkommen)
+                            HAL::watchdogStoppen();
+                            for (int k = 0; k < 10; k++) { HAL::wlanLedToggle(); delay(50); }
+                            if (strlen(config.hauptWlanPasswort) > 0)
+                                HAL::wlanVerbinden(config.hauptWlanName, config.hauptWlanPasswort);
+                            else
+                                HAL::neustart();
                         }
-                    } else { 
-                        stabilitaetsZaehler = 0; // Reset wenn Hauptnetz verschwunden
+                    } else {
+                        stabilitaetsZaehler = 0;
                     }
-                    
-                    WiFi.scanDelete(); // Speicher freigeben
-                    scanStatus = -1; // Bereit für nächsten Scan
+                    HAL::wlanScanLoeschen();
+                    scanStatus = -1;
                 }
             }
-        } else { 
-            stabilitaetsZaehler = 0; // Reset wenn auf Hauptnetz
+        } else {
+            stabilitaetsZaehler = 0;
         }
     } else {
-        // Nicht verbunden: Versuche Backup-Netzwerk
-        if (millis() - letzterVerbindungsVersuch > WLAN_WIEDERHOLUNGS_INTERVALL) { 
-            
+        if (HAL::zeitMs() - letzterVerbindungsVersuch > WLAN_WIEDERHOLUNGS_INTERVALL) {
             if (strlen(config.backupSsid) > 0) {
-                WiFi.disconnect(true); // true = RF ausschalten
-                
-                // Watchdog während Reconnect füttern (kann mehrere Sekunden dauern)
-                unsigned long start = millis();
-                while(millis() - start < 500) { 
-                    watchdogZaehler = 0; 
-                    yield(); // CPU für WiFi-Stack freigeben
-                } 
-                
-                WiFi.begin(config.backupSsid, config.backupPasswort);
-                letzterVerbindungsVersuch = millis(); 
-                letzterScanStart = millis(); 
+                HAL::wlanTrennen();
+                unsigned long start = HAL::zeitMs();
+                while (HAL::zeitMs() - start < 500) { HAL::watchdogFuettern(); HAL::cpuFreigeben(); }
+                HAL::wlanVerbinden(config.backupSsid, config.backupPasswort);
+                letzterVerbindungsVersuch = HAL::zeitMs();
+                letzterScanStart = HAL::zeitMs();
                 stabilitaetsZaehler = 0;
-            } else { 
-                letzterVerbindungsVersuch = millis(); 
+            } else {
+                letzterVerbindungsVersuch = HAL::zeitMs();
             }
         }
     }
 }
 
-// --- SECURE UDP (Speed Optimized) ---
-// Kernfunktion: Empfängt und validiert kryptografisch signierte Alarm-Befehle
-void verarbeiteUdpEmpfang() {
-    int paketGroesse = udp.parsePacket(); // Prüft ob Daten im Socket-Buffer
-    
-    if (paketGroesse) {
-        // DoS-Schutz: Rate Limiting
-        if (udpPaketZaehler >= UDP_MAX_PAKETE_PRO_MINUTE) {
-             // 60-Sekunden-Fenster abgelaufen? -> Counter zurücksetzen
-             if (millis() - udpZaehlerReset > 60000) { 
-                 udpPaketZaehler = 0; 
-                 udpZaehlerReset = millis(); 
-             } else { 
-                 udp.flush(); // Paket verwerfen wenn Limit überschritten
-                 return; 
-             }
-        }
-        udpPaketZaehler++;
-
-        char puffer[512]; // Buffer für eingehendes Paket
-        int laenge = udp.read(puffer, sizeof(puffer) - 1); // -1 für Nullterminator
-        if (laenge > 0) puffer[laenge] = 0; // String abschließen
-        
-        String roheNachricht = String(puffer); 
-        roheNachricht.trim(); // Whitespace entfernen
-        
-        // Sender-Info für ACK-Antwort
-        IPAddress senderIp = udp.remoteIP();
-        unsigned int senderPort = udp.remotePort(); 
-
-        // Paket-Format: "BEFEHL:SEQUENZNUMMER:HMAC_SIGNATUR"
-        int ersterTrenner = roheNachricht.indexOf(':');
-        int zweiterTrenner = roheNachricht.lastIndexOf(':');
-
-        if (ersterTrenner == -1) return; // Ungültiges Format -> ignorieren
-
-        // Paket in Komponenten zerlegen
-        String befehl = roheNachricht.substring(0, ersterTrenner);
-        String seqString = roheNachricht.substring(ersterTrenner + 1, zweiterTrenner);
-        String empfangeneSignatur = roheNachricht.substring(zweiterTrenner + 1);
-        
-        // HMAC nur berechnen wenn Format plausibel (spart CPU bei Müll-Paketen)
-        String payload = befehl + ":" + seqString;
-        String berechneteSignatur = berechneHMAC(payload, config.udpToken);
-
-        // Constant-Time-Vergleich (gegen Timing-Attacks)
-        if (berechneteSignatur.equalsIgnoreCase(empfangeneSignatur)) {
-            // Sequenznummer extrahieren (Base 10)
-            unsigned long empfangeneSeq = strtoul(seqString.c_str(), NULL, 10);
-            letzteSequenceNumber = empfangeneSeq; // Vereinfachtes Replay-Tracking
-            
-            // Befehl ausführen
-            if (befehl == CMD_ALARM_AN) {
-                if (!alarmAktiv) { 
-                    alarmAktiv = true;
-                    sendeProtokoll("ALARM ON (UDP)");
-                }
-                // ACK zurücksenden mit Sequenznummer (Sender kann Zustellung prüfen)
-                udp.beginPacket(senderIp, senderPort); 
-                udp.print("ACK_SECURE:" + seqString); 
-                udp.endPacket();
-            } 
-            else if (befehl == CMD_ALARM_AUS) {
-                if (alarmAktiv) {
-                    alarmAktiv = false;
-                    sendeProtokoll("ALARM OFF (UDP)");
-                }
-                udp.beginPacket(senderIp, senderPort); 
-                udp.print("ACK_SECURE:" + seqString); 
-                udp.endPacket();
-            }
-            // Unbekannte Befehle werden ignoriert (keine Fehlermeldung = Info Leak vermeiden)
-        }
-        // Falsche Signatur wird stillschweigend ignoriert (kein Logging = DoS vermeiden)
-    }
-}
-
-// --- HARDWARE STEUERUNG (Low Latency) ---
-// Zeitkritische Funktion: Steuert LED/Summer ohne Verzögerung
-void aktualisiereAlarm() {
-    if(alarmAktiv){
-        unsigned long currentMillis = millis(); // Einmal pro Durchlauf abfragen
-        
-        // Nicht-blockierendes Toggle-Timing
-        if (currentMillis - letzterToggle >= ALARM_TOGGLE_INTERVALL) {
-            letzterToggle = currentMillis;
-            ledStatus = !ledStatus; // Zustand umkehren
-            
-            // Kreuzweise Ansteuerung: Rot+Summer2 wechseln mit Gelb+Summer1
-            // Effekt: Alternierendes Blinken/Piepen für Aufmerksamkeit
-            digitalWrite(PIN_LED_ROT, ledStatus ? HIGH : LOW); 
-            digitalWrite(PIN_SUMMER_2, ledStatus ? HIGH : LOW);
-            digitalWrite(PIN_LED_GELB, !ledStatus ? HIGH : LOW); 
-            digitalWrite(PIN_SUMMER_1, ledStatus ? HIGH : LOW);
-        }
-    } else {
-        // Nur ausschalten wenn vorher an (vermeidet unnötige digitalWrite-Calls)
-        if (ledStatus) {
-            digitalWrite(PIN_SUMMER_1, LOW); 
-            digitalWrite(PIN_SUMMER_2, LOW);
-            digitalWrite(PIN_LED_ROT, LOW); 
-            digitalWrite(PIN_LED_GELB, LOW);
-            ledStatus = false;
-        }
-    }
-}
-
-// --- TELNET MIT EASTER EGG ---
-// Remote Debug Console mit Brute-Force-Schutz
+// --- Telnet ---
 void pruefeTelnetZugang() {
-  // Sperre aktiv? Keine Eingaben verarbeiten
-  if (millis() < telnetSperreBis) return;
-  
-  // Nur aktiv werden wenn tatsächlich Daten verfügbar (spart CPU)
-  if (TelnetStream.available()) {
-    String eingabe = TelnetStream.readStringUntil('\n'); 
-    eingabe.trim(); 
-    
-    if (eingabe.length() == 0) return; // Leere Zeilen ignorieren
-    
-    // Passwort-Prüfung
+    if (HAL::zeitMs() < telnetSperreBis) return;
+
+    if (!HAL::telnetVerfuegbar()) return;
+
+    String eingabe = HAL::telnetLesen();
+    if (eingabe.length() == 0) return;
+
     if (eingabe == String(config.telnetPasswort)) {
-        telnetAutorisiert = true; 
-        telnetFehlversuche = 0; 
-        TelnetStream.println("LOGIN OK");
-    } 
-    // Konami Code Easter Egg 
-    else if (eingabe.equalsIgnoreCase("up up down down left right left right b a")) {
-        TelnetStream.println("\n>> CHEAT CODE DETECTED <<");
-        TelnetStream.println("   GOD MODE: [ACTIVATED]");
-        TelnetStream.println("   UNLIMITED AMMO: [TRUE]");
+        telnetAutorisiert = true;
+        telnetFehlversuche = 0;
+        HAL::telnetSchreiben("LOGIN OK");
     }
-    // Falsches Passwort
+    else if (eingabe.equalsIgnoreCase("up up down down left right left right b a")) {
+        HAL::telnetSchreiben("\n>> CHEAT CODE DETECTED <<");
+        HAL::telnetSchreiben("   GOD MODE: [ACTIVATED]");
+        HAL::telnetSchreiben("   UNLIMITED AMMO: [TRUE]");
+    }
     else {
         telnetFehlversuche++;
-        
-        // Nach 3 Versuchen: 5 Minuten Sperre
-        if (telnetFehlversuche >= 3) { 
-            telnetSperreBis = millis() + 300000; 
-            TelnetStream.stop(); // Verbindung kappen
-        } else { 
-            TelnetStream.println("Wrong PW"); 
-        }
-    }
-  }
-}
-
-// --- INPUT & SAFE RESET ---
-// Hardware-Taster mit Multi-Funktion
-void ueberwacheTaster() {
-    static unsigned long druckStart = 0; // Persistent: Wann wurde gedrückt
-    bool aktuellerStatus = digitalRead(PIN_TASTER); // LOW = gedrückt (Pull-Up)
-
-    if (aktuellerStatus == LOW) { 
-        // Taste wird gedrückt: Timestamp merken
-        if (druckStart == 0) druckStart = millis();
-    } else { 
-        // Taste losgelassen: Aktion je nach Druckdauer
-        if (druckStart != 0) { 
-            unsigned long dauer = millis() - druckStart;
-            
-            // Langer Druck (>10s) = Factory Reset
-            if (dauer > TASTER_RESET_DRUCK) {
-                 sendeProtokoll("RESET!");
-                 watchdogTicker.detach(); // Watchdog aus (Reset dauert)
-                 LittleFS.format(); // Komplettes Flash löschen
-                 WiFiManager wm; 
-                 wm.resetSettings(); // Gespeicherte WiFi-Credentials löschen
-                 ESP.restart(); // Neustart -> Captive Portal
-            }
-            // Kurzer Druck (<1s) = Alarm Toggle
-            else if (dauer < TASTER_LANG_DRUCK) {
-                 alarmAktiv = !alarmAktiv; // Manuelles Ein/Ausschalten
-                 sendeProtokoll("Btn Toggle");
-            }
-            // Mittlere Druckdauer (1-10s): Keine Aktion (Sicherheitsfenster)
-            
-            druckStart = 0; // Reset für nächsten Tastendruck
+        if (telnetFehlversuche >= MAX_TELNET_VERSUCHE) {
+            telnetSperreBis = HAL::zeitMs() + 300000;
+            HAL::telnetStoppen();
+        } else {
+            HAL::telnetSchreiben("Wrong PW");
         }
     }
 }
 
-// --- SETUP ---
-// Einmalige Initialisierung beim Systemstart
-void setup() {
-    Serial.begin(9600); // Serielle Konsole für Debugging
-    
-    // Hardware-Pins konfigurieren
-    pinMode(PIN_LED_WLAN, OUTPUT); 
-    pinMode(PIN_LED_ROT, OUTPUT); 
-    pinMode(PIN_LED_GELB, OUTPUT);
-    pinMode(PIN_SUMMER_1, OUTPUT); 
-    pinMode(PIN_SUMMER_2, OUTPUT); 
-    pinMode(PIN_TASTER, INPUT_PULLUP); // Interner Pull-Up: HIGH wenn offen, LOW wenn gedrückt
-    
-    // Alle Ausgänge initial ausschalten (sicherer Startzustand)
-    digitalWrite(PIN_LED_WLAN, LOW); 
-    digitalWrite(PIN_LED_ROT, LOW); 
-    digitalWrite(PIN_LED_GELB, LOW);
-    digitalWrite(PIN_SUMMER_1, LOW); 
-    digitalWrite(PIN_SUMMER_2, LOW);
+// ============================================================================
+// FINITE STATE MACHINE
+// ============================================================================
 
-    ladeKonfiguration(); // Config aus Flash laden
-    
-    WiFiManager wm; // Captive Portal für WiFi-Setup
-    wm.setSaveConfigCallback(konfigurationSpeichernCallback); // Callback wenn User speichert
-    
-    // Custom Config-Parameter im Portal
-    WiFiManagerParameter custom_telnet_pass("tpass", "Telnet PW", config.telnetPasswort, 20);
-    WiFiManagerParameter custom_token("token", "HMAC Secret", config.udpToken, 40);
-    // ... (weitere Parameter gekürzt)
-    
-    wm.addParameter(&custom_telnet_pass); 
-    wm.addParameter(&custom_token); 
-    // ...
+void fsmInit() {
+    HAL::init();
+    HAL::flashInit();
+    // Verschleierte Defaults entschluesseln (einmalig beim Start)
+    // Falls config.json existiert, werden diese sowieso ueberschrieben
+    deobfuscate(config.apPasswort);
+    deobfuscate(config.telnetPasswort);   
+    ladeKonfiguration();
+    Security::ladeSequenz();
+    aktuellerZustand = ZUSTAND_WLAN_VERBINDEN;
+}
 
-    wm.setClass("invert"); // Dark Mode CSS
-    wm.setConfigPortalTimeout(180); // Portal schließt nach 3min ohne Interaktion
-    wm.setConnectTimeout(30); // 30s pro WiFi-Verbindungsversuch      
+void fsmWlanVerbinden() {
+    WiFiManager wm;
+    wm.setSaveConfigCallback(konfigurationSpeichernCallback);
 
-    // Wenn Hauptnetz konfiguriert: Direkt verbinden ohne Portal
-    if (strlen(config.hauptWlanName) > 0) 
-        WiFi.begin(config.hauptWlanName, config.hauptWlanPasswort);
-    
-    // Wenn nicht verbunden: Captive Portal starten
-    if (WiFi.status() != WL_CONNECTED) 
+    WiFiManagerParameter p_tpass("tpass", "Telnet PW", config.telnetPasswort, 20);
+    WiFiManagerParameter p_token("token", "HMAC Secret", config.udpToken, 40);
+    WiFiManagerParameter p_name("name", "mDNS Name", config.mdnsName, 32);
+    WiFiManagerParameter p_api("apiip", "API Server IP", config.apiServer, 32);
+    WiFiManagerParameter p_bssid("bssid", "Backup SSID", config.backupSsid, 32);
+    WiFiManagerParameter p_bpass("bpass", "Backup PW", config.backupPasswort, 64);
+    WiFiManagerParameter p_hssid("hssid", "Haupt SSID", config.hauptWlanName, 32);
+    WiFiManagerParameter p_hpass("hpass", "Haupt PW", config.hauptWlanPasswort, 64);
+    WiFiManagerParameter p_appw("appw", "AP Passwort", config.apPasswort, 64);
+    WiFiManagerParameter p_apitoken("apitoken", "API Token", config.apiToken, 32);
+
+    wm.addParameter(&p_tpass);
+    wm.addParameter(&p_token);
+    wm.addParameter(&p_name);
+    wm.addParameter(&p_api);
+    wm.addParameter(&p_bssid);
+    wm.addParameter(&p_bpass);
+    wm.addParameter(&p_hssid);
+    wm.addParameter(&p_hpass);
+    wm.addParameter(&p_appw);
+    wm.addParameter(&p_apitoken);
+
+    wm.setClass("invert");
+    wm.setConfigPortalTimeout(180);
+    wm.setConnectTimeout(30);
+
+    // Hauptnetz direkt versuchen
+    if (strlen(config.hauptWlanName) > 0)
+        HAL::wlanVerbinden(config.hauptWlanName, config.hauptWlanPasswort);
+
+    if (!HAL::wlanVerbunden())
         wm.autoConnect("Alarm-Empfaenger-SETUP");
 
-    // Custom Parameter-Werte übernehmen (gekürzt)
-    strlcpy(config.udpToken, custom_token.getValue(), sizeof(config.udpToken));
-    // ...
+    // Parameter uebernehmen
+    strlcpy(config.udpToken, p_token.getValue(), sizeof(config.udpToken));
+    strlcpy(config.telnetPasswort, p_tpass.getValue(), sizeof(config.telnetPasswort));
+    strlcpy(config.mdnsName, p_name.getValue(), sizeof(config.mdnsName));
+    strlcpy(config.apiServer, p_api.getValue(), sizeof(config.apiServer));
+    strlcpy(config.backupSsid, p_bssid.getValue(), sizeof(config.backupSsid));
+    strlcpy(config.backupPasswort, p_bpass.getValue(), sizeof(config.backupPasswort));
+    strlcpy(config.hauptWlanName, p_hssid.getValue(), sizeof(config.hauptWlanName));
+    strlcpy(config.hauptWlanPasswort, p_hpass.getValue(), sizeof(config.hauptWlanPasswort));
+    strlcpy(config.apPasswort, p_appw.getValue(), sizeof(config.apPasswort));
+    strlcpy(config.apiToken, p_apitoken.getValue(), sizeof(config.apiToken));
 
-    // Config speichern wenn geändert oder erfolgreich verbunden
-    if (konfigurationSpeichern || WiFi.status() == WL_CONNECTED) 
+    if (konfigurationSpeichern || HAL::wlanVerbunden())
         speichereKonfiguration();
 
-    // mDNS starten: Gerät per "alarm-receiver.local" erreichbar
-    if(MDNS.begin(config.mdnsName)) 
+    // Dienste starten
+    if (HAL::mdnsStarten(config.mdnsName))
         Serial.println("mDNS aktiv");
-    
-    TelnetStream.begin(); // Remote Debug Console starten
-    udp.begin(lokalerPort); // UDP Socket auf Port 4210 öffnen
-    starteOtaDienst(); // OTA Firmware-Update aktivieren
-    
-    // Watchdog aktivieren: ISR wird jede Sekunde aufgerufen
-    watchdogTicker.attach(1.0, watchdogInterrupt);
+    HAL::telnetStarten();
+    HAL::udpStarten();
+
+    HAL::watchdogStarten();
+    aktuellerZustand = ZUSTAND_BEREIT;
 }
 
-// --- LOOP Optimiert für Speed ---
-void loop() {
-    fuettereWauWau(); // Watchdog zurücksetzen = "Ich lebe noch"
-    beissZu();          // Prüfen ob Watchdog ausgelöst wurde
-    
-    // !!! WICHTIG: Priorisierung der Funktionen !!!
-    // Zeitkritische Hardware-Steuerung zuerst
-    verarbeiteUdpEmpfang();  // Alarm-Commands haben höchste Priorität
-    ueberwacheTaster();      // Lokale Steuerung ebenfalls kritisch
-    aktualisiereAlarm();     // Hardware-Toggle ohne Verzögerung
-    
-    // Weniger zeitkritische Netzwerk-Tasks danach
-    sendeHeartbeatAnApi();   // Telemetrie (wird bei Alarm automatisch pausiert)
-    pruefeTelnetZugang();    // Debug-Console 
-    verwalteWlanVerbindung(); // Failover (wird bei Alarm automatisch pausiert)
-    aktualisiereWlanLed();   // Status-Anzeige
-    
-    // Services die WiFi brauchen
-    if (WiFi.status() == WL_CONNECTED) { 
-        ArduinoOTA.handle(); // OTA-Updates verarbeiten
-        MDNS.update();       // mDNS Antworten senden
+void fsmBereit() {
+    // Zeitkritisch: UDP-Empfang
+    int udpResult = verarbeiteUdpEmpfang();
+    if (udpResult == 1) { alarmAktiv = true; aktuellerZustand = ZUSTAND_ALARM; return; }
+    if (udpResult == -1) { alarmAktiv = false; }
+
+    // Taster
+    int taste = verarbeiteTaster();
+    if (taste == 2) { aktuellerZustand = ZUSTAND_WERKSRESET; return; }
+    if (taste == 1) {
+        alarmAktiv = !alarmAktiv;
+        sendeProtokoll("Btn Toggle");
+        if (alarmAktiv) { aktuellerZustand = ZUSTAND_ALARM; return; }
     }
-    
-    yield(); // KRITISCH: CPU-Zeit an WiFi-Stack und TCP/IP abgeben
-             // Ohne yield() würde WiFi crashen
+
+    // Alarm-Hardware aktualisieren (fuer den Fall: OFF-Zustand aufräumen)
+    aktualisiereAlarmHardware();
+
+    // Nicht-zeitkritische Netzwerk-Tasks
+    verarbeiteHeartbeat();
+    pruefeTelnetZugang();
+    verwalteWlanVerbindung();
+    aktualisiereWlanLed();
+
+    if (HAL::wlanVerbunden())
+        HAL::mdnsUpdate();
+}
+
+void fsmAlarm() {
+    // PRIORITY MODE: Hardware-Steuerung hat Vorrang
+    // Heartbeat laeuft weiter (fuer Web-Dashboard-Steuerung),
+    // aber Telnet und WLAN-Scan bleiben pausiert.
+
+    aktualisiereAlarmHardware();
+
+    int udpResult = verarbeiteUdpEmpfang();
+    if (udpResult == -1) {
+        alarmAktiv = false;
+        aktuellerZustand = ZUSTAND_BEREIT;
+        return;
+    }
+
+    // Heartbeat: Ermoeglicht ALARM_OFF vom Web-Dashboard
+    // Tradeoff: HTTP-Request kann ~1s blockieren (kurzes LED-Stottern)
+    verarbeiteHeartbeat();
+
+    // Alarm durch Server-Befehl deaktiviert?
+    if (!alarmAktiv) {
+        aktuellerZustand = ZUSTAND_BEREIT;
+        return;
+    }
+
+    int taste = verarbeiteTaster();
+    if (taste == 2) { aktuellerZustand = ZUSTAND_WERKSRESET; return; }
+    if (taste == 1) {
+        alarmAktiv = false;
+        sendeProtokoll("Btn Toggle");
+        aktuellerZustand = ZUSTAND_BEREIT;
+        return;
+    }
+
+    // WLAN-LED auch im Alarm aktualisieren
+    aktualisiereWlanLed();
+}
+
+void fsmWerksreset() {
+    sendeProtokoll("RESET!");
+    HAL::watchdogStoppen();
+    HAL::flashFormatieren();
+    HAL::wlanCredentialsLoeschen();
+    HAL::neustart();
+}
+
+// Zentraler FSM-Dispatcher
+void fsmUpdate() {
+    switch (aktuellerZustand) {
+        case ZUSTAND_INIT:           fsmInit();          break;
+        case ZUSTAND_WLAN_VERBINDEN: fsmWlanVerbinden(); break;
+        case ZUSTAND_BEREIT:         fsmBereit();        break;
+        case ZUSTAND_ALARM:          fsmAlarm();         break;
+        case ZUSTAND_WERKSRESET:     fsmWerksreset();    break;
+    }
+}
+
+// ============================================================================
+// ARDUINO ENTRY POINTS
+// ============================================================================
+
+void setup() {
+    aktuellerZustand = ZUSTAND_INIT;
+    fsmUpdate(); // INIT -> WLAN_VERBINDEN
+    fsmUpdate(); // WLAN_VERBINDEN -> BEREIT
+}
+
+void loop() {
+    HAL::watchdogFuettern();
+    if (HAL::watchdogAusgeloest()) {
+        Serial.println("WATCHDOG RESET!");
+        HAL::neustart();
+    }
+    fsmUpdate();
+    HAL::cpuFreigeben();
 }
