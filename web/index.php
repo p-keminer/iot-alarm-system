@@ -1,14 +1,27 @@
 <?php
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
+ini_set('log_errors', 1);
+error_reporting(E_ALL);
+
+ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_samesite', 'Strict');
+ini_set('session.use_strict_mode', 1);
+if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+    ini_set('session.cookie_secure', 1);
+}
 session_start();
 
 // EINSTELLUNGEN LADEN
 $confFile = 'data/settings.json';
 $defaults = [
-    "password" => "admin", 
+    "password" => password_hash("admin", PASSWORD_BCRYPT), 
     "refresh_rate" => 2000, 
     "site_title" => "IoT Control Center",
-    "timeout_active" => false,
-    "timeout_minutes" => 5
+    "timeout_active" => true,
+    "timeout_minutes" => 5,
+    "esp_token" => bin2hex(random_bytes(16)),
+    "camera_port" => 8082
 ];
 
 $settings = [];
@@ -17,37 +30,51 @@ if (file_exists($confFile)) {
 }
 if (!$settings || !isset($settings['password'])) {
     $settings = $defaults;
-    if (!is_dir('data')) mkdir('data', 0777, true);
+    if (!is_dir('data')) mkdir('data', 0750, true);
     file_put_contents($confFile, json_encode($settings));
 }
 
 // LOGIN CHECK
-if (isset($_POST['password']) && $_POST['password'] == $settings['password']) {
-    $_SESSION['loggedin'] = true;
-    $_SESSION['last_activity'] = time();
-    $_SESSION['login_time'] = time();
-    
+$loginFailed = false;
+if (isset($_POST['password'])) {
+    $loginAttemptFile = 'data/login_attempts.json';
     $ip = $_SERVER['REMOTE_ADDR'];
-    $agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
-    $device = gethostbyaddr($ip);
-    if($device == $ip) $device = "Unknown Device";
-    
-    $userLogFile = 'data/user_logs.json';
-    $logs = file_exists($userLogFile) ? json_decode(file_get_contents($userLogFile), true) : [];
-    $newLog = [
-        'timestamp' => time(),
-        'date' => date("d.m.Y H:i:s"),
-        'ip' => $ip,
-        'device_name' => $device,
-        'user_agent' => $agent,
-        'action' => 'LOGIN',
-        'details' => 'Erfolgreicher Login',
-        'session_id' => session_id()
-    ];
-    array_unshift($logs, $newLog);
-    $logs = array_slice($logs, 0, 100);
-    if (!is_dir('data')) mkdir('data', 0777, true);
-    file_put_contents($userLogFile, json_encode($logs));
+    $attempts = file_exists($loginAttemptFile) ? json_decode(file_get_contents($loginAttemptFile), true) : [];
+    $now = time();
+    if (isset($attempts[$ip])) {
+        $attempts[$ip] = array_values(array_filter($attempts[$ip], function($t) use ($now) { return ($now - $t) < 300; }));
+    }
+    $blocked = isset($attempts[$ip]) && count($attempts[$ip]) >= 5;
+
+    if (!$blocked && password_verify($_POST['password'], $settings['password'])) {
+        session_regenerate_id(true);
+        $_SESSION['loggedin'] = true;
+        $_SESSION['last_activity'] = time();
+        $_SESSION['login_time'] = time();
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        unset($attempts[$ip]);
+        file_put_contents($loginAttemptFile, json_encode($attempts));
+
+        $agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
+        $device = gethostbyaddr($ip);
+        if ($device == $ip) $device = "Unknown Device";
+        $userLogFile = 'data/user_logs.json';
+        $logs = file_exists($userLogFile) ? json_decode(file_get_contents($userLogFile), true) : [];
+        array_unshift($logs, [
+            'timestamp' => time(), 'date' => date("d.m.Y H:i:s"), 'ip' => $ip,
+            'device_name' => $device, 'user_agent' => $agent,
+            'action' => 'LOGIN', 'details' => 'Erfolgreicher Login', 'session_id' => session_id()
+        ]);
+        $logs = array_slice($logs, 0, 100);
+        if (!is_dir('data')) mkdir('data', 0750, true);
+        file_put_contents($userLogFile, json_encode($logs));
+    } else {
+        if (!isset($attempts[$ip])) $attempts[$ip] = [];
+        $attempts[$ip][] = $now;
+        if (!is_dir('data')) mkdir('data', 0750, true);
+        file_put_contents($loginAttemptFile, json_encode($attempts));
+        $loginFailed = true;
+    }
 }
 
 // TIMEOUT CHECK
@@ -78,7 +105,7 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
             ];
             array_unshift($logs, $newLog);
             $logs = array_slice($logs, 0, 100);
-            if (!is_dir('data')) mkdir('data', 0777, true);
+            if (!is_dir('data')) mkdir("data", 0750, true);
             file_put_contents($userLogFile, json_encode($logs));
             
             session_destroy();
@@ -123,7 +150,8 @@ if (isset($_GET['logout'])) {
 // LOGIN MASKE
 if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
     $timeoutMsg = isset($_GET['timeout']) ? '<div class="alert-warning"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Session expired due to inactivity</span></div>' : '';
-    echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Login</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:"Inter",sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}.login-container{background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);padding:40px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);width:100%;max-width:400px;}.login-header{text-align:center;margin-bottom:32px;}.login-header svg{width:48px;height:48px;margin-bottom:16px;color:#667eea;}.login-header h1{font-size:24px;font-weight:700;color:#1a1a1a;margin-bottom:8px;}.login-header p{color:#666;font-size:14px;}.alert-warning{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;color:#856404;font-size:14px;margin-bottom:20px;}.alert-warning svg{flex-shrink:0;}.form-group{margin-bottom:20px;}.form-label{display:block;font-weight:500;font-size:14px;color:#333;margin-bottom:8px;}.form-input{width:100%;padding:12px 16px;border:2px solid #e0e0e0;border-radius:8px;font-size:15px;font-family:inherit;transition:border-color 0.2s;}.form-input:focus{outline:none;border-color:#667eea;}.btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;}.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(102,126,234,0.3);}.btn-primary:active{transform:translateY(0);}</style></head><body><div class="login-container"><div class="login-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><h1>Secure Login</h1><p>Access Control Center</p></div>' . $timeoutMsg . '<form method="post"><div class="form-group"><label class="form-label">Password</label><input type="password" name="password" class="form-input" placeholder="Enter password" required autofocus></div><button type="submit" class="btn-primary">Sign In</button></form></div></body></html>';
+    $failedMsg = (isset($loginFailed) && $loginFailed) ? '<div class="alert-warning" style="background:#fee2e2;border-color:#ef4444;color:#991b1b;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg><span>Invalid password</span></div>' : '';
+    echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Login</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:"Inter",sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}.login-container{background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);padding:40px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.3);width:100%;max-width:400px;}.login-header{text-align:center;margin-bottom:32px;}.login-header svg{width:48px;height:48px;margin-bottom:16px;color:#667eea;}.login-header h1{font-size:24px;font-weight:700;color:#1a1a1a;margin-bottom:8px;}.login-header p{color:#666;font-size:14px;}.alert-warning{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;color:#856404;font-size:14px;margin-bottom:20px;}.alert-warning svg{flex-shrink:0;}.form-group{margin-bottom:20px;}.form-label{display:block;font-weight:500;font-size:14px;color:#333;margin-bottom:8px;}.form-input{width:100%;padding:12px 16px;border:2px solid #e0e0e0;border-radius:8px;font-size:15px;font-family:inherit;transition:border-color 0.2s;}.form-input:focus{outline:none;border-color:#667eea;}.btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;}.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 20px rgba(102,126,234,0.3);}.btn-primary:active{transform:translateY(0);}</style></head><body><div class="login-container"><div class="login-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><h1>Secure Login</h1><p>Access Control Center</p></div>' . $timeoutMsg . $failedMsg . '<form method="post"><div class="form-group"><label class="form-label">Password</label><input type="password" name="password" class="form-input" placeholder="Enter password" required autofocus></div><button type="submit" class="btn-primary">Sign In</button></form></div></body></html>';
     exit;
 }
 
@@ -175,10 +203,12 @@ if (file_exists($logFile)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $settings['site_title']; ?></title>
+    <title><?php echo htmlspecialchars($settings['site_title']); ?></title>
+    <meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-primary: #0f172a;
@@ -846,7 +876,7 @@ if (file_exists($logFile)) {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                 </svg>
-                <span id="site-title"><?php echo $settings['site_title']; ?></span>
+                <span id="site-title"><?php echo htmlspecialchars($settings['site_title']); ?></span>
             </div>
             <nav class="nav-tabs">
                 <button id="btn-dash" class="tab-btn active" onclick="switchView('dashboard')">
@@ -956,9 +986,9 @@ if (file_exists($logFile)) {
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                                 PiCam
                             </div>
-                            <div id="dot-camera" class="status-indicator"></div>
+                            <div id="dot-camera" class="status-indicator online"></div>
                         </div>
-                        <div class="status-message" id="msg-camera">Waiting for connection...</div>
+                        <div class="status-message" id="msg-camera">Running</div>
                         <div class="card-content">
                             <div class="info-row">
                                 <span class="info-label">IP Address</span>
@@ -966,11 +996,11 @@ if (file_exists($logFile)) {
                             </div>
                         </div>
                         <div class="btn-group">
-                            <a href="#" class="btn btn-primary">
+                            <button class="btn btn-primary" onclick="openCameraStream()">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                 Stream
-                            </a>
-                            <button class="btn btn-danger" onclick="sendCommand('camera', 'REBOOT')">
+                            </button>
+                            <button class="btn btn-danger" onclick="rebootPi()">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
                                 Reboot
                             </button>
@@ -1052,7 +1082,7 @@ if (file_exists($logFile)) {
                     $onlineCount = 0;
                     $totalUptime = 0;
                     foreach($diagStatus as $data) {
-                        if(isset($data['last_seen']) && time() - $data['last_seen'] < 15) $onlineCount++;
+                        if(isset($data['last_seen']) && time() - $data['last_seen'] < 30) $onlineCount++;
                         if(isset($data['uptime'])) $totalUptime += $data['uptime'];
                     }
                     ?>
@@ -1098,7 +1128,7 @@ if (file_exists($logFile)) {
                             </thead>
                             <tbody>
                                 <?php if($diagStatus): foreach ($diagStatus as $name => $data): 
-                                    $isOnline = isset($data['last_seen']) && time() - $data['last_seen'] < 15;
+                                    $isOnline = isset($data['last_seen']) && time() - $data['last_seen'] < 30;
                                     $rssi = $data['rssi'] ?? 0;
                                     $rssiClass = $rssi > -60 ? 'badge-good' : ($rssi > -75 ? 'badge-warning' : 'badge-critical');
                                 ?>
@@ -1373,122 +1403,187 @@ if (file_exists($logFile)) {
         </div>
     </main>
 
-    <script>
-        let refreshRate = <?php echo $settings['refresh_rate']; ?>;
-        let updateTimer = null;
-        let timeoutActive = <?php echo json_encode($settings['timeout_active'] ?? false); ?>;
-        let timeoutMinutes = <?php echo $settings['timeout_minutes'] ?? 5; ?>;
 
-        function resetActivityTimer() {
-            if (!timeoutActive) return;
-            fetch('api.php?action=ping_activity', {method: 'POST'});
+    <!-- SCRIPT 1: Kritische Funktionen (Buttons, Dashboard, Navigation) -->
+    <script>
+        // ============================================================
+        // SECURITY: CSRF + Secure API Helper
+        // ============================================================
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        var CSRF_TOKEN = csrfMeta ? csrfMeta.content : '';
+        var CAMERA_PORT = <?php echo (int)($settings['camera_port'] ?? 8082); ?>;
+
+        function apiCall(action, params) {
+            if (!params) params = {};
+            params.csrf_token = CSRF_TOKEN;
+            console.log('[API]', action, params);
+            return fetch('api.php?action=' + action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRF-TOKEN': CSRF_TOKEN
+                },
+                body: new URLSearchParams(params),
+                credentials: 'same-origin'
+            }).then(function(response) {
+                console.log('[API Response]', action, response.status);
+                if (response.status === 403) {
+                    window.location.href = 'index.php?timeout=1';
+                    return new Promise(function() {});
+                }
+                return response;
+            })['catch'](function(err) {
+                console.error('[API Error]', action, err);
+                throw err;
+            });
         }
 
-        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(event => {
+        // ============================================================
+        var refreshRate = <?php echo (int)$settings['refresh_rate']; ?>;
+        var updateTimer = null;
+        var timeoutActive = <?php echo json_encode($settings['timeout_active'] ?? false); ?>;
+        var timeoutMinutes = <?php echo (int)($settings['timeout_minutes'] ?? 5); ?>;
+
+        var lastPing = 0;
+        function resetActivityTimer() {
+            if (!timeoutActive) return;
+            var now = Date.now();
+            if (now - lastPing < 30000) return;
+            lastPing = now;
+            fetch('api.php?action=ping_activity', {method: 'POST', credentials: 'same-origin'});
+        }
+
+        ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(function(event) {
             document.addEventListener(event, resetActivityTimer, {passive: true});
         });
 
         function sendCommand(target, cmd) {
-            if(!confirm(`Execute ${cmd} on ${target}?`)) return;
-            fetch(`api.php?action=send_command&target=${target}&cmd=${cmd}`).then(r => r.text()).then(t => alert(t));
-            resetActivityTimer();
+            if(!confirm('Execute ' + cmd + ' on ' + target + '?')) return;
+            console.log('[CMD] Sending', cmd, 'to', target);
+            apiCall('send_command', {target: target, cmd: cmd})
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    console.log('[CMD] Response data:', data);
+                    alert(data.message || data.error || 'Unknown response');
+                })
+                ['catch'](function(err) {
+                    console.error('[CMD] Error:', err);
+                    alert('Request failed: ' + err);
+                });
         }
 
         function toggleAlarm(checkbox) {
-            let cmd = checkbox.checked ? "ALARM_ON" : "ALARM_OFF";
-            fetch(`api.php?action=send_command&target=receiver&cmd=${cmd}`);
-            resetActivityTimer();
+            var cmd = checkbox.checked ? "ALARM_ON" : "ALARM_OFF";
+            console.log('[ALARM] Sending', cmd);
+            apiCall('send_command', {target: 'receiver', cmd: cmd})
+                .then(function(r) { return r.json(); })
+                .then(function(data) { console.log('[ALARM] Response:', data); })
+                ['catch'](function(err) { console.error('[ALARM] Error:', err); });
         }
 
         function clearLog(id) {
-            let target = '';
+            var target = '';
             if (id === 'log-sender') target = 'sender';
             if (id === 'log-receiver') target = 'receiver';
             if (id === 'log-camera') target = 'camera';
             if (!target) return;
-            fetch(`api.php?action=clear_logs&target=${target}`).then(r => document.getElementById(id).innerHTML = '<div style="opacity: 0.5; text-align: center; padding: 20px;">Log cleared</div>');
-            resetActivityTimer();
+            apiCall('clear_logs', {target: target})
+                .then(function() {
+                    document.getElementById(id).innerHTML = '<div style="opacity:0.5;text-align:center;padding:20px;">Log cleared</div>';
+                });
+        }
+
+        function openCameraStream() {
+            var el = document.getElementById('ip-camera');
+            var camIp = el ? el.innerText : window.location.hostname;
+            var url = 'http://' + (camIp !== '---' ? camIp : window.location.hostname) + ':' + CAMERA_PORT + '/?action=stream';
+            window.open(url, '_blank');
+        }
+
+        function rebootPi() {
+            if (!confirm('Raspberry Pi wirklich neustarten?')) return;
+            if (!confirm('ACHTUNG: Dashboard wird kurzzeitig nicht erreichbar!')) return;
+            apiCall('pi_reboot')
+                .then(function(r) { return r.json(); })
+                .then(function(data) { alert(data.message || data.error); })
+                ['catch'](function() { alert('Request failed'); });
         }
 
         function switchView(tabName) {
-            ['dashboard', 'logs', 'diagnose', 'config', 'userlogs'].forEach(v => {
-                const viewElement = document.getElementById('view-' + v);
-                if (viewElement) viewElement.style.display = 'none';
-                
-                const btnMap = { 'dashboard': 'dash', 'config': 'conf', 'logs': 'logs', 'userlogs': 'userlogs', 'diagnose': 'diag' };
-                let btn = document.getElementById('btn-' + btnMap[v]);
-                if(btn) btn.classList.remove('active');
+            var views = ['dashboard', 'logs', 'diagnose', 'config', 'userlogs'];
+            var btnMap = { 'dashboard': 'dash', 'config': 'conf', 'logs': 'logs', 'userlogs': 'userlogs', 'diagnose': 'diag' };
+            
+            views.forEach(function(v) {
+                var viewEl = document.getElementById('view-' + v);
+                if (viewEl) viewEl.style.display = 'none';
+                var btn = document.getElementById('btn-' + btnMap[v]);
+                if (btn) btn.classList.remove('active');
             });
             
-            const targetView = document.getElementById('view-' + tabName);
+            var targetView = document.getElementById('view-' + tabName);
             if (targetView) targetView.style.display = 'block';
+            var activeBtn = document.getElementById('btn-' + btnMap[tabName]);
+            if (activeBtn) activeBtn.classList.add('active');
             
-            const btnMap = { 'dashboard': 'dash', 'config': 'conf', 'logs': 'logs', 'userlogs': 'userlogs', 'diagnose': 'diag' };
-            let activeBtn = document.getElementById('btn-' + btnMap[tabName]);
-            if(activeBtn) activeBtn.classList.add('active');
+            try { sessionStorage.setItem('activeTab', tabName); } catch(e) {}
             
-            if (tabName === 'userlogs') {
-                loadUserLogsSimple();
-            }
-            
-            if (tabName === 'diagnose') {
-                initDiagnoseCharts();
-            }
+            if (tabName === 'userlogs') loadUserLogsSimple();
+            if (tabName === 'diagnose' && typeof initDiagnoseCharts === 'function') initDiagnoseCharts();
             
             resetActivityTimer();
         }
 
         function saveConfig() {
-            const settings = {
+            var settings = {
                 site_title: document.getElementById('cfg-title').value,
                 password: document.getElementById('cfg-pw').value,
                 refresh_rate: document.getElementById('cfg-refresh').value,
                 timeout_active: document.getElementById('cfg-timeout-active').checked,
                 timeout_minutes: parseInt(document.getElementById('cfg-timeout-min').value)
             };
-            const formData = new FormData();
-            formData.append('settings', JSON.stringify(settings));
-            fetch('api.php?action=save_settings', { method: 'POST', body: formData }).then(r => r.text()).then(text => {
-                alert(text); location.reload();
-            });
+            apiCall('save_settings', {settings: JSON.stringify(settings)})
+                .then(function(r) { return r.json(); })
+                .then(function(data) { alert(data.message || data.error); location.reload(); })
+                ['catch'](function() { alert('Request failed'); });
         }
 
         function sendNodeConfig() {
-            const target = document.getElementById('conf-target').value;
-            if (!target) { alert("No online device selected!"); return; }
-
-            const config = {};
-            const api = document.getElementById('conf-apiip').value; if(api) config.apiip = api;
-            const mssid = document.getElementById('conf-mssid').value; if(mssid) config.mssid = mssid;
-            const mpass = document.getElementById('conf-mpass').value; if(mpass) config.mpass = mpass;
-            const bssid = document.getElementById('conf-bssid').value; if(bssid) config.bssid = bssid;
-            const bpass = document.getElementById('conf-bpass').value; if(bpass) config.bpass = bpass;
-            const telnet = document.getElementById('conf-telnet').value; if(telnet) config.tpass = telnet;
-
-            if(Object.keys(config).length === 0) { alert("No fields filled!"); return; }
-            if(!confirm(`Send configuration to ${target}? Device will restart.`)) return;
-
-            const formData = new FormData();
-            formData.append('target', target);
-            formData.append('config', JSON.stringify(config));
-            fetch('api.php?action=save_node_config', { method: 'POST', body: formData }).then(r => r.text()).then(t => alert(t));
-            resetActivityTimer();
+            var target = document.getElementById('conf-target').value;
+            if (!target) { alert("No device selected!"); return; }
+            var config = {};
+            var api = document.getElementById('conf-apiip').value; if(api) config.apiip = api;
+            var mssid = document.getElementById('conf-mssid').value; if(mssid) config.mssid = mssid;
+            var mpass = document.getElementById('conf-mpass').value; if(mpass) config.mpass = mpass;
+            var bssid = document.getElementById('conf-bssid').value; if(bssid) config.bssid = bssid;
+            var bpass = document.getElementById('conf-bpass').value; if(bpass) config.bpass = bpass;
+            var telnet = document.getElementById('conf-telnet').value; if(telnet) config.tpass = telnet;
+            if (Object.keys(config).length === 0) { alert("No fields filled!"); return; }
+            if (!confirm('Send configuration to ' + target + '? Device will restart.')) return;
+            apiCall('save_node_config', {target: target, config: JSON.stringify(config)})
+                .then(function(r) { return r.json(); })
+                .then(function(data) { alert(data.message || data.error); })
+                ['catch'](function() { alert('Request failed'); });
         }
 
         function resetSystem() {
-            if(!confirm("Delete all data?")) return;
-            fetch('api.php?action=system_reset').then(r => r.text()).then(t => { alert(t); location.reload(); });
+            if (!confirm("Delete all data?")) return;
+            if (!confirm("CONFIRM: Erase all status, logs and commands?")) return;
+            apiCall('system_reset')
+                .then(function(r) { return r.json(); })
+                .then(function(data) { alert(data.message || data.error); location.reload(); })
+                ['catch'](function() { alert('Request failed'); });
         }
 
         function updateTimeoutStatus() {
-            const indicator = document.getElementById('timeout-status');
-            const statusText = document.getElementById('timeout-status-text');
-            const infoText = document.getElementById('timeout-info');
+            var indicator = document.getElementById('timeout-status');
+            var statusText = document.getElementById('timeout-status-text');
+            var infoText = document.getElementById('timeout-info');
+            if (!indicator || !statusText || !infoText) return;
             
             if (timeoutActive) {
                 indicator.className = 'alert alert-warning';
                 statusText.textContent = 'Auto-Logout: Enabled';
-                infoText.textContent = `Automatic logout after ${timeoutMinutes} minutes of inactivity`;
+                infoText.textContent = 'Automatic logout after ' + timeoutMinutes + ' minutes of inactivity';
             } else {
                 indicator.className = 'alert alert-info';
                 statusText.textContent = 'Auto-Logout: Disabled';
@@ -1497,82 +1592,99 @@ if (file_exists($logFile)) {
         }
 
         function updateDashboard() {
-            fetch('api.php?get=all')
-                .then(response => response.json())
-                .then(data => {
-                    updateNode('sender', data.status.sender);
-                    updateNode('receiver', data.status.receiver);
-                    updateNode('camera', data.status.camera);
+            fetch('api.php?get=all', {credentials: 'same-origin'})
+                .then(function(response) {
+                    if (response.status === 403) { window.location.href = 'index.php?timeout=1'; return null; }
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (!data || !data.status) return;
+                    updateNode('sender', data.status.sender || null);
+                    updateNode('receiver', data.status.receiver || null);
+                    
+                    var camData = data.status.camera ? JSON.parse(JSON.stringify(data.status.camera)) : {};
+                    var piData = data.status.pi || {};
+                    if (!camData.ip || camData.ip === '0.0.0.0') camData.ip = piData.ip || '---';
+                    if (!camData.online && piData.online) {
+                        camData.online = true;
+                        camData.status = 'Stream bereit';
+                    }
+                    updateNode('camera', camData);
 
                     if (data.config) {
-                        timeoutActive = data.config.timeout_active ?? false;
-                        timeoutMinutes = data.config.timeout_minutes ?? 5;
+                        timeoutActive = data.config.timeout_active || false;
+                        timeoutMinutes = data.config.timeout_minutes || 5;
                         updateTimeoutStatus();
                     }
 
-                    const targetSelect = document.getElementById('conf-target');
-                    const currentSelection = targetSelect.value;
-                    let newOptions = "";
-                    let sStatus = data.status.sender && data.status.sender.online;
-                    newOptions += `<option value="sender" ${sStatus ? '' : 'disabled'}>ESP Sender ${sStatus ? '' : '(OFFLINE)'}</option>`;
-                    let rStatus = data.status.receiver && data.status.receiver.online;
-                    newOptions += `<option value="receiver" ${rStatus ? '' : 'disabled'}>ESP Receiver ${rStatus ? '' : '(OFFLINE)'}</option>`;
-                    if (targetSelect.innerHTML !== newOptions) {
-                        targetSelect.innerHTML = newOptions;
-                        targetSelect.value = currentSelection;
+                    var targetSelect = document.getElementById('conf-target');
+                    if (targetSelect) {
+                        var currentSelection = targetSelect.value;
+                        var sOnline = data.status.sender && data.status.sender.online;
+                        var rOnline = data.status.receiver && data.status.receiver.online;
+                        var newOpts = '<option value="sender">ESP Sender' + (sOnline ? '' : ' (OFFLINE)') + '</option>';
+                        newOpts += '<option value="receiver">ESP Receiver' + (rOnline ? '' : ' (OFFLINE)') + '</option>';
+                        if (targetSelect.innerHTML !== newOpts) {
+                            targetSelect.innerHTML = newOpts;
+                            if (currentSelection) targetSelect.value = currentSelection;
+                        }
                     }
 
-                    const alarmSwitch = document.getElementById('alarm-toggle');
-                    if (data.status.receiver && data.status.receiver.alarm !== undefined && document.activeElement !== alarmSwitch) {
+                    var alarmSwitch = document.getElementById('alarm-toggle');
+                    if (alarmSwitch && data.status.receiver && data.status.receiver.alarm !== undefined && document.activeElement !== alarmSwitch) {
                         alarmSwitch.checked = (data.status.receiver.alarm == true || data.status.receiver.alarm == "1");
                     }
 
-                    document.getElementById('log-sender').innerHTML = '';
-                    document.getElementById('log-receiver').innerHTML = '';
-                    document.getElementById('log-camera').innerHTML = '';
-                    if(data.logs) {
-                        data.logs.forEach(line => {
-                            let target = 'log-sender';
-                            if(line.includes('receiver:')) target = 'log-receiver';
-                            if(line.includes('camera:')) target = 'log-camera';
-                            const div = document.createElement('div');
-                            div.className = 'log-line'; div.textContent = line;
-                            document.getElementById(target).appendChild(div);
+                    var logSender = document.getElementById('log-sender');
+                    var logReceiver = document.getElementById('log-receiver');
+                    var logCamera = document.getElementById('log-camera');
+                    if (logSender) logSender.innerHTML = '';
+                    if (logReceiver) logReceiver.innerHTML = '';
+                    if (logCamera) logCamera.innerHTML = '';
+                    
+                    if (data.logs) {
+                        data.logs.forEach(function(line) {
+                            var tgt = 'log-sender';
+                            if (line.indexOf('receiver:') !== -1) tgt = 'log-receiver';
+                            if (line.indexOf('camera:') !== -1) tgt = 'log-camera';
+                            var div = document.createElement('div');
+                            div.className = 'log-line';
+                            div.textContent = line;
+                            var container = document.getElementById(tgt);
+                            if (container) container.appendChild(div);
                         });
-                        ['log-sender', 'log-receiver', 'log-camera'].forEach(id => {
-                            const el = document.getElementById(id); el.scrollTop = el.scrollHeight;
+                        ['log-sender', 'log-receiver', 'log-camera'].forEach(function(id) {
+                            var el = document.getElementById(id);
+                            if (el) el.scrollTop = el.scrollHeight;
                         });
                     }
 
-                    const userlogsView = document.getElementById('view-userlogs');
-                    if (userlogsView && userlogsView.style.display !== 'none') {
-                        loadUserLogsSimple();
-                    }
+                    var ulView = document.getElementById('view-userlogs');
+                    if (ulView && ulView.style.display !== 'none') loadUserLogsSimple();
                 })
-                .catch(err => console.error('API Error:', err));
+                ['catch'](function(err) { console.error('Dashboard Error:', err); });
         }
 
         function updateNode(name, data) {
-            const card = document.getElementById('card-' + name);
-            const ipField = document.getElementById('ip-' + name);
-            const msgField = document.getElementById('msg-' + name);
-            const dot = document.getElementById('dot-' + name);
-
+            var card = document.getElementById('card-' + name);
+            var ipField = document.getElementById('ip-' + name);
+            var msgField = document.getElementById('msg-' + name);
+            var dot = document.getElementById('dot-' + name);
+            if (!card) return;
             if (!data) {
                 card.classList.remove('online');
+                if (dot) dot.classList.remove('online');
                 return;
             }
-
-            ipField.innerText = data.ip;
-
+            if (ipField) ipField.innerText = data.ip || '---';
             if (data.online) {
-                msgField.innerText = data.status;
+                if (msgField) msgField.innerText = data.status || 'Online';
                 card.classList.add('online');
-                dot.classList.add('online');
+                if (dot) dot.classList.add('online');
             } else {
                 card.classList.remove('online');
-                msgField.innerText = "Device offline";
-                dot.classList.remove('online');
+                if (msgField) msgField.innerText = 'Device offline';
+                if (dot) dot.classList.remove('online');
             }
         }
 
@@ -1580,214 +1692,153 @@ if (file_exists($logFile)) {
             updateDashboard();
             updateTimer = setTimeout(startLoop, refreshRate);
         }
-        
-        updateTimeoutStatus();
-        startLoop();
-        
-        // Initialize Lucide icons (non-blocking)
-        try {
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
-        } catch(e) {
-            console.log('Lucide icons not loaded');
-        }
 
         function loadUserLogsSimple() {
-            const container = document.getElementById('userlog-container');
+            var container = document.getElementById('userlog-container');
             if (!container) return;
-            
-            fetch('api.php?action=get_user_logs')
-                .then(r => r.text())
-                .then(text => {
-                    let logs;
-                    try {
-                        logs = JSON.parse(text);
-                    } catch(e) {
-                        container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--accent-red);">Error parsing log data</div>';
+            fetch('api.php?action=get_user_logs', {credentials: 'same-origin'})
+                .then(function(r) { return r.text(); })
+                .then(function(text) {
+                    var logs;
+                    try { logs = JSON.parse(text); } catch(e) {
+                        container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--accent-red);">Error parsing log data</div>';
                         return;
                     }
-                    
                     if (!logs || logs.length === 0) {
-                        container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-secondary);">No activity logged</div>';
+                        container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">No activity logged</div>';
                         return;
                     }
-                    
-                    let html = '';
-                    logs.slice(0, 20).forEach(log => {
-                        const iconMap = {
-                            'LOGIN': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>',
-                            'LOGOUT': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
-                            'AUTO-LOGOUT': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
-                            'Command Sent': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>',
-                            'Config Change': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6"/></svg>'
-                        };
-                        
-                        html += `
-                            <div class="log-entry">
-                                <div class="log-entry-header">
-                                    <div class="log-action" style="display: flex; align-items: center; gap: 8px;">
-                                        ${iconMap[log.action] || ''}
-                                        <span>${log.action}</span>
-                                    </div>
-                                    <span class="log-time">${log.date}</span>
-                                </div>
-                                <div class="log-details">
-                                    IP: ${log.ip} | Device: ${log.device_name}
-                                    ${log.details ? `<br><span style="color: var(--accent-yellow);">→ ${log.details}</span>` : ''}
-                                </div>
-                            </div>
-                        `;
+                    var html = '';
+                    logs.slice(0, 20).forEach(function(log) {
+                        html += '<div class="log-entry">' +
+                            '<div class="log-entry-header">' +
+                                '<div class="log-action" style="display:flex;align-items:center;gap:8px;">' +
+                                    '<span>' + (log.action || '') + '</span>' +
+                                '</div>' +
+                                '<span class="log-time">' + (log.date || '') + '</span>' +
+                            '</div>' +
+                            '<div class="log-details">' +
+                                'IP: ' + (log.ip || '') + ' | Device: ' + (log.device_name || '') +
+                                (log.details ? '<br><span style="color:var(--accent-yellow);">&rarr; ' + log.details + '</span>' : '') +
+                            '</div></div>';
                     });
-                    
                     container.innerHTML = html;
-                    try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch(e) {}
                 })
-                .catch(err => {
-                    container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--accent-red);">Error loading logs</div>';
+                ['catch'](function() {
+                    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--accent-red);">Error loading logs</div>';
                 });
         }
 
-        function exportUserLogs() {
-            window.location.href = 'api.php?action=export_user_logs';
-        }
+        function exportUserLogs() { window.location.href = 'api.php?action=export_user_logs'; }
 
         function clearUserLogs() {
             if (!confirm('Delete all audit logs?')) return;
-            fetch('api.php?action=clear_user_logs', { method: 'POST' })
-                .then(r => r.text())
-                .then(msg => {
-                    alert(msg);
-                    loadUserLogsSimple();
-                });
+            apiCall('clear_user_logs')
+                .then(function(r) { return r.json(); })
+                .then(function(data) { alert(data.message || data.error); loadUserLogsSimple(); })
+                ['catch'](function() { alert('Request failed'); });
         }
 
-        // === DIAGNOSE CHARTS ===
-        let rssiChart, heapChart;
+        // === INIT ===
+        updateTimeoutStatus();
+        try {
+            var savedTab = sessionStorage.getItem('activeTab');
+            if (savedTab && savedTab !== 'dashboard') switchView(savedTab);
+        } catch(e) {}
+        startLoop();
+        try { if (typeof lucide !== 'undefined') lucide.createIcons(); } catch(e) {}
+
+        console.log('[INIT] All critical functions loaded OK. CSRF token:', CSRF_TOKEN ? 'present (' + CSRF_TOKEN.length + ' chars)' : 'MISSING!');
+    </script>
+
+    <!-- SCRIPT 2: Charts (isoliert - Fehler hier brechen KEINE Buttons) -->
+    <script>
+        var rssiChart = null, heapChart = null;
         
         function initDiagnoseCharts() {
-            if (rssiChart) return; // Already initialized
-            
-            const chartData = <?php echo json_encode($chartData); ?>;
-            
-            const chartConfig = {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { labels: { color: '#f1f5f9' } }
-                },
-                scales: {
-                    x: { 
-                        ticks: { color: '#94a3b8' },
-                        grid: { color: 'rgba(51, 65, 85, 0.3)' }
+            try {
+                if (typeof Chart === 'undefined') {
+                    console.warn('[CHARTS] Chart.js not loaded');
+                    return;
+                }
+
+                var chartData = <?php echo json_encode($chartData); ?>;
+                
+                var allTimes = {};
+                ['sender', 'receiver', 'camera'].forEach(function(src) {
+                    chartData[src].time.forEach(function(t) { allTimes[t] = true; });
+                });
+                var sortedTimes = Object.keys(allTimes).map(Number).sort(function(a,b) { return a-b; });
+                var labels = sortedTimes.map(function(t) { return new Date(t * 1000).toLocaleTimeString('de-DE'); });
+                
+                function mapToTimeline(srcData, field) {
+                    var lookup = {};
+                    srcData.time.forEach(function(t, i) { lookup[t] = srcData[field][i]; });
+                    return sortedTimes.map(function(t) { return (t in lookup) ? lookup[t] : null; });
+                }
+
+                if (rssiChart) { rssiChart.destroy(); rssiChart = null; }
+                if (heapChart) { heapChart.destroy(); heapChart = null; }
+
+                function makeDatasets(field) {
+                    return [
+                        { label: 'Sender',   data: mapToTimeline(chartData.sender, field),   borderColor: '#3b82f6', tension: 0.3, fill: false, spanGaps: true },
+                        { label: 'Receiver', data: mapToTimeline(chartData.receiver, field), borderColor: '#f59e0b', tension: 0.3, fill: false, spanGaps: true },
+                        { label: 'PiCam',    data: mapToTimeline(chartData.camera, field),   borderColor: '#8b5cf6', tension: 0.3, fill: false, spanGaps: true }
+                    ];
+                }
+
+                var rssiOpts = {
+                    responsive: true, maintainAspectRatio: false, animation: false,
+                    plugins: { legend: { labels: { color: '#f1f5f9', usePointStyle: true, pointStyle: 'line' } } },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', maxTicksLimit: 12, maxRotation: 45 }, grid: { color: 'rgba(51,65,85,0.3)' } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(51,65,85,0.3)' }, title: { display: true, text: 'dBm', color: '#94a3b8' }, suggestedMin: -80, suggestedMax: -30 }
                     },
-                    y: { 
-                        ticks: { color: '#94a3b8' },
-                        grid: { color: 'rgba(51, 65, 85, 0.3)' }
-                    }
-                }
-            };
+                    elements: { point: { radius: 0, hitRadius: 6 }, line: { borderWidth: 2 } }
+                };
 
-            rssiChart = new Chart(document.getElementById('rssiChart'), {
-                type: 'line',
-                data: {
-                    datasets: [
-                        {
-                            label: 'Sender',
-                            data: chartData.sender.time.map((t, i) => ({
-                                x: new Date(t * 1000).toLocaleTimeString('de-DE'),
-                                y: chartData.sender.rssi[i]
-                            })),
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        },
-                        {
-                            label: 'Receiver',
-                            data: chartData.receiver.time.map((t, i) => ({
-                                x: new Date(t * 1000).toLocaleTimeString('de-DE'),
-                                y: chartData.receiver.rssi[i]
-                            })),
-                            borderColor: '#f59e0b',
-                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        },
-                        {
-                            label: 'PiCam',
-                            data: chartData.camera.time.map((t, i) => ({
-                                x: new Date(t * 1000).toLocaleTimeString('de-DE'),
-                                y: chartData.camera.rssi[i]
-                            })),
-                            borderColor: '#8b5cf6',
-                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }
-                    ]
-                },
-                options: chartConfig
-            });
+                rssiChart = new Chart(document.getElementById('rssiChart'), {
+                    type: 'line', data: { labels: labels, datasets: makeDatasets('rssi') }, options: rssiOpts
+                });
 
-            heapChart = new Chart(document.getElementById('heapChart'), {
-                type: 'line',
-                data: {
-                    datasets: [
-                        {
-                            label: 'Sender',
-                            data: chartData.sender.time.map((t, i) => ({
-                                x: new Date(t * 1000).toLocaleTimeString('de-DE'),
-                                y: chartData.sender.heap[i]
-                            })),
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                            tension: 0.4,
-                            fill: true
-                        },
-                        {
-                            label: 'Receiver',
-                            data: chartData.receiver.time.map((t, i) => ({
-                                x: new Date(t * 1000).toLocaleTimeString('de-DE'),
-                                y: chartData.receiver.heap[i]
-                            })),
-                            borderColor: '#f59e0b',
-                            backgroundColor: 'rgba(245, 158, 11, 0.2)',
-                            tension: 0.4,
-                            fill: true
-                        },
-                        {
-                            label: 'PiCam',
-                            data: chartData.camera.time.map((t, i) => ({
-                                x: new Date(t * 1000).toLocaleTimeString('de-DE'),
-                                y: chartData.camera.heap[i]
-                            })),
-                            borderColor: '#8b5cf6',
-                            backgroundColor: 'rgba(139, 92, 246, 0.2)',
-                            tension: 0.4,
-                            fill: true
-                        }
-                    ]
-                },
-                options: chartConfig
-            });
-            
-            // Auto-Refresh for Diagnose
-            const toggle = document.getElementById('diag-auto-refresh');
-            let diagRefreshInterval = null;
-            
-            toggle.addEventListener('change', function() {
-                if (this.checked) {
-                    diagRefreshInterval = setInterval(() => location.reload(), 5000);
-                } else {
-                    if (diagRefreshInterval) clearInterval(diagRefreshInterval);
-                }
-            });
-            
-            if (toggle.checked) {
-                diagRefreshInterval = setInterval(() => location.reload(), 5000);
+                var heapOpts = {
+                    responsive: true, maintainAspectRatio: false, animation: false,
+                    plugins: { legend: { labels: { color: '#f1f5f9', usePointStyle: true, pointStyle: 'line' } } },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8', maxTicksLimit: 12, maxRotation: 45 }, grid: { color: 'rgba(51,65,85,0.3)' } },
+                        y: { ticks: { color: '#94a3b8', callback: function(v) { return (v/1024).toFixed(1) + ' KB'; } }, grid: { color: 'rgba(51,65,85,0.3)' }, title: { display: true, text: 'Bytes', color: '#94a3b8' } }
+                    },
+                    elements: { point: { radius: 0, hitRadius: 6 }, line: { borderWidth: 2 } }
+                };
+
+                heapChart = new Chart(document.getElementById('heapChart'), {
+                    type: 'line', data: { labels: labels, datasets: makeDatasets('heap') }, options: heapOpts
+                });
+                
+                console.log('[CHARTS] OK:', sortedTimes.length, 'points');
+            } catch(err) {
+                console.error('[CHARTS] Error:', err);
             }
+            
+            // Auto-Refresh Toggle
+            var toggle = document.getElementById('diag-auto-refresh');
+            var diagInterval = null;
+            try {
+                var saved = sessionStorage.getItem('diagAutoRefresh');
+                if (saved !== null) toggle.checked = (saved === 'true');
+            } catch(e) {}
+            function startDiagRefresh() {
+                if (diagInterval) clearInterval(diagInterval);
+                if (toggle.checked) diagInterval = setInterval(function() { location.reload(); }, 5000);
+            }
+            toggle.addEventListener('change', function() {
+                try { sessionStorage.setItem('diagAutoRefresh', this.checked); } catch(e) {}
+                startDiagRefresh();
+            });
+            startDiagRefresh();
         }
+        console.log('[INIT] Chart module loaded');
     </script>
 </body>
 </html>
