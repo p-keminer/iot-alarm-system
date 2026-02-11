@@ -27,6 +27,8 @@ Hardware- und Protokoll-Upgrades:
 * **Dead Man's Switch (Jamming-Schutz):**
 Implementierung einer Überwachungslogik gegen Layer-1 Angriffe:
 
-- **Hysterese-Logik:** Überwachung des vorherigem RSSI Signal und verfügbarer Anzahl an WLAN-Netzwerken durch ein externes Python-Skript bei Verbindungsverlust.
-- **Eskalations-Zeitraum:** Festlegung eines 60-sekündigen Zeitfensters (Grace Period), um Router-Reboot-Zyklen von tatsächlichen Jamming-Angriffen zu differenzieren.
-- **Alarm-Trigger:** Automatisches Auslösen des Alarmzustands (R3 über USB), falls innerhalb der definierten Zeitspanne keine Verbindung wiederhergestellt werden kann oder Netzwerkanzahl nicht +-2 der zuvor gespeocherten Netzwerkanzahl entspricht.
+Folgende Schritte sind dazu auf dem RaspberryPi zu implementieren:
+
+1. **Hysterese-Logik:** Überwachung des vorherigem RSSI Signal und verfügbarer Anzahl an WLAN-Netzwerken durch ein externes Python-Skript bei Verbindungsverlust.
+2. **Eskalations-Zeitraum:** Festlegung eines 60-sekündigen Zeitfensters (Grace Period), um Router-Reboot-Zyklen von tatsächlichen Jamming-Angriffen zu differenzieren.
+3. **Alarm-Trigger:** Automatisches Auslösen des Alarmzustands (R3 über USB), falls innerhalb der definierten Zeitspanne keine Verbindung wiederhergestellt werden kann oder Netzwerkanzahl nicht (+-3) der zuvor gespeicherten Netzwerkanzahl entspricht.
