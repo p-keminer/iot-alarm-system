@@ -7,7 +7,8 @@ This document summarizes the key experiences and insights gained during the deve
 ---
 
 ## 1. Konzeption & Systemarchitektur / Conception & System Architecture
-- **Modulare Struktur / Modular Structure:** Die Trennung von Alarmlogik (Arduino Master) und Kommunikation (ESP8266 Nodes) bewährt sich. Das System ist gezielt auf eine **Erweiterung über WLAN** ausgelegt, sodass neue Nodes als eigenständige Einheiten hinzugefügt werden können, ohne die Master-Hardware physisch zu ändern.  
+
+- **Modulare Struktur / Modular Structure:** Die Trennung von Alarmlogik (Arduino Master) und Kommunikation (ESP8266 Nodes) bewährt sich. Das System ist gezielt auf eine **Erweiterung über WLAN** ausgelegt, sodass neue Nodes als eigenständige Einheiten hinzugefügt werden können, ohne die Master-Hardware physisch zu ändern.
 
   The separation of alarm logic (Arduino Master) and communication (ESP8266 Nodes) is effective. The system is specifically designed for **expansion via Wi-Fi**, allowing new nodes to be added as independent units without physical changes to the master hardware.
 
@@ -18,6 +19,10 @@ This document summarizes the key experiences and insights gained during the deve
 - **Redundanz / Redundancy:** Die Wahl fällt auf KY-021 Magnetschalter statt optischer Sensoren. Eine **UND-Logik** stellt sicher, dass ein Alarm nur ausgelöst wird, wenn beide Sensoren korrelieren, was Fehlauslösungen durch Erschütterungen minimiert.  
 
   Magnetic reed switches (KY-021) were chosen over optical sensors. An **AND logic** ensures that an alarm is only triggered if both sensors correlate, minimizing false alarms caused by vibrations.
+
+- **Portabilität (HAL & FSM) / Portability (HAL & FSM):** Durch die bewusste Implementierung eines **Hardware Abstraction Layer (HAL)** wurde die Software erfolgreich von der physischen Ebene entkoppelt, was eine zukünftige Migration auf leistungsstärkere Controller (z. B. ESP32/STM32) ohne Neuentwicklung der Logik ermöglicht. Rückblickend erwies sich zudem die **Finite State Machine (FSM)** als essenziell, um ein determiniertes Systemverhalten zu garantieren, das unabhängig von der zugrunde liegenden Hardware-Geschwindigkeit stabil bleibt.
+
+   By consciously implementing a **Hardware Abstraction Layer (HAL)**, the software was successfully decoupled from the physical layer, enabling future migration to more powerful controllers (e.g., ESP32/STM32) without rewriting the logic. In retrospect, the **Finite State Machine (FSM)** proved essential in guaranteeing deterministic system behavior that remains stable regardless of the underlying hardware speed.
 
 ---
 
@@ -90,6 +95,10 @@ Die kompakte Gestaltung der PCB erleichtert den Gehäusebau sowie manuelle Lötv
 - **Debugging & Troubleshooting:** Browser Developer Tools (F12 Console) und `tail -f` für PHP-Logs sind essenziell. Systematisches Prüfen von PHP-FPM, Lighttpd-Status und Dateiberechtigungen beschleunigt Fehlersuche erheblich.  
 
   Browser developer tools (F12 console) and `tail -f` for PHP logs are essential. Systematic checking of PHP-FPM, Lighttpd status, and file permissions significantly speeds up troubleshooting.
+
+- **Migration & Umgebungskonfiguration (VM zu Pi) / Migration & Environment Configuration (VM to Pi):** Der Umzug des Webservers aus einer virtuellen Maschine auf den Raspberry Pi verdeutlichte, dass funktionierender Code allein nicht ausreicht. Die Hürden lagen in der Systemumgebung und Administration: **Schreibrechte** für die entsprechenden User und notwendige **Portfreigaben** unter berücksichtigung von Security-Aspekten. Dies unterstreicht die Notwendigkeit, Deployment-Szenarien frühzeitig in der Zielumgebung zu testen und anzupassen.
+
+  Moving the web server from a virtual machine to the Raspberry Pi highlighted that working code alone is insufficient. The challenges lay in the system environment and administration: specifically, write permissions for the respective users and necessary port forwarding while considering security aspects. This underscores the need to test and adapt deployment scenarios in the target environment early on.
 
 ---
 
