@@ -117,3 +117,7 @@ Die kompakte Gestaltung der PCB erleichtert den Gehäusebau sowie manuelle Lötv
 Dieses Projekt verdeutlicht, dass ein systematisches Vorgehen – von der Datenblatt-Analyse bis zum fertigen PCB und Web-Dashboard – entscheidend ist, um ein funktionsfähiges und erweiterbares Embedded-System zu realisieren.  
 
 This project demonstrates that a systematic approach – from datasheet analysis to the finished PCB and web dashboard – is essential to realize a functional and expandable embedded system.
+
+---
+
+[Zurück zur Haupt-Dokumentation / Back to main dokumentation](../README.md)

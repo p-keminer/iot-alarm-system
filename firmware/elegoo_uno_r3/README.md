@@ -297,8 +297,5 @@ static const ErlaubteUID WHITELIST[] = {
 };
 ```
 
----
 
-## Lizenz
-
-MIT
+[Zurück zur Haupt-Dokumentation / Back to main dokumentation](../README.md)
