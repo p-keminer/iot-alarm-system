@@ -25,10 +25,11 @@ Hardware- und Protokoll-Upgrades:
 * **Akustische Signalisierung:** Erweiterung um **Passive Buzzer** an PWM-fähigen Pins zur akustischen Differenzierung verschiedener Alarmzustände und Systemereignisse.
 
 * **Dead Man's Switch (Jamming-Schutz):**
-Implementierung einer Überwachungslogik gegen Layer-1 Angriffe:
+Implementierung einer Überwachungslogik gegen Layer-1 Angriffe (**WICHTIG:** False Positives vs False Negatives - Timing Analyse und Stresstest zwingend notwendig):
 
 Folgende Schritte sind dazu auf dem RaspberryPi zu implementieren:
 
-1. **Hysterese-Logik:** Überwachung des vorherigem RSSI Signal und verfügbarer Anzahl an WLAN-Netzwerken durch ein externes Python-Skript bei Verbindungsverlust.
+1. **Hysterese-Logik:** Überwachung und Messung der Stabilität des vorherigen RSSI Signal und verfügbarer Anzahl an WLAN-Netzwerken durch ein externes Python-Skript im Bereit-Zustand.
 2. **Eskalations-Zeitraum:** Festlegung eines 60-sekündigen Zeitfensters (Grace Period), um Router-Reboot-Zyklen von tatsächlichen Jamming-Angriffen zu differenzieren.
-3. **Alarm-Trigger:** Automatisches Auslösen des Alarmzustands (R3 über USB), falls innerhalb der definierten Zeitspanne keine Verbindung wiederhergestellt werden kann oder Netzwerkanzahl nicht (+-3) der zuvor gespeicherten Netzwerkanzahl entspricht.
+3. **Alarm-Trigger:** Automatisierte Eskalation des Alarmzustands (Pi -> USB -> R3), sofern innerhalb des definierten Zeitfensters keine Verbindung wiederhergestellt werden kann oder die Netzwerkanzahl zum Referenzwert eine signifikante Diskrepanz aufweist.
+4. **Heartbeat als Sicherheitsnetz:** Implementieren eines Heartbeats Signal über USB um zusätzliche Dos Attacken auf den Pi abzufangen.

@@ -31,7 +31,7 @@
 ┌──────────────────────────────────────────────────────┐
 │  FSM (Finite State Machine)                          │
 │  fsmUpdate() → Dispatcher für alle Zustände          │
-│  INIT → WLAN_VERBINDEN → BEREIT ↔ ALARM             │
+│  INIT → WLAN_VERBINDEN → BEREIT ↔ ALARM              │
 │                              ↓                       │
 │                         WERKSRESET                   │
 ├──────────────────────────────────────────────────────┤
@@ -85,7 +85,7 @@
                   │                               │ • Heartbeat       │
                   ▼                               │ • Telnet          │
          ┌────────────┐                           │ • WLAN-Scan       │
-         │ WERKSRESET  │◄─── Taster >10s ────────│                   │
+         │ WERKSRESET  │◄─── Taster >10s ──────── │                   │
          │             │                          └───────────────────┘
          │ Flash       │
          │ formatieren │
@@ -245,18 +245,18 @@ UDP-Paket empfangen
 │  > 60 Pakete/Min? → Verwerfen           │
 └──────────────────────────┬───────────────┘
                            │
-    ▼
+                           ▼
 ┌─ char-Array Parsing ────────────────────┐
 │  strtok(":") → Befehl, Seq, Signatur    │
 │  Genau 3 Felder? (kein Extra-Feld)      │
 └──────────────────────────┬───────────────┘
                            │
-    ▼
+                           ▼
 ┌─ isdigit-Validierung ──────────────────┐
 │  Sequenz-String nur Ziffern?            │
 └──────────────────────────┬──────────────┘
                            │
-    ▼
+                           ▼
 ┌─ HMAC berechnen & vergleichen ─────────┐
 │  Payload = "BEFEHL:SEQ"                 │
 │  HMAC = SHA256(payload, secret)         │
@@ -264,18 +264,18 @@ UDP-Paket empfangen
 │  Constant-Time Vergleich                │
 └──────────────────────────┬──────────────┘
                            │
-    ▼
+                           ▼
 ┌─ Replay-Window prüfen ────────────────┐
 │  Sequenz schon gesehen?                │
 │  Sequenz zu alt (außerhalb Fenster)?   │
 └──────────────────────────┬─────────────┘
                            │
-    ▼
+                           ▼
 ┌─ Sequenz in Flash sichern ────────────┐
 │  (alle 5 Inkremente)                   │
 └──────────────────────────┬─────────────┘
                            │
-    ▼
+                           ▼
 ┌─ Befehl ausführen ───────────────────┐
 │  CMD_ALARM_AN  → alarmAktiv = true   │
 │  CMD_ALARM_AUS → alarmAktiv = false  │
@@ -295,7 +295,7 @@ Der Kern-Designunterschied zu einer naiven Implementierung:
 ┌─────────────────────────────────────────────────────────┐
 │                     ZUSTAND_BEREIT                      │
 │                                                         │
-│  UDP ─ Heartbeat ─ Telnet ─ WLAN-Scan ─ mDNS ─ LED    │
+│  UDP ─ Heartbeat ─ Telnet ─ WLAN-Scan ─ mDNS ─ LED      │
 │  Alle Tasks laufen parallel im Loop                     │
 └─────────────────────────────────────────────────────────┘
 
@@ -307,13 +307,13 @@ Der Kern-Designunterschied zu einer naiven Implementierung:
 │                                                         │
 │  ✅ aktualisiereAlarmHardware()   (200ms LED/Summer)    │
 │  ✅ verarbeiteUdpEmpfang()        (kann ALARM_OFF)      │
-│  ✅ verarbeiteTaster()             (kann deaktivieren)   │
-│  ✅ aktualisiereWlanLed()          (Status-Anzeige)      │
+│  ✅ verarbeiteTaster()             (kann deaktivieren)  │
+│  ✅ aktualisiereWlanLed()          (Status-Anzeige)     │
 │                                                         │
-│  ❌ verarbeiteHeartbeat()          PAUSIERT              │
-│  ❌ pruefeTelnetZugang()           PAUSIERT              │
-│  ❌ verwalteWlanVerbindung()       PAUSIERT              │
-│  ❌ mdnsUpdate()                   PAUSIERT              │
+│  ❌ verarbeiteHeartbeat()          PAUSIERT             │
+│  ❌ pruefeTelnetZugang()           PAUSIERT             │
+│  ❌ verwalteWlanVerbindung()       PAUSIERT             │
+│  ❌ mdnsUpdate()                   PAUSIERT             │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -342,7 +342,8 @@ Phase A:  LED_ROT=AN   LED_GELB=AUS   SUMMER_1=AN   SUMMER_2=AN
 Phase B:  LED_ROT=AUS  LED_GELB=AN    SUMMER_1=AN   SUMMER_2=AN
 ```
 
-### Schaltplan (vereinfacht)
+### Schaltplan (vereinfacht) 
+Hinweis: Reale Widerstandswerte bitte den Schaltplänen unter ```hardware/schematics``` entnehmen.
 
 ```
                 NodeMCU V2
