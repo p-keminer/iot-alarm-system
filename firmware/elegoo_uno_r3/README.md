@@ -1,4 +1,4 @@
-# Alarmsystem - Arduino Nano
+# Alarmsystem - Uno R3 (Master)
 
 RFID-gesteuerte Alarmanlage mit Magnetsensoren, HAL-Architektur und Pico2W-Anbindung.
 
