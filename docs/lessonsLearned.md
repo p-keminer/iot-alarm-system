@@ -120,4 +120,4 @@ This project demonstrates that a systematic approach – from datasheet analysis
 
 ---
 
-[Zurück zur Haupt-Dokumentation / Back to main dokumentation](/README.md)
+[Zurück zur Haupt-Dokumentation / Back to main dokumentation](../README.md)

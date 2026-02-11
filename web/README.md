@@ -146,4 +146,4 @@ tail -f /var/log/php8.2-fpm.log
 ```
 
 
-[Zurück zur Haupt-Dokumentation / Back to main dokumentation](/README.md)
+[Zurück zur Haupt-Dokumentation / Back to main dokumentation](../README.md)

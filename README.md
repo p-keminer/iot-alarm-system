@@ -17,7 +17,7 @@ Basic IoT alarm system based on ESP8266 and Elegoo Uno R3, featuring magnetic Ha
 
 ---
 
-[![Docs: Lessons Learned](https://img.shields.io/badge/Docs-Lessons%20Learned-yellow)](docs/lessonsLearned.md) [![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-blue)](web/README.md) [![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266_nodes/sketch_empfaengerESP/sketch_empfaengerESP.ino) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266_nodes/sketch_senderESP/sketch_senderESP.ino) [![Schematic: Sending](https://img.shields.io/badge/Schematic-%20Sending_KiCad-blueviolet)](hardware/pcb/r3_senderEsp/schaltplan_r3_senderEsp.png) [![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving_KiCad-blueviolet)](hardware/pcb/empfaengerEsp/schaltplanEmpfaenger.png) 
+[![Docs: Lessons Learned](https://img.shields.io/badge/Docs-Lessons%20Learned-yellow)](docs/lessonsLearned.md) [![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-blue)](web/) [![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266_nodes/sketch_empfaengerESP) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266_nodes/sketch_senderESP/) [![Schematic: Sending](https://img.shields.io/badge/Schematic-%20Sending_KiCad-blueviolet)](hardware/pcb/r3_senderEsp/schaltplan_r3_senderEsp.png) [![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving_KiCad-blueviolet)](hardware/pcb/empfaengerEsp/schaltplanEmpfaenger.png) 
 
 ---
 
@@ -92,7 +92,7 @@ Ein Ki-Assisted selbstentwickeltes, professionelles Web-Dashboard ermöglicht di
 
 A Ki Assisted-developed professional web dashboard enables central monitoring and control of all system components. The dashboard runs on a Raspberry Pi Zero 2 W and provides a modern, responsive user interface for desktop and mobile devices.
 
-[![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-blue)](web/README.md)
+[![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-blue)](web/)
 
 ---
 

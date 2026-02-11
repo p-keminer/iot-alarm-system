@@ -404,4 +404,4 @@ Nach dem Login werden alle `sendeProtokoll()`-Nachrichten auch an die Telnet-Ses
 
 6. **Factory Reset:** Reset-Taster >10 Sekunden gedrückt halten, dann loslassen
 
-[Zurück zur Haupt-Dokumentation / Back to main dokumentation](/README.md)
+[Zurück zur Haupt-Dokumentation / Back to main dokumentation](../../../README.md)
