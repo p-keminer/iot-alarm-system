@@ -34,4 +34,4 @@ Folgende Schritte sind dazu auf dem RaspberryPi zu implementieren:
 3. **Alarm-Trigger:** Automatisierte Eskalation des Alarmzustands (Pi -> USB -> R3), sofern innerhalb des definierten Zeitfensters keine Verbindung wiederhergestellt werden kann oder die Netzwerkanzahl zum Referenzwert eine signifikante Diskrepanz aufweist.
 4. **Heartbeat als Sicherheitsnetz:** Implementieren eines Heartbeats Signal über USB um zusätzliche Dos Attacken auf den Pi abzufangen.
 
-[Zurück zur Haupt-Dokumentation / Back to main dokumentation](../README.md)
+[Zurück zur Haupt-Dokumentation / Back to main dokumentation](/README.md)

@@ -540,4 +540,4 @@ Nach Login: Alle `sendeProtokoll()`-Meldungen werden live gestreamt.
 
 7. **Factory Reset:** Taster >10s drücken, dann loslassen
 
-[Zurück zur Haupt-Dokumentation / Back to main dokumentation](../README.md)
+[Zurück zur Haupt-Dokumentation / Back to main dokumentation](/README.md)
