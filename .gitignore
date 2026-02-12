@@ -18,6 +18,7 @@ node_modules/
 include/secrets.h
 src/secrets.h
 .env
+*.secrets
 
 # --- System-Dateien ---
 .DS_Store

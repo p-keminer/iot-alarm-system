@@ -1,0 +1,13 @@
+title: Embedded Repo Secret Scan  
+  
+# Use upstream ruleset  
+extends:  
+  - https://raw.githubusercontent.com/gitleaks/gitleaks/master/config/gitleaks.toml  
+  
+allowlist:  
+  description: Allow common non-secret tokens & code patterns  
+  regexes:  
+    - csrf_token  
+    - CSRF_TOKEN  
+    - authHeader  
+    - empfangenerToken  
