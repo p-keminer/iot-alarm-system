@@ -1,5 +1,6 @@
 <?php
-// api.php - V5.1 (Security Hardened + Lighttpd-kompatibel)
+
+// api.php - V5.3 (Security Hardened + File Locking + SD-Card Safe)
 
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
@@ -30,18 +31,67 @@ if (!file_exists($confFile)) {
         "timeout_active"  => true,
         "timeout_minutes" => 5,
         "esp_token"       => bin2hex(random_bytes(16)),
-        "camera_port"     => 8082
+        "camera_port"     => 8082,
+        "alarm_pin"       => password_hash("1234", PASSWORD_BCRYPT)
     ];
     file_put_contents($confFile, json_encode($defaults));
 }
 
 // ============================================================
-// SECURITY HELPERS
+// SECURITY & LOCKING HELPERS
 // ============================================================
+
+/**
+ * Sicheres JSON-Lesen mit Shared Lock (LOCK_SH)
+ * Respektiert Write-Locks von Python/PHP
+ */
+function readJsonLocked($file) {
+    if (!file_exists($file)) return [];
+
+    $fp = fopen($file, 'r');
+    if (!$fp) return [];
+
+    $data = [];
+    if (flock($fp, LOCK_SH)) { // Shared Lock (Warten auf Writer)
+        $size = filesize($file);
+        if ($size > 0) {
+            $json = fread($fp, $size);
+            $data = json_decode($json, true);
+        }
+        flock($fp, LOCK_UN);
+    }
+    fclose($fp);
+
+    return is_array($data) ? $data : [];
+}
+
+/**
+ * Sicheres JSON-Schreiben mit Exlusive Lock (LOCK_EX)
+ * Leert die Datei erst, wenn der Lock steht.
+ * fsync() erzwingt Schreiben auf SD-Karte (Stromausfall-Schutz).
+ */
+function writeJsonLocked($file, $data) {
+    $fp = fopen($file, 'c+'); // c+ = Lesen & Schreiben, Zeiger am Anfang
+    if ($fp) {
+        if (flock($fp, LOCK_EX)) { // Exklusiver Lock (Warten...)
+            ftruncate($fp, 0);     // Jetzt sicher leeren
+            rewind($fp);           // Sicherstellen, dass wir am Anfang sind
+            fwrite($fp, json_encode($data));
+            fflush($fp);           // Puffer -> OS Cache
+            
+            // ⚡ ECHTE PERSISTENZ (Wichtig für SD-Karten)
+            if (function_exists('fsync')) {
+                fsync($fp);        // OS Cache -> Disk (PHP 8.1+)
+            }
+
+            flock($fp, LOCK_UN);   // Freigeben
+        }
+        fclose($fp);
+    }
+}
 
 function requireAuth($dieOnFail = true) {
     if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
-        // Timeout-Check auch fuer AJAX-Requests
         $confFile = 'data/settings.json';
         if (file_exists($confFile)) {
             $s = json_decode(file_get_contents($confFile), true);
@@ -98,9 +148,6 @@ function checkRateLimit($maxRequests = 60, $windowSeconds = 60) {
     file_put_contents($file, json_encode(array_values($data)));
 }
 
-/**
- * Robuste Auth-Header-Erkennung fuer alle Webserver-Konfigurationen
- */
 function getAuthorizationHeader() {
     if (!empty($_SERVER['HTTP_AUTHORIZATION']))          return $_SERVER['HTTP_AUTHORIZATION'];
     if (!empty($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) return $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
@@ -191,7 +238,6 @@ session_start();
 // A. DASHBOARD AKTIONEN
 // ============================================================
 
-// Lighttpd CGI Workaround: $_POST kann leer sein
 $_rawPostBody = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && isset($_GET['action'])) {
     $_rawPostBody = file_get_contents('php://input');
@@ -203,7 +249,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST) && isset($_GET['actio
 if (isset($_GET['action'])) {
     $action = $_GET['action'];
 
-    // Kein Login noetig
     if ($action === 'ping_activity') {
         if (requireAuth(false)) {
             $_SESSION['last_activity'] = time();
@@ -216,48 +261,9 @@ if (isset($_GET['action'])) {
         exit;
     }
 
-    // Debug-Endpunkt: zeigt welche Headers ankommen
-    if ($action === 'debug_headers') {
-        requireAuth();
-        $info = [
-            'HTTP_AUTHORIZATION'          => $_SERVER['HTTP_AUTHORIZATION'] ?? '(not set)',
-            'REDIRECT_HTTP_AUTHORIZATION' => $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '(not set)',
-            'HTTP_X_ESP_TOKEN'            => $_SERVER['HTTP_X_ESP_TOKEN'] ?? '(not set)',
-            'resolved'                    => getAuthorizationHeader() ?: '(empty)',
-            'sapi'                        => php_sapi_name(),
-            'server'                      => $_SERVER['SERVER_SOFTWARE'] ?? 'unknown'
-        ];
-        header('Content-Type: application/json');
-        echo json_encode($info, JSON_PRETTY_PRINT);
-        exit;
-    }
-
-    // Debug-Endpunkt: testet POST-Datenempfang (kein CSRF noetig)
-    if ($action === 'debug_post') {
-        requireAuth();
-        global $_rawPostBody;
-        $info = [
-            'REQUEST_METHOD'  => $_SERVER['REQUEST_METHOD'],
-            'CONTENT_TYPE'    => $_SERVER['CONTENT_TYPE'] ?? $_SERVER['HTTP_CONTENT_TYPE'] ?? '(not set)',
-            '_POST'           => $_POST,
-            'raw_body'        => substr($_rawPostBody ?: '(not captured)', 0, 500),
-            'csrf_in_post'    => $_POST['csrf_token'] ?? '(missing)',
-            'csrf_in_header'  => $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '(missing)',
-            'csrf_in_session' => $_SESSION['csrf_token'] ?? '(missing)',
-            'csrf_match'      => (!empty($_POST['csrf_token']) && hash_equals($_SESSION['csrf_token'] ?? '', $_POST['csrf_token'])) ? 'YES' : 'NO',
-            'session_id'      => session_id(),
-            'session_data'    => ['loggedin' => $_SESSION['loggedin'] ?? false, 'last_activity' => $_SESSION['last_activity'] ?? 0]
-        ];
-        header('Content-Type: application/json');
-        echo json_encode($info, JSON_PRETTY_PRINT);
-        exit;
-    }
-
-    // Ab hier: Login + Rate Limit
     requireAuth();
     checkRateLimit(60, 60);
 
-    // Lesend (GET ok)
     if ($action === 'get_user_logs') {
         header('Content-Type: application/json');
         echo file_get_contents($userLogFile);
@@ -278,20 +284,110 @@ if (isset($_GET['action'])) {
         echo json_encode(['esp_token' => $s['esp_token'] ?? '']);
         exit;
     }
+    if ($action === 'export_telemetry') {
+        $csvFile = $dataDir . 'telemetry.csv';
+        if (!file_exists($csvFile)) {
+            http_response_code(404);
+            die('Keine Telemetrie-Daten vorhanden.');
+        }
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="telemetry_' . date('Y-m-d_H-i-s') . '.csv"');
+        echo "timestamp,source,rssi,heap\n";
+        readfile($csvFile);
+        exit;
+    }
 
-    // Schreibend: POST + CSRF
+    if ($action === 'get_recordings') {
+        $recDir = $dataDir . 'recordings';
+        $files = [];
+        if (is_dir($recDir)) {
+            foreach (glob($recDir . '/alarm_*.{avi,mp4,mkv}', GLOB_BRACE) as $f) {
+                $files[] = [
+                    'name' => basename($f),
+                    'size' => filesize($f),
+                    'size_mb' => round(filesize($f) / 1048576, 1),
+                    'date' => date('d.m.Y H:i:s', filemtime($f)),
+                    'timestamp' => filemtime($f)
+                ];
+            }
+        }
+        usort($files, function($a, $b) { return $b['timestamp'] - $a['timestamp']; });
+        echo json_encode(['recordings' => $files]);
+        exit;
+    }
+
+    if ($action === 'download_recording' && isset($_GET['file'])) {
+        $filename = basename($_GET['file']);
+        $filepath = $dataDir . 'recordings/' . $filename;
+        if (!file_exists($filepath) || !preg_match('/^alarm_\d{8}_\d{6}\.(avi|mp4|mkv)$/', $filename)) {
+            http_response_code(404);
+            die('Datei nicht gefunden');
+        }
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . filesize($filepath));
+        readfile($filepath);
+        exit;
+    }
+
+    // === ALARM STATUS (Locked Read) ===
+    if ($action === 'get_alarm_status') {
+        $statusFile2 = $dataDir . 'alarm_monitor.json';
+
+        if (file_exists($statusFile2)) {
+            $data = readJsonLocked($statusFile2); // Locked Read
+            echo json_encode($data);
+        } else {
+            echo json_encode(['state' => 'not_running', 'timestamp' => null]);
+        }
+        exit;
+    }
+
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         http_response_code(405);
         die(json_encode(['error' => 'POST required']));
     }
     validateCSRF();
 
+    if ($action === 'delete_recording' && isset($_POST['file'])) {
+        $filename = basename($_POST['file']);
+        $filepath = $dataDir . 'recordings/' . $filename;
+        if (!file_exists($filepath) || !preg_match('/^alarm_\d{8}_\d{6}\.(avi|mp4|mkv)$/', $filename)) {
+            http_response_code(404);
+            die(json_encode(['error' => 'Datei nicht gefunden']));
+        }
+        unlink($filepath);
+        logUserAction("Recordings", "Aufnahme geloescht: $filename");
+        echo json_encode(['status' => 'ok', 'message' => "Aufnahme geloescht: $filename"]);
+        exit;
+    }
+
+    if ($action === 'delete_all_recordings') {
+        $recDir = $dataDir . 'recordings';
+        $count = 0;
+        if (is_dir($recDir)) {
+            foreach (glob($recDir . '/alarm_*.{avi,mp4,mkv}', GLOB_BRACE) as $f) {
+                unlink($f);
+                $count++;
+            }
+        }
+        logUserAction("Recordings", "$count Aufnahmen geloescht");
+        echo json_encode(['status' => 'ok', 'message' => "$count Aufnahmen geloescht"]);
+        exit;
+    }
+
     if ($action === 'clear_logs' && isset($_POST['target'])) {
         $target = sanitizeNodeName($_POST['target']);
         $lines = file_exists($logFile) ? file($logFile) : [];
-        $filtered = array_filter($lines, function($line) use ($target) {
-            return strpos($line, $target . ':') === false;
-        });
+        if ($target === 'sender') {
+            $filtered = array_filter($lines, function($line) {
+                return strpos($line, 'receiver:') !== false || strpos($line, 'camera:') !== false;
+            });
+        } else {
+            $filtered = array_filter($lines, function($line) use ($target) {
+                return strpos($line, $target . ':') === false;
+            });
+        }
         file_put_contents($logFile, implode('', $filtered));
         logUserAction("Clear Logs", "Logs fuer '$target' geloescht");
         echo json_encode(['status' => 'ok', 'message' => "Logs geloescht"]);
@@ -305,6 +401,22 @@ if (isset($_GET['action'])) {
         exit;
     }
 
+    if ($action === 'clear_telemetry') {
+        $csvFile = $dataDir . 'telemetry.csv';
+        if (file_exists($csvFile)) @unlink($csvFile);
+        if (file_exists($csvFile . '.old')) @unlink($csvFile . '.old');
+        logUserAction("Clear Telemetry", "Telemetrie-Daten geloescht");
+        echo json_encode(['status' => 'ok', 'message' => 'Telemetrie geloescht.']);
+        exit;
+    }
+
+    if ($action === 'clear_all_logs') {
+        file_put_contents($logFile, "");
+        logUserAction("Clear All Logs", "System-Logs geloescht");
+        echo json_encode(['status' => 'ok', 'message' => 'System-Logs geloescht.']);
+        exit;
+    }
+
     if ($action === 'save_settings' && isset($_POST['settings'])) {
         $new = json_decode($_POST['settings'], true);
         if (!$new) { http_response_code(400); die(json_encode(['error' => 'Invalid JSON'])); }
@@ -312,6 +424,8 @@ if (isset($_GET['action'])) {
 
         if (!empty($new['password'])) { $new['password'] = password_hash($new['password'], PASSWORD_BCRYPT); }
         else { $new['password'] = $cur['password']; }
+        if (!empty($new['alarm_pin'])) { $new['alarm_pin'] = password_hash($new['alarm_pin'], PASSWORD_BCRYPT); }
+        else { $new['alarm_pin'] = $cur['alarm_pin'] ?? password_hash("1234", PASSWORD_BCRYPT); }
         $new['esp_token'] = $cur['esp_token'] ?? bin2hex(random_bytes(16));
 
         if (!isset($new['timeout_active'])) $new['timeout_active'] = false;
@@ -320,7 +434,7 @@ if (isset($_GET['action'])) {
         $new['camera_port'] = (int)($new['camera_port'] ?? $cur['camera_port'] ?? 8082);
         $new['site_title'] = htmlspecialchars(substr($new['site_title'] ?? 'IoT-AlarmSystem', 0, 50));
 
-        $allowed = ['password','refresh_rate','site_title','timeout_active','timeout_minutes','esp_token','camera_port'];
+        $allowed = ['password','refresh_rate','site_title','timeout_active','timeout_minutes','esp_token','camera_port','alarm_pin'];
         $final = [];
         foreach ($allowed as $k) $final[$k] = $new[$k] ?? $cur[$k] ?? null;
 
@@ -355,13 +469,12 @@ if (isset($_GET['action'])) {
         $target = sanitizeNodeName($_POST['target']);
         $cmd = sanitizeCommand($_POST['cmd']);
 
-        // Befehl IMMER speichern (auch wenn offline)
         $cmds = json_decode(file_get_contents($cmdFile), true) ?? [];
         $cmds[$target] = $cmd;
         file_put_contents($cmdFile, json_encode($cmds));
 
         $status = json_decode(file_get_contents($statusFile), true) ?? [];
-        $isOnline = isset($status[$target]['last_seen']) && (time() - $status[$target]['last_seen'] < 30);
+        $isOnline = isset($status[$target]['last_seen']) && (time() - $status[$target]['last_seen'] < 60);
 
         logUserAction("Command", "'$cmd' -> '$target'" . ($isOnline ? "" : " (offline)"));
         $msg = $isOnline
@@ -380,11 +493,91 @@ if (isset($_GET['action'])) {
         exit;
     }
 
+    if ($action === 'serial_send' && isset($_POST['cmd'])) {
+        $cmd = $_POST['cmd'];
+        $erlaubt = ['SCHARF', 'UNSCHARF', '1', '0'];
+        if (!in_array($cmd, $erlaubt)) {
+            http_response_code(400);
+            die(json_encode(['error' => 'Unerlaubter Befehl']));
+        }
+
+        $pin = isset($_POST['alarm_pin']) ? $_POST['alarm_pin'] : '';
+        $s = json_decode(file_get_contents($confFile), true) ?? [];
+        $storedPin = isset($s['alarm_pin']) ? $s['alarm_pin'] : '';
+        if (empty($storedPin)) {
+            $storedPin = password_hash("1234", PASSWORD_BCRYPT);
+            $s['alarm_pin'] = $storedPin;
+            file_put_contents($confFile, json_encode($s));
+        }
+        if (empty($pin) || !password_verify($pin, $storedPin)) {
+            http_response_code(401);
+            logUserAction("Alarm", "PIN falsch - Zugriff verweigert");
+            die(json_encode(['error' => 'Falscher Alarm-PIN!']));
+        }
+
+        $port = null;
+        foreach (['/dev/ttyUSB0', '/dev/ttyUSB1', '/dev/ttyACM0', '/dev/ttyACM1'] as $p) {
+            if (file_exists($p)) { $port = $p; break; }
+        }
+        if (!$port) {
+            echo json_encode(['status' => 'error', 'message' => 'Kein serieller Port gefunden. Arduino angeschlossen?']);
+            exit;
+        }
+
+        $serialCmd = ($cmd === 'SCHARF' || $cmd === '1') ? '1' : '0';
+        $label = ($serialCmd === '1') ? 'SCHARF' : 'UNSCHARF';
+
+        exec("stty -F " . escapeshellarg($port) . " 9600 cs8 -cstopb -parenb -echo -hupcl raw 2>&1", $sttyOut, $sttyRc);
+        if ($sttyRc !== 0) {
+            echo json_encode(['status' => 'error', 'message' => 'Port-Konfiguration fehlgeschlagen: ' . implode(' ', $sttyOut) . ' - Tipp: sudo usermod -a -G dialout www-data']);
+            exit;
+        }
+
+        usleep(50000);
+
+        $fp = @fopen($port, 'w');
+        if ($fp === false) {
+            echo json_encode(['status' => 'error', 'message' => 'Senden fehlgeschlagen. Berechtigung pruefen: sudo usermod -a -G dialout www-data']);
+            exit;
+        }
+        fwrite($fp, $serialCmd . "\n");
+        fflush($fp);
+        usleep(50000);
+        fclose($fp);
+
+        logUserAction("Alarm", "$label via Seriell an $port");
+        $logEntry = date("[d.m.Y H:i:s]") . " camera: Alarm $label gesendet (Seriell -> $port)\n";
+        file_put_contents($logFile, $logEntry, FILE_APPEND);
+        echo json_encode(['status' => 'ok', 'message' => "Alarm $label gesendet ($port)", 'port' => $port, 'cmd' => $serialCmd]);
+        exit;
+    }
+
     if ($action === 'pi_reboot') {
         logUserAction("PI REBOOT", "Neustart ausgeloest");
         echo json_encode(['status' => 'ok', 'message' => 'Pi wird neugestartet...']);
         if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
         exec('sudo /sbin/reboot 2>&1 &');
+        exit;
+    }
+
+    if ($action === 'pi_shutdown') {
+        $pin = isset($_POST['alarm_pin']) ? $_POST['alarm_pin'] : '';
+        $s = json_decode(file_get_contents($confFile), true) ?? [];
+        $storedPin = isset($s['alarm_pin']) ? $s['alarm_pin'] : '';
+        if (empty($storedPin)) {
+            $storedPin = password_hash("1234", PASSWORD_BCRYPT);
+            $s['alarm_pin'] = $storedPin;
+            file_put_contents($confFile, json_encode($s));
+        }
+        if (empty($pin) || !password_verify($pin, $storedPin)) {
+            http_response_code(401);
+            logUserAction("PI SHUTDOWN", "PIN falsch - Zugriff verweigert");
+            die(json_encode(['error' => 'Falscher Alarm-PIN!']));
+        }
+        logUserAction("PI SHUTDOWN", "Herunterfahren ausgeloest");
+        echo json_encode(['status' => 'ok', 'message' => 'Pi wird heruntergefahren...']);
+        if (function_exists('fastcgi_finish_request')) fastcgi_finish_request();
+        exec('sudo /sbin/poweroff 2>&1 &');
         exit;
     }
 
@@ -428,9 +621,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_GET['action'])) {
                 'reset_reason' => substr($data['reset_reason'] ?? 'unknown', 0, 32),
                 'uptime'    => (int)($data['uptime'] ?? 0)
             ];
-            $cs = json_decode(file_get_contents($statusFile), true) ?? [];
+
+            // === STATUS LOCKING (Locked Read + Write) ===
+            $cs = readJsonLocked($statusFile); //  Locked Read
             
-            // Auto-Log: Heartbeat alle 60s loggen (damit Receiver im Log erscheint)
             $lastLogTime = $cs[$source]['last_log_time'] ?? 0;
             $statusChanged = ($cs[$source]['status'] ?? '') !== $sd['status'];
             if (!isset($data['log']) && (time() - $lastLogTime >= 60 || $statusChanged)) {
@@ -446,7 +640,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_GET['action'])) {
             }
             
             $cs[$source] = array_merge($cs[$source] ?? [], $sd);
-            file_put_contents($statusFile, json_encode($cs));
+            writeJsonLocked($statusFile, $cs); //  Locked Write (with fsync)
+            // ============================================
 
             $csvFile = $dataDir . 'telemetry.csv';
             if (file_exists($csvFile) && filesize($csvFile) > 1000000) rename($csvFile, $csvFile . ".old");
@@ -481,33 +676,61 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !isset($_GET['action'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['get']) && $_GET['get'] === 'all') {
     requireAuth();
 
-    $status = json_decode(file_get_contents($statusFile), true) ?? [];
+    // === STATUS LOCKING (Locked Read) ===
+    $status = readJsonLocked($statusFile); // Locked Read
+    // ====================================
+
     foreach ($status as $k => $v) {
-        $status[$k]['online'] = (isset($v['last_seen']) && time() - $v['last_seen'] < 30);
+        $status[$k]['online'] = (isset($v['last_seen']) && time() - $v['last_seen'] < 60);
     }
 
-    // Pi: immer online
     $piUptime = 0;
     if (file_exists('/proc/uptime')) {
         $parts = explode(' ', file_get_contents('/proc/uptime'));
         $piUptime = (int)floatval($parts[0]);
     }
+
     $status['pi'] = [
-        'last_seen' => time(),
-        'ip' => $_SERVER['SERVER_ADDR'] ?? '127.0.0.1',
-        'status' => 'Running',
-        'online' => true,
-        'rssi' => 0, 'heap' => 0,
-        'uptime' => $piUptime,
-        'reset_reason' => 'N/A'
+        'last_seen'    => time(),
+        'ip'           => $_SERVER['SERVER_ADDR'] ?? '127.0.0.1',
+        'status'       => 'Running',
+        'online'       => true,
+        'rssi'         => 0,
+        'heap'         => 0,
+        'uptime'       => $piUptime,
+        'reset_reason' => 'N/A',
+        'cpu_temp'     => 0,
+        'cpu_load'     => '0'
     ];
+
+    if (file_exists('/sys/class/thermal/thermal_zone0/temp')) {
+        $raw = trim(file_get_contents('/sys/class/thermal/thermal_zone0/temp'));
+        $status['pi']['cpu_temp'] = round((int)$raw / 1000, 1);
+    }
+
+    if (file_exists('/proc/loadavg')) {
+        $parts = explode(' ', trim(file_get_contents('/proc/loadavg')));
+        $status['pi']['cpu_load'] = $parts[0] ?? '0';
+    }
 
     $logs = file_exists($logFile) ? array_slice(file($logFile), -20) : [];
     $settings = json_decode(file_get_contents($confFile), true);
     unset($settings['password'], $settings['esp_token']);
 
+    // === ALARM MONITOR LOCKING (Locked Read) ===
+    $alarmMonFile = $dataDir . 'alarm_monitor.json';
+    $alarmMon = file_exists($alarmMonFile)
+        ? readJsonLocked($alarmMonFile) //  Locked Read
+        : ['state' => 'not_running'];
+    // ===========================================
+
     header('Content-Type: application/json');
-    echo json_encode(["status" => $status, "logs" => $logs, "config" => $settings]);
+    echo json_encode([
+        "status"        => $status,
+        "logs"          => $logs,
+        "config"        => $settings,
+        "alarm_monitor" => $alarmMon
+    ]);
     exit;
 }
 ?>

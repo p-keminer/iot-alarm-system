@@ -208,7 +208,7 @@ if (file_exists($logFile)) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --bg-primary: #0f172a;
@@ -539,6 +539,16 @@ if (file_exists($logFile)) {
         
         .btn-primary:hover {
             background: #2563eb;
+        }
+        
+        .btn-success {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
         }
         
         /* === TOGGLE SWITCH === */
@@ -994,15 +1004,62 @@ if (file_exists($logFile)) {
                                 <span class="info-label">IP Address</span>
                                 <span class="info-value" id="ip-camera">---</span>
                             </div>
+                            <div class="info-row">
+                                <span class="info-label">CPU Temp</span>
+                                <span class="info-value" id="pi-cpu-temp">---</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">CPU Load</span>
+                                <span class="info-value" id="pi-cpu-load">---</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Aufnahme</span>
+                                <span class="info-value" id="pi-rec-status">---</span>
+                            </div>
                         </div>
                         <div class="btn-group">
                             <button class="btn btn-primary" onclick="openCameraStream()">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                 Stream
                             </button>
+                            <button class="btn btn-primary" onclick="switchView('recordings')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                Aufnahmen
+                            </button>
                             <button class="btn btn-danger" onclick="rebootPi()">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
                                 Reboot
+                            </button>
+                            <button class="btn btn-danger" onclick="shutdownPi()">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                Shutdown
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="card-alarm" class="card">
+                        <div class="card-header">
+                            <div class="card-title">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                Alarmsteuerung
+                            </div>
+                            <div id="alarm-serial-status" style="font-size:12px;color:var(--text-secondary);">Arduino</div>
+                        </div>
+                        <div class="status-message" id="alarm-serial-msg">Bereit</div>
+                        <div class="card-content">
+                            <div class="info-row">
+                                <span class="info-label">Schnittstelle</span>
+                                <span class="info-value" id="alarm-serial-port">Auto-Detect</span>
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-success" onclick="sendSerialCmd('1')" style="flex:1;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                Aktivieren
+                            </button>
+                            <button class="btn btn-danger" onclick="sendSerialCmd('0')" style="flex:1;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                Deaktivieren
                             </button>
                         </div>
                     </div>
@@ -1218,18 +1275,18 @@ if (file_exists($logFile)) {
                         Wartung & Export
                     </h3>
                     <div class="btn-group">
-                        <a href="admin.php?action=export_telemetry" class="btn btn-primary">
+                        <a href="api.php?action=export_telemetry" class="btn btn-primary">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             Telemetrie exportieren (CSV)
                         </a>
-                        <a href="admin.php?action=clear_telemetry" class="btn btn-danger" onclick="return confirm('Telemetrie-Daten wirklich löschen?')">
+                        <button class="btn btn-danger" onclick="clearTelemetry()">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             Telemetrie löschen
-                        </a>
-                        <a href="admin.php?action=clear_all_logs" class="btn btn-danger" onclick="return confirm('System-Logs wirklich löschen?')">
+                        </button>
+                        <button class="btn btn-danger" onclick="clearAllLogs()">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                             System-Logs löschen
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1265,6 +1322,12 @@ if (file_exists($logFile)) {
                         <div class="form-group">
                             <label class="form-label">Change Admin Password</label>
                             <input type="password" id="cfg-pw" class="form-input" placeholder="Enter new password">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Alarm-PIN aendern</label>
+                            <input type="password" id="cfg-alarm-pin" class="form-input" placeholder="Neuer Alarm-PIN (Standard: 1234)">
+                            <div class="form-hint">Separater PIN fuer Alarm Aktivieren/Deaktivieren</div>
                         </div>
                         
                         <div class="form-group">
@@ -1398,6 +1461,43 @@ if (file_exists($logFile)) {
                     </div>
                 </div>
             </div>
+
+            <!-- RECORDINGS VIEW -->
+            <div id="view-recordings" class="view-section">
+                <div class="page-header">
+                    <h1 class="page-title">Alarm-Aufnahmen</h1>
+                    <p class="page-subtitle">Automatische Kameraaufnahmen bei Alarm</p>
+                </div>
+
+                <div class="card" style="margin-bottom: 24px;">
+                    <div class="alert alert-info" id="rec-monitor-status">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <div>
+                            <div style="font-weight: 600;" id="rec-monitor-text">Alarm-Monitor Status</div>
+                            <div style="font-size: 12px; opacity: 0.8; margin-top: 2px;" id="rec-monitor-detail">Lade...</div>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-primary" onclick="loadRecordings()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                            Aktualisieren
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteAllRecordings()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            Alle loeschen
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div id="recordings-container" style="min-height: 100px;">
+                        <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                            Lade Aufnahmen...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <?php endif; ?>
 
         </div>
@@ -1487,17 +1587,33 @@ if (file_exists($logFile)) {
             if (id === 'log-receiver') target = 'receiver';
             if (id === 'log-camera') target = 'camera';
             if (!target) return;
+            if (!confirm(target + ' Logs wirklich loeschen?')) return;
             apiCall('clear_logs', {target: target})
-                .then(function() {
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
                     document.getElementById(id).innerHTML = '<div style="opacity:0.5;text-align:center;padding:20px;">Log cleared</div>';
-                });
+                })
+                ['catch'](function() { alert('Fehler beim Loeschen'); });
+        }
+
+        function clearTelemetry() {
+            if (!confirm('Telemetrie-Daten wirklich loeschen? Charts werden zurueckgesetzt.')) return;
+            apiCall('clear_telemetry')
+                .then(function(r) { return r.json(); })
+                .then(function(data) { alert(data.message || data.error); location.reload(); })
+                ['catch'](function() { alert('Fehler beim Loeschen'); });
+        }
+
+        function clearAllLogs() {
+            if (!confirm('ALLE System-Logs wirklich loeschen?')) return;
+            apiCall('clear_all_logs')
+                .then(function(r) { return r.json(); })
+                .then(function(data) { alert(data.message || data.error); location.reload(); })
+                ['catch'](function() { alert('Fehler beim Loeschen'); });
         }
 
         function openCameraStream() {
-            var el = document.getElementById('ip-camera');
-            var camIp = el ? el.innerText : window.location.hostname;
-            var url = 'http://' + (camIp !== '---' ? camIp : window.location.hostname) + ':' + CAMERA_PORT + '/?action=stream';
-            window.open(url, '_blank');
+            window.open('stream.php', '_blank');
         }
 
         function rebootPi() {
@@ -1509,8 +1625,124 @@ if (file_exists($logFile)) {
                 ['catch'](function() { alert('Request failed'); });
         }
 
+        function shutdownPi() {
+            var pin = prompt('Alarm-PIN eingeben um Pi HERUNTERZUFAHREN:');
+            if (pin === null || pin === '') return;
+            if (!confirm('ACHTUNG: Pi wird KOMPLETT heruntergefahren! Nur durch physischen Neustart wieder erreichbar!')) return;
+            apiCall('pi_shutdown', {alarm_pin: pin})
+                .then(function(r) { return r.json(); })
+                .then(function(data) { alert(data.message || data.error); })
+                ['catch'](function() { alert('Request failed'); });
+        }
+
+        function loadRecordings() {
+            var container = document.getElementById('recordings-container');
+            if (!container) return;
+            container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-secondary);">Lade...</div>';
+            fetch('api.php?action=get_recordings', {credentials: 'same-origin'})
+                .then(function(r) {
+                    if (r.status === 403) { window.location.href = 'index.php?timeout=1'; return null; }
+                    return r.json();
+                })
+                .then(function(data) {
+                    if (!data) return;
+                    var recs = data.recordings || [];
+                    if (recs.length === 0) {
+                        container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">Keine Aufnahmen vorhanden</div>';
+                        return;
+                    }
+                    var html = '<table style="width:100%;border-collapse:collapse;">';
+                    html += '<tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:8px 12px;color:var(--text-secondary);font-size:12px;">Datei</th><th style="text-align:left;padding:8px 12px;color:var(--text-secondary);font-size:12px;">Datum</th><th style="text-align:right;padding:8px 12px;color:var(--text-secondary);font-size:12px;">Groesse</th><th style="padding:8px 12px;"></th></tr>';
+                    recs.forEach(function(rec) {
+                        html += '<tr style="border-bottom:1px solid rgba(51,65,85,0.3);">';
+                        html += '<td style="padding:10px 12px;font-size:13px;">' + rec.name + '</td>';
+                        html += '<td style="padding:10px 12px;font-size:13px;color:var(--text-secondary);">' + rec.date + '</td>';
+                        html += '<td style="padding:10px 12px;font-size:13px;text-align:right;">' + rec.size_mb + ' MB</td>';
+                        html += '<td style="padding:10px 12px;text-align:right;white-space:nowrap;">';
+                        html += '<a href="api.php?action=download_recording&file=' + encodeURIComponent(rec.name) + '" class="btn btn-primary" style="padding:4px 10px;font-size:12px;display:inline-block;margin-right:4px;">Download</a>';
+                        html += '<button onclick="deleteRecording(\'' + rec.name + '\')" class="btn btn-danger" style="padding:4px 10px;font-size:12px;">Loeschen</button>';
+                        html += '</td></tr>';
+                    });
+                    html += '</table>';
+                    container.innerHTML = html;
+                })
+                ['catch'](function(err) {
+                    container.innerHTML = '<div style="text-align:center;padding:20px;color:#ef4444;">Fehler: ' + err + '</div>';
+                });
+            // Alarm-Monitor Status laden
+            fetch('api.php?action=get_alarm_status', {credentials: 'same-origin'})
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    var textEl = document.getElementById('rec-monitor-text');
+                    var detailEl = document.getElementById('rec-monitor-detail');
+                    if (!textEl) return;
+                    var stateMap = {
+                        'idle': 'Alarm-Monitor aktiv - Bereit',
+                        'recording': 'AUFNAHME LAEUFT',
+                        'stopped': 'Alarm-Monitor gestoppt',
+                        'error': 'Fehler',
+                        'not_running': 'Alarm-Monitor nicht gestartet'
+                    };
+                    textEl.textContent = stateMap[data.state] || data.state;
+                    if (data.current_file) {
+                        detailEl.textContent = 'Datei: ' + data.current_file;
+                    } else if (data.error) {
+                        detailEl.textContent = 'Fehler: ' + data.error;
+                    } else {
+                        detailEl.textContent = data.timestamp ? ('Letztes Update: ' + new Date(data.timestamp).toLocaleTimeString('de-DE')) : 'Warte auf Alarm-Signale...';
+                    }
+                })
+                ['catch'](function() {});
+        }
+
+        function deleteRecording(filename) {
+            if (!confirm('Aufnahme "' + filename + '" wirklich loeschen?')) return;
+            apiCall('delete_recording', {file: filename})
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.status === 'ok') loadRecordings();
+                    else alert(data.error || 'Fehler');
+                })
+                ['catch'](function() { alert('Fehler beim Loeschen'); });
+        }
+
+        function deleteAllRecordings() {
+            if (!confirm('ALLE Aufnahmen wirklich loeschen?')) return;
+            apiCall('delete_all_recordings')
+                .then(function(r) { return r.json(); })
+                .then(function(data) { alert(data.message || data.error); loadRecordings(); })
+                ['catch'](function() { alert('Fehler'); });
+        }
+
+        function sendSerialCmd(cmd) {
+            var label = (cmd === '1') ? 'AKTIVIEREN (Scharfschalten)' : 'DEAKTIVIEREN (Unscharfschalten)';
+            var pin = prompt('Alarm-PIN eingeben um ' + label + ':');
+            if (pin === null || pin === '') return;
+            console.log('[ALARM-SERIAL] Sending', cmd);
+            var msgEl = document.getElementById('alarm-serial-msg');
+            var portEl = document.getElementById('alarm-serial-port');
+            if (msgEl) msgEl.textContent = 'Pruefe PIN...';
+            apiCall('serial_send', {cmd: cmd, alarm_pin: pin})
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    console.log('[ALARM-SERIAL] Response:', data);
+                    if (data.status === 'ok') {
+                        if (msgEl) msgEl.textContent = (cmd === '1') ? 'SCHARF' : 'UNSCHARF';
+                        if (portEl && data.port) portEl.textContent = data.port;
+                    } else {
+                        if (msgEl) msgEl.textContent = 'Fehler';
+                    }
+                    alert(data.message || data.error);
+                })
+                ['catch'](function(err) {
+                    console.error('[ALARM-SERIAL] Error:', err);
+                    if (msgEl) msgEl.textContent = 'Fehler!';
+                    alert('Serieller Befehl fehlgeschlagen: ' + err);
+                });
+        }
+
         function switchView(tabName) {
-            var views = ['dashboard', 'logs', 'diagnose', 'config', 'userlogs'];
+            var views = ['dashboard', 'logs', 'diagnose', 'config', 'userlogs', 'recordings'];
             var btnMap = { 'dashboard': 'dash', 'config': 'conf', 'logs': 'logs', 'userlogs': 'userlogs', 'diagnose': 'diag' };
             
             views.forEach(function(v) {
@@ -1529,6 +1761,7 @@ if (file_exists($logFile)) {
             
             if (tabName === 'userlogs') loadUserLogsSimple();
             if (tabName === 'diagnose' && typeof initDiagnoseCharts === 'function') initDiagnoseCharts();
+            if (tabName === 'recordings') loadRecordings();
             
             resetActivityTimer();
         }
@@ -1537,6 +1770,7 @@ if (file_exists($logFile)) {
             var settings = {
                 site_title: document.getElementById('cfg-title').value,
                 password: document.getElementById('cfg-pw').value,
+                alarm_pin: document.getElementById('cfg-alarm-pin').value,
                 refresh_rate: document.getElementById('cfg-refresh').value,
                 timeout_active: document.getElementById('cfg-timeout-active').checked,
                 timeout_minutes: parseInt(document.getElementById('cfg-timeout-min').value)
@@ -1610,6 +1844,33 @@ if (file_exists($logFile)) {
                         camData.status = 'Stream bereit';
                     }
                     updateNode('camera', camData);
+
+                    // Pi Temperatur + CPU Load
+                    var tempEl = document.getElementById('pi-cpu-temp');
+                    var loadEl = document.getElementById('pi-cpu-load');
+                    if (piData.cpu_temp !== undefined && tempEl) {
+                        var temp = parseFloat(piData.cpu_temp);
+                        var color = temp > 70 ? '#ef4444' : (temp > 55 ? '#f59e0b' : '#10b981');
+                        tempEl.innerHTML = '<span style="color:' + color + '">' + temp.toFixed(1) + ' °C</span>';
+                    }
+                    if (piData.cpu_load !== undefined && loadEl) {
+                        loadEl.textContent = piData.cpu_load;
+                    }
+
+                    // Aufnahme-Status
+                    var recEl = document.getElementById('pi-rec-status');
+                    if (recEl && data.alarm_monitor) {
+                        var am = data.alarm_monitor;
+                        if (am.state === 'recording') {
+                            recEl.innerHTML = '<span style="color:#ef4444;font-weight:600;">● REC</span>';
+                        } else if (am.state === 'idle') {
+                            recEl.innerHTML = '<span style="color:#10b981;">Bereit</span>';
+                        } else if (am.state === 'not_running') {
+                            recEl.innerHTML = '<span style="color:#94a3b8;">Inaktiv</span>';
+                        } else {
+                            recEl.textContent = am.state || '---';
+                        }
+                    }
 
                     if (data.config) {
                         timeoutActive = data.config.timeout_active || false;
@@ -1769,6 +2030,16 @@ if (file_exists($logFile)) {
                     chartData[src].time.forEach(function(t) { allTimes[t] = true; });
                 });
                 var sortedTimes = Object.keys(allTimes).map(Number).sort(function(a,b) { return a-b; });
+                
+                if (sortedTimes.length === 0) {
+                    console.log('[CHARTS] Keine Telemetrie-Daten vorhanden');
+                    var rssiEl = document.getElementById('rssiChart');
+                    var heapEl = document.getElementById('heapChart');
+                    if (rssiEl) rssiEl.parentElement.innerHTML = '<div style="color:var(--text-secondary);text-align:center;padding:40px;">Keine Telemetrie-Daten vorhanden. Warte auf ESP-Heartbeats...</div>';
+                    if (heapEl) heapEl.parentElement.innerHTML = '<div style="color:var(--text-secondary);text-align:center;padding:40px;">Keine Telemetrie-Daten vorhanden.</div>';
+                    return;
+                }
+                
                 var labels = sortedTimes.map(function(t) { return new Date(t * 1000).toLocaleTimeString('de-DE'); });
                 
                 function mapToTimeline(srcData, field) {
@@ -1839,6 +2110,15 @@ if (file_exists($logFile)) {
             startDiagRefresh();
         }
         console.log('[INIT] Chart module loaded');
+        // Auto-Init: Falls Diagnose-Tab beim Seitenlade aktiv ist
+        // (Script 1 hat switchView aufgerufen BEVOR diese Funktion definiert war)
+        try {
+            var diagView = document.getElementById('view-diagnose');
+            if (diagView && diagView.style.display === 'block') {
+                console.log('[CHARTS] Diagnose tab active on load - initializing charts');
+                initDiagnoseCharts();
+            }
+        } catch(e) { console.error('[CHARTS] Auto-init error:', e); }
     </script>
 </body>
 </html>

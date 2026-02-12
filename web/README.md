@@ -61,11 +61,14 @@ The system deliberately avoids an SQL database to minimize write cycles on the S
     * `api.php`: Zentraler RESTful Endpoint für alle AJAX-Requests und ESP-Kommunikation.  
       Central RESTful endpoint for all AJAX requests and ESP communication.
 
-* **Datenspeicherung / Data Storage:** JSON-Flatfiles im Ordner `/data/` dienen als persistenter Speicher für Logs und Konfigurationen.  
-  JSON flat files in the `/data/` folder serve as persistent storage for logs and configurations.
+* **Datenspeicherung / Data Storage:**    
+Persistenz über JSON-Flatfiles im Verzeichnis `/data/`.    
+Selektives File-Locking mittels `flock()` für status‑ und race‑kritische Dateien sowie eine bewusst einfache, SD‑karten‑schonende Schreibstrategie (Log‑Rotation, begrenzte Dateigrößen, gezielte Schreibzugriffe).  
+  JSON flat files in the `/data/` directory are used as persistent storage.    
+  Selective file locking via `flock()` is applied to race‑critical status files, combined with a deliberately simple write strategy optimized for SD card longevity (log rotation, bounded file sizes, targeted writes).  
 
-* **Sicherheit / Security:** Session-Hijacking-Prävention durch IP-Bindung und Activity-Tracking.  
-  Session hijacking prevention via IP binding and activity tracking.
+* **Sicherheit / Security:** Session-Hijacking-Prävention durch IP-Bindung, Activity-Tracking und Session-Timeouts.
+  Session hijacking prevention via IP binding, activity tracking and session-timeouts.
 
 ### Frontend-Design
 * **Performance First:** Verzicht auf Bootstrap oder Tailwind zugunsten von handoptimiertem CSS.  
@@ -91,7 +94,7 @@ sudo apt update && sudo apt upgrade -y
 
 # Webserver und PHP-FPM installieren / Install Webserver & PHP
 # Hinweis: Version kann je nach Repo variieren (z.B. php8.2-fpm)
-sudo apt install lighttpd php8.2-fpm -y
+sudo apt install lighttpd php8.4-fpm -y   -y
 
 # FastCGI-PHP Modul aktivieren / Enable FastCGI module
 sudo lighttpd-enable-mod fastcgi-php
@@ -142,7 +145,7 @@ vcgencmd measure_temp
 tail -f /var/log/lighttpd/error.log
 
 # PHP-Fehlerprotokoll / PHP Error Log
-tail -f /var/log/php8.2-fpm.log
+tail -f /var/log/php8.4-fpm.log  
 ```
 
 
