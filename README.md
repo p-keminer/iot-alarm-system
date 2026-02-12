@@ -323,3 +323,12 @@ Der Uno R3 fungiert als **intelligenter Sensor-Hub** und wurde softwareseitig vo
 - **[Claude-Sonnet 4.5 & Opus 4.5/4.6](https://claude.ai/)** – Code-Optimierung und Debugging / Code optimization and debugging
 - **[ChatGPT 5.2 & 4o](https://chat.openai.com/)** – Konzeptentwicklung und Problemlösung / Concept development and problem solving
 - **[Google Gemini 3](https://gemini.google.com/)** – Alternative Perspektiven und Validierung / Alternative perspectives and validation
+
+---
+
+## Sicherheitshinweis / Security Note  
+Standard-Zugangsdaten, IP-Adressen und Konfigurationswerte, die in diesem Repository gezeigt werden, dienen ausschließlich als Platzhalter und müssen vor einem produktiven Einsatz zwingend angepasst werden.  
+Sie wurden bewusst für die öffentliche Veröffentlichung bereinigt.  
+
+ Default credentials, IP addresses and configuration values shown in this repository are placeholders and must be changed before deployment.  
+ They were intentionally sanitized for public release.  
