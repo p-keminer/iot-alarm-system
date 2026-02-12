@@ -8,7 +8,7 @@ Basic IoT alarm system based on ESP8266 and Elegoo Uno R3, featuring magnetic Ha
 
 <div align="center" >
   <a href="#">
-    <img src="media/videos/gifs/sender_pcb.gif" style="height: 350px; ">
+    <img src="media/videos/gifs/sender_r3_pcb.gif" style="height: 350px; ">
   </a>
   <a href="#">
     <img src="media/videos/gifs/receiver_pcb.gif" style="height: 350px; ">
@@ -17,7 +17,7 @@ Basic IoT alarm system based on ESP8266 and Elegoo Uno R3, featuring magnetic Ha
 
 ---
 
-[![Docs: Lessons Learned](https://img.shields.io/badge/Docs-Lessons%20Learned-yellow)](docs/lessons_learned.md) [![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-blue)](web/) [![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266/receiver) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266/sender/) [![Schematic: Sending](https://img.shields.io/badge/Schematic-%20Sending_KiCad-blueviolet)](hardware/pcb/sender/schaltplan_r3_senderEsp.png) [![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving_KiCad-blueviolet)](hardware/pcb/receiver/schaltplanEmpfaenger.png) 
+[![Docs: Lessons Learned](https://img.shields.io/badge/Docs-Lessons%20Learned-yellow)](docs/lessons_learned.md) [![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-blue)](web/) [![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266/receiver) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266/sender/) [![Schematic: Sending](https://img.shields.io/badge/Schematic-%20Sending_KiCad-blueviolet)](hardware/pcb/sender/schematic_sender_r3.png) [![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving_KiCad-blueviolet)](hardware/pcb/receiver/schematic_receiver.png) 
 
 ---
 
@@ -61,7 +61,7 @@ This was my first hands-on embedded systems project, developed with minimal prio
 - Selbst entworfene PCBs / Custom designed PCBs
 - 3D-gedruckte Gehäuse / 3D-printed housings
 
-[![PCB Sending Nodes](https://img.shields.io/badge/PCB-Sending%20Nodes-blue)](hardware/pcb/sender/rückseite_r3_senderEsp.png)  [![PCB Receiving Nodes](https://img.shields.io/badge/PCB-Receiving%20Nodes-blue)](hardware/pcb/receiver/rückseiteEmpfaenger.png) [![Gehäuse: Sensoren](https://img.shields.io/badge/Gehäuse-%20Sensoren-white)](media/photos/gehauesePrototyp.png) [![Gehäuse: Empfänger](https://img.shields.io/badge/Gehäuse-%20Empfänger-white)](mechanics/3d_prints/receiver/EmpfaengerGehaeusePCB.jpg)
+[![PCB Sending Nodes](https://img.shields.io/badge/PCB-Sending%20Nodes-blue)](hardware/pcb/sender/pcb_sender_r3_back.png)  [![PCB Receiving Nodes](https://img.shields.io/badge/PCB-Receiving%20Nodes-blue)](hardware/pcb/receiver/pcb_receiver_back.png) [![Gehäuse: Sensoren](https://img.shields.io/badge/Gehäuse-%20Sensoren-white)](media/photos/prototype_housing.png) [![Gehäuse: Empfänger](https://img.shields.io/badge/Gehäuse-%20Empfänger-white)](mechanics/prints_3d/receiver/receiver_housing.png)
 
 
 **Workflow / Ablauf:**  
@@ -198,7 +198,7 @@ Der Uno R3 fungiert als **intelligenter Sensor-Hub** und wurde softwareseitig vo
 
 *Alle Sketche sind modular aufgebaut, ausführlich kommentiert und nutzen moderne C++ Standards.*
 
-[![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266/receiver/sketch_empfaengerESP.ino) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266/sender/sketch_senderESP.ino)
+[![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266/receiver/sketch_receiver.ino) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266/sender/sketch_sender.ino)
 
 ---
 
@@ -218,7 +218,7 @@ Der Uno R3 fungiert als **intelligenter Sensor-Hub** und wurde softwareseitig vo
 | Gehäuse / Housing | 3D-gedruckt / 3D-printed | Schützt Sensoren und Elektronik / Protects sensors and electronics |
 
 
-[![Schematic: Sending](https://img.shields.io/badge/Schematic-%20Sending_KiCad-blueviolet)](hardware/pcb/sender/schaltplan_r3_senderEsp.png) [![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving_KiCad-blueviolet)](hardware/pcb/receiver/schaltplanEmpfaenger.png) [![Hardware: Components](https://img.shields.io/badge/Hardware-%20Components-violet)](hardware/assembly/components.md) [![Pinmapping: Elegoo Uno R3](https://img.shields.io/badge/Pinmapping-Elegoo%20Uno%20R3-lightgrey)](docs/pinmapping/elegoo_uno_r3.md) [![Pinmapping: Empfänger ESP](https://img.shields.io/badge/Pinmapping-Empfänger%20ESP-lightgrey)](docs/pinmapping/esp8266_receiver.md) [![Pinmapping: Sender ESP](https://img.shields.io/badge/Pinmapping-Sender%20ESP-lightgrey)](docs/pinmapping/esp8266_sender.md)
+[![Schematic: Sending](https://img.shields.io/badge/Schematic-%20Sending_KiCad-blueviolet)](hardware/pcb/sender/schematic_sender_r3.png) [![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving_KiCad-blueviolet)](hardware/pcb/receiver/schematic_receiver.png) [![Hardware: Components](https://img.shields.io/badge/Hardware-%20Components-violet)](hardware/assembly/components.md) [![Pinmapping: Elegoo Uno R3](https://img.shields.io/badge/Pinmapping-Elegoo%20Uno%20R3-lightgrey)](docs/pinmapping/elegoo_uno_r3.md) [![Pinmapping: Empfänger ESP](https://img.shields.io/badge/Pinmapping-Empfänger%20ESP-lightgrey)](docs/pinmapping/esp8266_receiver.md) [![Pinmapping: Sender ESP](https://img.shields.io/badge/Pinmapping-Sender%20ESP-lightgrey)](docs/pinmapping/esp8266_sender.md)
 
 ---
 
@@ -244,7 +244,7 @@ Der Uno R3 fungiert als **intelligenter Sensor-Hub** und wurde softwareseitig vo
 - G-Code-Datei für **Bambu Lab H2S** enthalten / G-code file for **Bambu Lab H2S** included
 - Alle Dateien befinden sich im Ordner `mechanics/` / All files are located in the `mechanics/` folder
 
-[![3D Printed Reed Sensor Housing](https://img.shields.io/badge/3D%20Print-Reed%20Sensor-red)](mechanics/3d_prints/reed_sensor/reed_sensor_gehaeuse.stl) [![3D Printed RFID Sensor Housing](https://img.shields.io/badge/3D%20Print-RFID%20Sensor-red)](mechanics/3d_prints/rfid_sensor/rfid_sensor_gehaeuse.stl) [![3D Printed Receiver Housing](https://img.shields.io/badge/3D%20Print-Receiver%20Housing-red)](mechanics/3d_prints/receiver/EmpfaengerGehaeuse.stl)
+[![3D Printed Reed Sensor Housing](https://img.shields.io/badge/3D%20Print-Reed%20Sensor-red)](mechanics/prints_3d/reed_sensor/reed_sensor_gehaeuse.stl) [![3D Printed RFID Sensor Housing](https://img.shields.io/badge/3D%20Print-RFID%20Sensor-red)](mechanics/prints_3d/rfid_sensor/rfid_sensor_gehaeuse.stl) [![3D Printed Receiver Housing](https://img.shields.io/badge/3D%20Print-Receiver%20Housing-red)](mechanics/prints_3d/receiver/receiver_housing.stl)
 
 ---
 
@@ -276,7 +276,7 @@ Der Uno R3 fungiert als **intelligenter Sensor-Hub** und wurde softwareseitig vo
 - Optimierung für finale Hardware in Arbeit / Optimization for final hardware in progress
 - Erweiterungen geplant (siehe Web Dashboard Sektion) / Extensions planned (see Web Dashboard section)
 
-[![Prototype Breadboard](https://img.shields.io/badge/Prototype-Breadboard-pink)](photos/prototyp_breadboards.png) [![Prototype Perfboard](https://img.shields.io/badge/Prototype-Perfboard-pink)](photos/prototyp_perforatedCircuitBoards.jpg) 
+[![Prototype Breadboard](https://img.shields.io/badge/Prototype-Breadboard-pink)](media/photos/prototype_breadboards.png) [![Prototype Perfboard](https://img.shields.io/badge/Prototype-Perfboard-pink)](media/photos/prototype_perforated_circuit_boards.jpg) 
 
 ---
 
