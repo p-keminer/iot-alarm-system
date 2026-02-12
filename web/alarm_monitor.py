@@ -2,7 +2,7 @@
 """  
 Alarm Monitor Daemon  
 ====================  
-Liest den seriellen Port (Arduino R3) und steuert die Kameraaufnahme.  
+Liest den seriellen Port (Uno R3) und steuert die Kameraaufnahme.  
   
 - ALARM_ON  -> Startet ffmpeg-Aufnahme vom mjpg-streamer  
 - ALARM_OFF -> Stoppt Aufnahme  
