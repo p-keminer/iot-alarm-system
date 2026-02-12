@@ -15,7 +15,7 @@ session_start();
 // EINSTELLUNGEN LADEN
 $confFile = 'data/settings.json';
 $defaults = [
-    "password" => password_hash("admin", PASSWORD_BCRYPT), 
+    "password" => password_hash("CHANGE_ME", PASSWORD_BCRYPT), 
     "refresh_rate" => 2000, 
     "site_title" => "IoT Control Center",
     "timeout_active" => true,
@@ -1326,7 +1326,7 @@ if (file_exists($logFile)) {
                         
                         <div class="form-group">
                             <label class="form-label">Alarm-PIN aendern</label>
-                            <input type="password" id="cfg-alarm-pin" class="form-input" placeholder="Neuer Alarm-PIN (Standard: 1234)">
+                            <input type="password" id="cfg-alarm-pin" class="form-input" placeholder="Neuer Alarm-PIN (Standard: CHANGE_ME)">
                             <div class="form-hint">Separater PIN fuer Alarm Aktivieren/Deaktivieren</div>
                         </div>
                         

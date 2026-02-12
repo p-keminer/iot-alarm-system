@@ -25,14 +25,14 @@ if (!file_exists($userLogFile)) file_put_contents($userLogFile, json_encode([]))
 
 if (!file_exists($confFile)) {
     $defaults = [
-        "password"        => password_hash("admin", PASSWORD_BCRYPT),
+        "password"        => password_hash("CHANGE_ME", PASSWORD_BCRYPT),
         "refresh_rate"    => 2000,
         "site_title"      => "IoT-AlarmSystem",
         "timeout_active"  => true,
         "timeout_minutes" => 5,
         "esp_token"       => bin2hex(random_bytes(16)),
         "camera_port"     => 8082,
-        "alarm_pin"       => password_hash("1234", PASSWORD_BCRYPT)
+        "alarm_pin"       => password_hash("CHANGE_ME", PASSWORD_BCRYPT)
     ];
     file_put_contents($confFile, json_encode($defaults));
 }
@@ -425,7 +425,7 @@ if (isset($_GET['action'])) {
         if (!empty($new['password'])) { $new['password'] = password_hash($new['password'], PASSWORD_BCRYPT); }
         else { $new['password'] = $cur['password']; }
         if (!empty($new['alarm_pin'])) { $new['alarm_pin'] = password_hash($new['alarm_pin'], PASSWORD_BCRYPT); }
-        else { $new['alarm_pin'] = $cur['alarm_pin'] ?? password_hash("1234", PASSWORD_BCRYPT); }
+        else { $new['alarm_pin'] = $cur['alarm_pin'] ?? password_hash("CHANGE_ME", PASSWORD_BCRYPT); }
         $new['esp_token'] = $cur['esp_token'] ?? bin2hex(random_bytes(16));
 
         if (!isset($new['timeout_active'])) $new['timeout_active'] = false;
@@ -505,7 +505,7 @@ if (isset($_GET['action'])) {
         $s = json_decode(file_get_contents($confFile), true) ?? [];
         $storedPin = isset($s['alarm_pin']) ? $s['alarm_pin'] : '';
         if (empty($storedPin)) {
-            $storedPin = password_hash("1234", PASSWORD_BCRYPT);
+            $storedPin = password_hash("CHANGE_ME", PASSWORD_BCRYPT);
             $s['alarm_pin'] = $storedPin;
             file_put_contents($confFile, json_encode($s));
         }
@@ -565,7 +565,7 @@ if (isset($_GET['action'])) {
         $s = json_decode(file_get_contents($confFile), true) ?? [];
         $storedPin = isset($s['alarm_pin']) ? $s['alarm_pin'] : '';
         if (empty($storedPin)) {
-            $storedPin = password_hash("1234", PASSWORD_BCRYPT);
+            $storedPin = password_hash("CHANGE_ME", PASSWORD_BCRYPT);
             $s['alarm_pin'] = $storedPin;
             file_put_contents($confFile, json_encode($s));
         }

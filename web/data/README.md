@@ -20,7 +20,7 @@ Sie enthalten sensible Informationen wie:
 
 ```json
 {
-  "password": "admin",
+  "password": "CHANGE_ME",
   "refresh_rate": 2000,
   "site_title": "IoT Control Center",
   "timeout_active": false,
@@ -72,7 +72,7 @@ Protokolliert:
 
 ## Sicherheit
 
-Beim ersten Start wird automatisch ein Standard-Passwort (`admin`) gesetzt.
+Beim ersten Start wird automatisch ein Platzhalter-Passwort (`CHANGE_ME`) gesetzt.
 
 **WICHTIG: Ändere das Passwort sofort nach dem ersten Login!**
 
