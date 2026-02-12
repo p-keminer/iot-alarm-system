@@ -291,31 +291,35 @@ Der Uno R3 fungiert als **intelligenter Sensor-Hub** und wurde softwareseitig vo
 
 ## Verwendete Tools / Tools Used
 
-### Hardware & PCB Design
-- **[KiCad](https://www.kicad.org/)** – PCB-Design und Schaltpläne / PCB design and schematics  
-- **[Tinkercad](https://www.tinkercad.com/)** – Simulation Prototyping und Gehäuse-Entwürfe / Simulation, prototyping and building houses  
-- **[DIY Layout Creator](https://bancika.github.io/diy-layout-creator/)** – Layout-Erstellung für Lötpläne / Layout creation for soldering plans  
-- **[Bambu Lab Studio](https://bambulab.com/en/download/studio)** – 3D-Druck-Slicing für H2S / 3D printing slicing for H2S  
+### Hardware Design & 3D Prototyping
+- **[KiCad](https://www.kicad.org/)** – PCB-Design und Schaltpläne / PCB design and schematics
+- **[Tinkercad](https://www.tinkercad.com/)** – Simulation, Prototyping und Gehäuse-Entwürfe / Simulation, prototyping and housing design
+- **[Bambu Lab Studio](https://bambulab.com/en/download/studio)** – 3D-Druck-Slicing für H2S / 3D printing slicing for H2S
+- **[DIY Layout Creator](https://bancika.github.io/diy-layout-creator/)** – Layout-Erstellung für Lötpläne / Layout creation for soldering plans
 
-### Software Development
+### Firmware & Software Development
 - **[Visual Studio Code](https://code.visualstudio.com/)** – Entwicklungsumgebung für Code und Dokumentation / Development environment for code and documentation
 - **[PlatformIO](https://platformio.org/)** – Embedded-Entwicklung für ESP8266 / Embedded development for ESP8266
 - **[Arduino IDE](https://www.arduino.cc/en/software)** – Firmware-Entwicklung / Firmware development
-- **[Oracle VM VirtualBox](https://www.virtualbox.org/)** – Virtualisierungsumgebung für Server-Testläufe unter Xubuntu / Virtualization environment for server testing on Xubuntu
-- **[SillyTavern](https://github.com/SillyTavern/SillyTavern)** – Frontend-Schnittstelle zur Nutzung und Orchestrierung verschiedener KI-Modelle über APIs / Frontend interface for using and orchestrating various AI models via APIs
-- **[Ventoy](https://www.ventoy.net/)** – Erstellung bootfähiger USB-Medien zur Auslagerung und Nutzung von VM-Daten, -Images und ISOs / Creation of bootable USB media for offloading and using VM data, -images and ISOs
 
-### Web Development
+### Web Technologies
 - **[PHP 8.4](https://www.php.net/)** – Backend-Logik und API / Backend logic and API
 - **[Lighttpd](https://www.lighttpd.net/)** – Webserver / Web server
 - **[Chart.js](https://www.chartjs.org/)** – Datenvisualisierung / Data visualization
 - **[Lucide Icons](https://lucide.dev/)** – Icon-Bibliothek / Icon library
 
-### System Administration
+### Virtualization & Operating Systems
+- **[Oracle VM VirtualBox](https://www.virtualbox.org/)** – Virtualisierungsumgebung für Server-Testläufe unter Xubuntu / Virtualization environment for server testing on Xubuntu
+- **[Ventoy](https://www.ventoy.net/)** – Bootfähige USB-Medien für VM-Daten, Images und ISOs / Bootable USB media for VM data, images and ISOs
 - **[DietPi](https://dietpi.com/)** – Optimiertes Linux-OS für Raspberry Pi / Optimized Linux OS for Raspberry Pi
+
+### Network, Security & File Management
+- **[WireGuard](https://www.wireguard.com/)** – VPN-Tool für sichere Netzwerkverbindungen / VPN tool for secure network connections
+- **[WinSCP](https://winscp.net/)** – Dateimanagement und Transfer zwischen Windows und Linux / File management and transfer between Windows and Linux
 - **[SSH](https://www.openssh.com/)** – Remote-Zugriff und Verwaltung / Remote access and management
 
-### AI-Assisted Development
-- **[Claude-Sonnet 4.5 & Opus 4.5/4.6](https://claude.ai/)** – Code-Optimierung und Debugging-Unterstützung / Code optimization and debugging support
+### AI Orchestration & Assistance
+- **[SillyTavern](https://github.com/SillyTavern/SillyTavern)** – Frontend-Schnittstelle zur Orchestrierung verschiedener KI-Modelle / Frontend interface for orchestrating various AI models
+- **[Claude-Sonnet 4.5 & Opus 4.5/4.6](https://claude.ai/)** – Code-Optimierung und Debugging / Code optimization and debugging
 - **[ChatGPT 5.2 & 4o](https://chat.openai.com/)** – Konzeptentwicklung und Problemlösung / Concept development and problem solving
 - **[Google Gemini 3](https://gemini.google.com/)** – Alternative Perspektiven und Validierung / Alternative perspectives and validation
