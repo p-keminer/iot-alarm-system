@@ -140,7 +140,7 @@ A Ki Assisted-developed professional web dashboard enables central monitoring an
 - Konfiguration wird nur an Online-Nodes gesendet
 
 #### Sicherheit & Audit / Security & Audit
-- Passwort-geschützter Zugang mit Session-Management
+- Passwort-geschützter Zugang mit Session-Management und 3-stufigem Brute Force Schutz
 - Inaktivitäts-basierter Auto-Logout (konfigurierbar 1-60 Min)
 - Vollständiger Audit-Log für Admin-Aktivitäten
 - User-Agent-Parsing und Gerätenamen-Resolution via DNS

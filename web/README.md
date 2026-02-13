@@ -67,8 +67,8 @@ Selektives File-Locking mittels `flock()` für status‑ und race‑kritische Da
   JSON flat files in the `/data/` directory are used as persistent storage.    
   Selective file locking via `flock()` is applied to race‑critical status files, combined with a deliberately simple write strategy optimized for SD card longevity (log rotation, bounded file sizes, targeted writes).  
 
-* **Sicherheit / Security:** Session-Hijacking-Prävention durch IP-Bindung, Activity-Tracking und Session-Timeouts.
-  Session hijacking prevention via IP binding, activity tracking and session-timeouts.
+* **Sicherheit / Security:** Session-Hijacking-Prävention durch IP-Bindung, Activity-Tracking,Session-Timeouts und 3-stufiger Brute Force Schutz.
+  Session hijacking prevention via IP binding, activity tracking, session-timeouts and 3-stage brute force protection.
 
 ### Frontend-Design
 * **Performance First:** Verzicht auf Bootstrap oder Tailwind zugunsten von handoptimiertem CSS.  
