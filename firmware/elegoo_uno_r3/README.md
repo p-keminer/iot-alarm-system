@@ -15,7 +15,7 @@ RFID-gesteuerte Alarmanlage mit Magnetsensoren, HAL-Architektur und Pico2W-Anbin
 ---
 
 ## Workflow
-w
+
 ```
                          ┌─────────────────────────────────────────┐
                          │              SYSTEM START               │
