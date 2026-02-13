@@ -478,7 +478,7 @@ Bei HTTP-Fehler wird das Heartbeat-Intervall automatisch auf 60 Sekunden erhöht
 
 ---
 
-## Telnet-Debug-Konsole
+## Telnet-Honeypot
 
 Verbindung über Port 23:
 

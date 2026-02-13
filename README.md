@@ -6,18 +6,27 @@ IoT-Alarmanlagen-Basissystem auf ESP8266 und Elegoo Uno R3-Basis mit magnetische
 
 Basic IoT alarm system based on ESP8266 and Elegoo Uno R3, featuring magnetic Hall-effect sensors (KY-021) and RFID access control (RC522). The system processes sensor data locally, controls outputs such as LEDs and buzzers, communicates via UART and UDP, and is designed for modular expansion. A web-based monitoring dashboard on Raspberry Pi Zero 2 W enables real-time monitoring, remote control, and telemetry analysis of all nodes. This project serves as a hands-on Embedded/IoT application developed by a student at THGA Bochum.
 
-<div align="center" >
+---
+
+
+<div align="center">
   <a href="#">
-    <img src="media/videos/gifs/sender_r3_pcb.gif" style="height: 350px; ">
+   <img src="media/videos/gifs/ac_deactivate_via_dashboard.gif" width="37%">
   </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   <a href="#">
-    <img src="media/videos/gifs/receiver_pcb.gif" style="height: 350px; ">
+    <img src="media/videos/gifs/prototyp_housings_3d.gif" width="11.7%">
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ <a href="#">
+    <img src="media/videos/gifs/receiver_via_dashboard.gif" width="37%">
   </a>
 </div>
 
+
 ---
 
-[![Docs: Lessons Learned](https://img.shields.io/badge/Docs-Lessons%20Learned-yellow)](docs/lessons_learned.md) [![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-blue)](web/) [![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266/receiver) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266/sender/) [![Schematic: Sending](https://img.shields.io/badge/Schematic-%20Sending_KiCad-blueviolet)](hardware/pcb/sender/schematic_sender_r3.png) [![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving_KiCad-blueviolet)](hardware/pcb/receiver/schematic_receiver.png) 
+[![Docs: Lessons Learned](https://img.shields.io/badge/Docs-Lessons%20Learned-yellow)](docs/lessons_learned.md) [![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-blue)](web/) [![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266/receiver) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266/sender/) [![Schematic: Sending](https://img.shields.io/badge/Schematic-%20Sending_KiCad-blueviolet)](hardware/pcb/sender/schematic_sender_r3.png) [![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving_KiCad-blueviolet)](hardware/pcb/receiver/schematic_receiver.png)
 
 ---
 
@@ -59,10 +68,11 @@ This was my first hands-on embedded systems project, developed with minimal prio
 - Elegoo Uno R3 als zentrale Steuerung / Elegoo Uno R3 as central controller
 - Raspberry Pi Zero 2 W als Monitoring-Server / Raspberry Pi Zero 2 W as monitoring server
 - Selbst entworfene PCBs / Custom designed PCBs
-- 3D-gedruckte Gehäuse / 3D-printed housings
+- 3D-gedruckte Gehäuse / 3D-printed housings  
 
-[![PCB Sending Nodes](https://img.shields.io/badge/PCB-Sending%20Nodes-blue)](hardware/pcb/sender/pcb_sender_r3_back.png)  [![PCB Receiving Nodes](https://img.shields.io/badge/PCB-Receiving%20Nodes-blue)](hardware/pcb/receiver/pcb_receiver_back.png) [![Gehäuse: Sensoren](https://img.shields.io/badge/Gehäuse-%20Sensoren-white)](media/photos/prototype_housing.png) [![Gehäuse: Empfänger](https://img.shields.io/badge/Gehäuse-%20Empfänger-white)](mechanics/prints_3d/receiver/receiver_housing.png)
+[![PCB Sending Nodes](https://img.shields.io/badge/PCB-Sending%20Nodes-blue)](media/photos/sender_pcb.jpg) [![PCB Receiving Nodes](https://img.shields.io/badge/PCB-Receiving%20Nodes-blue)](media/photos/receiver_pcb.jpg) [![Gehäuse: Sender](https://img.shields.io/badge/Gehäuse-%20Sender-white)](media/photos/sender_enclosure.jpg) [![Gehäuse: Empfänger](https://img.shields.io/badge/Gehäuse-%20Empfänger-white)](media/photos/receiver_enclosure_pcb.jpg) [![Gehäuse: Sensoren](https://img.shields.io/badge/Gehäuse-%20Sensoren-white)](media/photos/sender_enclosure.jpg) 
 
+---
 
 **Workflow / Ablauf:**  
 Der folgende Workflow zeigt, wie Sensoren und Aktoren über die Steuerungseinheit und ESP-Nodes interagieren.  
@@ -75,11 +85,11 @@ The following workflow shows how sensors and actuators interact via the control 
                                    ↓                                             
                              UART (9600 baud)                                    ↓
                                    ↓                                             
-                             ESP8266 Sender   ←   MQTT/HTTP/JSON API   →   Raspberry Pi Zero 2 W 
+                             ESP8266 Sender   ←      HTTP/JSON API   →   Raspberry Pi Zero 2 W 
                                    ↑                                             
                                  (UDP)                                           ↑
                                    ↓                                             
-                           ESP8266 Empfänger             ←                MQTT/HTTP/JSON API  
+                           ESP8266 Empfänger             ←                  HTTP/JSON API  
                                    ↓                    
                               LED + Buzzer         
 ```
@@ -155,7 +165,7 @@ A Ki Assisted-developed professional web dashboard enables central monitoring an
 Die Firmware für beide ESP8266-Nodes (`firmware/esp8266/`) ist auf **maximale Ausfallsicherheit, Sicherheit und geringe Latenz** optimiert. Sie implementiert ein robustes Master-Slave-Konzept mit kryptografischer Absicherung.
 
 ### ESP8266 Receiver Node (Empfänger)
-Der Empfänger (`sketch_empfaengerESP`) priorisiert lokale Alarm-Logik über Netzwerk-Funktionen ("Priority Mode"), um ein stotterfreies Auslösen der Aktoren zu garantieren.
+Der Empfänger (`sketch_receiver`) priorisiert lokale Alarm-Logik über Netzwerk-Funktionen ("Priority Mode"), um ein stotterfreies Auslösen der Aktoren zu garantieren.
 
 - **Sicherheit (Security Hardening):**
   - **HMAC-SHA256 Signierung:** Authentifiziert Sender via `BearSSL` und Secret Token.
@@ -168,8 +178,10 @@ Der Empfänger (`sketch_empfaengerESP`) priorisiert lokale Alarm-Logik über Net
   - **WLAN Failover:** Asynchroner Wechsel auf Backup-SSID bei Verbindungsverlust.
   - **Watchdog V2:** Dedizierter Hardware-Timer überwacht den Loop-Zyklus und erzwingt bei Hängern einen Reboot.
 
+---
+
 ### ESP8266 Sender Node
-Der Sender (`sketch_senderESP`) ist auf zuverlässige Befehlsübermittlung ausgelegt, selbst in instabilen Netzwerken.
+Der Sender (`sketch_receiver`) ist auf zuverlässige Befehlsübermittlung ausgelegt, selbst in instabilen Netzwerken.
 
 - **Zuverlässige Kommunikation:**
   - **Retry-Logik:** Sendet Befehle bis zu 10x wiederholt, bis ein kryptografisch signiertes `ACK` (Acknowledgement) vom Empfänger eintrifft.
@@ -180,6 +192,8 @@ Der Sender (`sketch_senderESP`) ist auf zuverlässige Befehlsübermittlung ausge
   - **Safe Reset Pattern:** Werksreset erfordert langes Drücken (>10s) mit visuellem LED-Feedback, um Fehlbedienung zu verhindern.
   - **Telemetrie:** Übermittelt RSSI, Heap-Auslastung und Reset-Gründe an das Dashboard.
   - **OTA & Remote Debug:** Firmware-Updates und Debugging via Telnet over-the-air möglich.
+
+---
 
 ### Elegoo Uno R3 (Controller)
 Der Uno R3 fungiert als **intelligenter Sensor-Hub** und wurde softwareseitig von einem monolithischen Ansatz auf eine professionelle **Schichtenarchitektur** refaktioniert. Dies gewährleistet Wartbarkeit und deterministisches Verhalten.
@@ -196,9 +210,12 @@ Der Uno R3 fungiert als **intelligenter Sensor-Hub** und wurde softwareseitig vo
   - **Zugriffskontrolle:** Die Validierung von Berechtigungen ist in `uid_check` ausgelagert, um Authentifizierungslogik zentral und sicher zu verwalten.
   - **Alarm Logik Isolation:** Auf die Haupt-Alarm-Logik kann lediglich per USB (Serieller Kommunikation) oder physisch Einfluss genommen werden. (Attack Surface Reduction)
 
+
 *Alle Sketche sind modular aufgebaut, ausführlich kommentiert und nutzen moderne C++ Standards.*
 
-[![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266/receiver/sketch_receiver.ino) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266/sender/sketch_sender.ino)
+
+
+[![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266/receiver) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266/sender/)
 
 ---
 
@@ -218,7 +235,7 @@ Der Uno R3 fungiert als **intelligenter Sensor-Hub** und wurde softwareseitig vo
 | Gehäuse / Housing | 3D-gedruckt / 3D-printed | Schützt Sensoren und Elektronik / Protects sensors and electronics |
 
 
-[![Schematic: Sending](https://img.shields.io/badge/Schematic-%20Sending_KiCad-blueviolet)](hardware/pcb/sender/schematic_sender_r3.png) [![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving_KiCad-blueviolet)](hardware/pcb/receiver/schematic_receiver.png) [![Hardware: Components](https://img.shields.io/badge/Hardware-%20Components-violet)](hardware/assembly/components.md) [![Pinmapping: Elegoo Uno R3](https://img.shields.io/badge/Pinmapping-Elegoo%20Uno%20R3-lightgrey)](docs/pinmapping/elegoo_uno_r3.md) [![Pinmapping: Empfänger ESP](https://img.shields.io/badge/Pinmapping-Empfänger%20ESP-lightgrey)](docs/pinmapping/esp8266_receiver.md) [![Pinmapping: Sender ESP](https://img.shields.io/badge/Pinmapping-Sender%20ESP-lightgrey)](docs/pinmapping/esp8266_sender.md)
+ [![Hardware: Components](https://img.shields.io/badge/Hardware-%20Components-violet)](hardware/assembly/components.md) [![Pinmapping: Elegoo Uno R3](https://img.shields.io/badge/Pinmapping-Elegoo%20Uno%20R3-lightgrey)](docs/pinmapping/elegoo_uno_r3.md) [![Pinmapping: Empfänger ESP](https://img.shields.io/badge/Pinmapping-Empfänger%20ESP-lightgrey)](docs/pinmapping/esp8266_receiver.md) [![Pinmapping: Sender ESP](https://img.shields.io/badge/Pinmapping-Sender%20ESP-lightgrey)](docs/pinmapping/esp8266_sender.md)  
 
 ---
 
@@ -241,10 +258,9 @@ Der Uno R3 fungiert als **intelligenter Sensor-Hub** und wurde softwareseitig vo
 ## Mechanik / Mechanical Design
 - 3D-gedruckte Gehäuse für Sensoren / 3D-printed housings for sensors
 - STL-Dateien für den Druck / STL files for printing 
-- G-Code-Datei für **Bambu Lab H2S** enthalten / G-code file for **Bambu Lab H2S** included
 - Alle Dateien befinden sich im Ordner `mechanics/` / All files are located in the `mechanics/` folder
 
-[![3D Printed Reed Sensor Housing](https://img.shields.io/badge/3D%20Print-Reed%20Sensor-red)](mechanics/prints_3d/reed_sensor/reed_sensor_gehaeuse.stl) [![3D Printed RFID Sensor Housing](https://img.shields.io/badge/3D%20Print-RFID%20Sensor-red)](mechanics/prints_3d/rfid_sensor/rfid_sensor_gehaeuse.stl) [![3D Printed Receiver Housing](https://img.shields.io/badge/3D%20Print-Receiver%20Housing-red)](mechanics/prints_3d/receiver/receiver_housing.stl)
+[![Receiver Housing](https://img.shields.io/badge/3D%20Print-Receiver%20Housing-green)](mechanics/prints_3d/receiver/receiver_housing.stl) [![Reed Sensor Gehäuse](https://img.shields.io/badge/3D%20Print-Reed%20Sensor%20Gehäuse-green)](mechanics/prints_3d/reed_sensor/reed_sensor_gehaeuse.stl) [![RFID Sensor Gehäuse](https://img.shields.io/badge/3D%20Print-RFID%20Sensor%20Gehäuse-green)](mechanics/prints_3d/rfid_sensor/rfid_sensor_gehaeuse.stl) [![Sender R3 Housing](https://img.shields.io/badge/3D%20Print-Sender%20R3%20Housing-green)](mechanics/prints_3d/sender/sender_r3_housing.stl)
 
 ---
 
@@ -257,7 +273,7 @@ Der Uno R3 fungiert als **intelligenter Sensor-Hub** und wurde softwareseitig vo
 - Raspberry Pi Zero 2 W Setup mit DietPi und Dashboard-Installation / Raspberry Pi Zero 2 W setup with DietPi and dashboard installation
 - Integration der ESP-Nodes mit Dashboard-API / Integration of ESP nodes with dashboard API
 - Zusammenbau der funktionsfähigen Version für den Dauerbetrieb / Fully functional version assembled for continuous operation
-- Siehe Ordner `assembly/` für Hinweise / See `assembly/` folder for notes
+- Siehe Ordner `hardware/assembly/` für Hinweise / See `hardware/assembly/` folder for notes
 
 ---
 
@@ -272,11 +288,10 @@ Der Uno R3 fungiert als **intelligenter Sensor-Hub** und wurde softwareseitig vo
 
 ## Status
 - Prototyp abgeschlossen / Prototype completed 
-- Web-Dashboard in Arbeit / Web dashboard in progress
+- Finales Web-Dashboard in Arbeit / Web dashboard final in progress
 - Optimierung für finale Hardware in Arbeit / Optimization for final hardware in progress
-- Erweiterungen geplant (siehe Web Dashboard Sektion) / Extensions planned (see Web Dashboard section)
 
-[![Prototype Breadboard](https://img.shields.io/badge/Prototype-Breadboard-pink)](media/photos/prototype_breadboards.png) [![Prototype Perfboard](https://img.shields.io/badge/Prototype-Perfboard-pink)](media/photos/prototype_perforated_circuit_boards.jpg) 
+[![Prototype Breadboard](https://img.shields.io/badge/Prototype-Breadboard-pink)](media/photos/prototype_breadboards.png) [![Prototype Perfboard](https://img.shields.io/badge/Prototype-Perfboard-pink)](media/photos/prototype_perforated_circuit_boards.jpg) [![Prototype Housings](https://img.shields.io/badge/Prototype-Housings-pink)](media/photos/prototype_housings_3d.jpg)
 
 ---
 

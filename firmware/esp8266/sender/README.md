@@ -343,7 +343,7 @@ Hauptnetz verfügbar?
 
 ---
 
-## Telnet-Debug-Konsole
+## Telnet-Honeypot
 
 Verbindung über Port 23 (Standard-Telnet):
 

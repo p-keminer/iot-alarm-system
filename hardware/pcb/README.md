@@ -1,6 +1,6 @@
 ## PCB – Versorgungsvarianten (ESP + Elegoo Uno R3)
 
-In diesem Verzeichnis befinden sich **zwei PCB-Varianten** für das **r3_SenderEsp** System, die sich ausschließlich in der Art der Stromversorgung unterscheiden.
+In diesem Verzeichnis befinden sich **zwei PCB-Varianten** für das **sender** System, die sich ausschließlich in der Art der Stromversorgung unterscheiden.
 
 ---
 
@@ -16,6 +16,8 @@ Diese Version versorgt den ESP **direkt über den Elegoo Uno R3**.
 - Einschränkungen:
   - begrenzte Stromreserve
   - nicht optimal für hohe WLAN-Lasten oder OTA-Updates
+
+**HINWEIS:** NICHT empfohlen, falls Elegoo Uno R3 über USB per Pi versorgt    werden soll.
 
 ---
 

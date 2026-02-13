@@ -14,7 +14,7 @@
  *
  * Hardware:   NodeMCU V2 (ESP8266)
  * Autor:      Philip Keminer
- * Version:    V12.0 (Sender - HAL/FSM, OTA entfernt)
+ * Version:    V13.0 (Sender - HAL/FSM, OTA entfernt)
  * Datum:      2026-02-10
  */
 
