@@ -9,16 +9,19 @@
  *   [HAL]      - Hardware-Abstraktion: GPIO, WiFi, UDP, Flash, Timer, Telnet, mDNS
  *
  * Security: HMAC-SHA256, Sliding-Window Replay-Schutz (25 Pakete, LittleFS-persistent),
- *           Constant-Time Signatur-Vergleich, isdigit-Validierung, Traffic Obfuscation,
- *           DoS Rate-Limiting, Telnet Brute-Force-Schutz
+ *           Constant-Time Signatur-Vergleich, isdigit-Validierung,
+ *           Binary String Obfuscation (Flash), DoS Rate-Limiting
  *
- * Priority-Mode: Im ALARM-Zustand werden Heartbeat, Telnet und WLAN-Scan pausiert.
+ * Resilienz: Flash Wear-Leveling (LittleFS), Emergency QoS (Log-Filterung im Alarm),
+ *            Remote-Override via Heartbeat-Kanal, Zero-Allocation UDP-Parsing
+ *
+ * Priority-Mode: Im ALARM-Zustand werden Heartbeat und WLAN-Scan pausiert.
  *                Nur Hardware-Steuerung und UDP-Empfang laufen (Stop-the-World).
  *
  * Hardware:   NodeMCU V2 (ESP8266)
  * Autor:      Philip Keminer
- * Version:    V13.0 (Receiver - HAL/FSM, OTA entfernt)
- * Datum:      2026-02-11
+ * Version:    V14.0 (Receiver - HAL/FSM, OTA entfernt)
+ * Datum:      2026-02-23
  */
 
 // ============================================================================

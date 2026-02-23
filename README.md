@@ -172,28 +172,40 @@ Der Empfänger (`sketch_receiver`) priorisiert lokale Alarm-Logik über Netzwerk
 - **Sicherheit (Security Hardening):**
   - **HMAC-SHA256 Signierung:** Authentifiziert Sender via `BearSSL` und Secret Token.
   - **Anti-Replay Protection:** Validierung von Sequenznummern verhindert Wiederholungsangriffe.
-  - **Traffic Obfuscation:** Verschleierte Payloads (z.B. `NICE_TRY_WIRESHARK_USER`) erschweren Paketanalyse.
-  - **DoS-Protection:** Rate-Limiting (Max. 60 Pakete/Min) und Brute-Force-Schutz für Telnet.
+  - **Binary String Obfuscation:** Kritische Strings im Flash verschleiert gegen statische Analyse.
+  - **DoS-Protection:** Rate-Limiting (Max. 60 Pakete/Min).
 
 - **Netzwerk & Resilienz:**
   - **Priority Mode:** Blockiert unkritische Netzwerk-Tasks während eines Alarms ("Stop-the-World").
+  - **Remote Override:** Fernabschaltung des Alarms via Heartbeat-Kanal (bricht Priority-Mode).
   - **WLAN Failover:** Asynchroner Wechsel auf Backup-SSID bei Verbindungsverlust.
+  - **Flash Wear-Leveling:** Gleichmäßige Verteilung der Schreibzugriffe verlängert die Flash-Lebensdauer.
+  - **Emergency QoS:** API-Logs werden im Alarmzustand priorisiert gefiltert.
   - **Watchdog V2:** Dedizierter Hardware-Timer überwacht den Loop-Zyklus und erzwingt bei Hängern einen Reboot.
 
 ---
 
 ### ESP8266 Sender Node
-Der Sender (`sketch_receiver`) ist auf zuverlässige Befehlsübermittlung ausgelegt, selbst in instabilen Netzwerken.
+Der Sender (`sketch_sender`) ist auf zuverlässige Befehlsübermittlung ausgelegt, selbst in instabilen Netzwerken.
+
+- **Sicherheit (Security Hardening):**
+  - **HMAC-SHA256 Signierung:** Jeder gesendete Befehl ist kryptografisch signiert.
+  - **Firmware String Obfuscation:** Kritische Strings im Flash verschleiert gegen statische Analyse.
+  - **Constant-Time ACK-Vergleich:** Verhindert Timing-Angriffe bei der Antwortvalidierung.
 
 - **Zuverlässige Kommunikation:**
   - **Retry-Logik:** Sendet Befehle bis zu 10x wiederholt, bis ein kryptografisch signiertes `ACK` (Acknowledgement) vom Empfänger eintrifft.
+  - **UDP-Broadcast-Fallback:** Sendet bei DNS-Ausfall als Broadcast ins Subnetz.
   - **Non-Blocking Architecture:** Wartet auf Bestätigung, ohne den restlichen Systembetrieb (z.B. LEDs) zu blockieren.
   - **mDNS Discovery:** Löst die IP des Empfängers dynamisch auf (`alarm-receiver.local`), um IP-Änderungen automatisch zu verkraften.
 
-- **System-Features:**
+- **Resilienz & Management:**
+  - **Active WiFi-Failback:** Hysterese-gesteuerter Wechsel auf Backup-SSID und automatische Rückkehr zum Hauptnetz.
+  - **Remote-Konfigurations-Update:** Konfigurationsparameter können zur Laufzeit per API-Rückkanal aktualisiert werden.
+  - **Remote-Wipe:** Ferngesteuertes Zurücksetzen auf Werkseinstellungen via API.
+  - **Software-Watchdog:** Überwacht Loop-Zyklen zusätzlich zum Hardware-Watchdog.
+  - **Remote-Logging / Audit Trail:** Alle sicherheitsrelevanten Ereignisse werden an das Dashboard übermittelt.
   - **Safe Reset Pattern:** Werksreset erfordert langes Drücken (>10s) mit visuellem LED-Feedback, um Fehlbedienung zu verhindern.
-  - **Telemetrie:** Übermittelt RSSI, Heap-Auslastung und Reset-Gründe an das Dashboard.
-  - **OTA & Remote Debug:** Firmware-Updates und Debugging via Telnet over-the-air möglich.
 
 ---
 
