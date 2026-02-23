@@ -1,10 +1,10 @@
 
 # IoT-Basis-Alarmanlage / IoT Basic Alarm System
 
-**Kurzbeschreibung / Brief Description:**  
-IoT-Alarmanlagen-Basissystem auf ESP8266 und Elegoo Uno R3-Basis mit magnetischen Hall-Sensoren (KY-021) und RFID-Zugangskontrolle (RC522). Das System verarbeitet Sensordaten lokal, steuert Ausgaben wie LED und Buzzer, kommuniziert über UART und UDP und ist modular erweiterbar. Ein webbasiertes Monitoring-Dashboard auf Raspberry Pi Zero 2 W ermöglicht Echtzeit-Überwachung, Fernsteuerung und Telemetrie-Analyse aller Nodes. Ziel ist ein praxisnahes Embedded-/IoT-Projekt eines Studierenden der THGA Bochum.
+**Kurzbeschreibung / Brief Description:**
+IoT-Alarmanlage auf Basis von ESP8266 und Elegoo Uno R3 mit kryptografischer HMAC-SHA256-Absicherung, Hall-Sensoren (KY-021) und RFID-Zugangskontrolle (RC522). Die Firmware beider Nodes nutzt eine HAL/FSM-Architektur mit Resilienz-Features wie UDP-Broadcast-Fallback, Active WiFi-Failback und Remote-Management (Konfigurations-Update & Wipe). Die Nodes kommunizieren über UART, UDP und HTTP/JSON API. Echtzeit-Überwachung und Fernsteuerung aller Nodes über ein Web-Dashboard auf Raspberry Pi Zero 2 W. Studierendenprojekt an der THGA Bochum.
 
-Basic IoT alarm system based on ESP8266 and Elegoo Uno R3, featuring magnetic Hall-effect sensors (KY-021) and RFID access control (RC522). The system processes sensor data locally, controls outputs such as LEDs and buzzers, communicates via UART and UDP, and is designed for modular expansion. A web-based monitoring dashboard on Raspberry Pi Zero 2 W enables real-time monitoring, remote control, and telemetry analysis of all nodes. This project serves as a hands-on Embedded/IoT application developed by a student at THGA Bochum.
+IoT alarm system based on ESP8266 and Elegoo Uno R3 with HMAC-SHA256 cryptographic security, Hall-effect sensors (KY-021), and RFID access control (RC522). Both node firmwares use a HAL/FSM architecture with resilience features including UDP broadcast fallback, active WiFi failback, and remote management (config update & wipe). Nodes communicate via UART, UDP, and HTTP/JSON API. Real-time monitoring and remote control of all nodes via a web dashboard on Raspberry Pi Zero 2 W. Student project at THGA Bochum.
 
 ---
 
@@ -26,19 +26,20 @@ Basic IoT alarm system based on ESP8266 and Elegoo Uno R3, featuring magnetic Ha
 
 ---
 
-[![Docs: Lessons Learned](https://img.shields.io/badge/Docs-Lessons%20Learned-yellow)](docs/lessons_learned.md) [![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-blue)](web/) [![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266/receiver) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266/sender/) [![Schematic: Sending](https://img.shields.io/badge/Schematic-%20Sending_KiCad-blueviolet)](hardware/pcb/sender/schematic_sender_r3.png) [![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving_KiCad-blueviolet)](hardware/pcb/receiver/schematic_receiver.png)
+[![Docs: Lessons Learned](https://img.shields.io/badge/Docs-Lessons%20Learned-yellow)](docs/lessons_learned.md) [![Docs: Schwachstellenanalyse](https://img.shields.io/badge/Docs-Schwachstellenanalyse-red)](firmware/esp8266/README.md) [![Web Dashboard](https://img.shields.io/badge/Web-Dashboard-blue)](web/) [![Elegoo Uno R3](https://img.shields.io/badge/Firmware-Elegoo%20Uno%20R3-green)](firmware/elegoo_uno_r3) [![ESP8266 Empfänger](https://img.shields.io/badge/Firmware-ESP8266%20Empfänger-green)](firmware/esp8266/receiver) [![ESP8266 Sender](https://img.shields.io/badge/Firmware-ESP8266%20Sender-green)](firmware/esp8266/sender/) [![Schematic: Sending](https://img.shields.io/badge/Schematic-%20Sending_KiCad-blueviolet)](hardware/pcb/sender/schematic_sender_r3.png) [![Schematic: Receiving](https://img.shields.io/badge/Schematic-%20Receiving_KiCad-blueviolet)](hardware/pcb/receiver/schematic_receiver.png)
 
 ---
 
 ## Inhaltsverzeichnis
 - [Übersicht / Overview](#übersicht--overview)
 - [Systemarchitektur / System Architecture](#systemarchitektur--system-architecture)
+- [Kommunikationsarten / Communication Protocols](#kommunikationsarten--communication-protocols)
 - [Web Dashboard / Monitoring Interface](#web-dashboard--monitoring-interface)
 - [Firmware](#firmware)
 - [Hardware](#hardware)
 - [Projekt-Highlights / Features](#projekt-highlights--features)
 - [Mechanik / Mechanical Design](#mechanik--mechanical-design)
-- [Zusammenbau / Assembly](#zusammenbau--assembly) 
+- [Zusammenbau / Assembly](#zusammenbau--assembly)
 - [Reflektion / Lessons Learned](#reflektion--lessons-learned)
 - [Status](#status)
 - [Hinweis / Notes](#hinweis--notes)
@@ -47,19 +48,21 @@ Basic IoT alarm system based on ESP8266 and Elegoo Uno R3, featuring magnetic Ha
 ---
 
 ## Übersicht / Overview
-Dieses Projekt ist eine selbstentwickelte Basis-IoT-Alarmanlage mit zwei ESP8266-Nodes und einem Elegoo Uno R3.  
-Es dient als modularer Grundbaustein, der es ermöglicht, bei Bedarf weitere Nodes hinzuzufügen und das System so flexibel und einfach zu erweitern.
-Es umfasst Sensorerfassung, Kommunikation (UART & UDP) zwischen den Nodes, eine zentrale Steuerungseinheit sowie selbst entworfene PCBs.  
-Ein Web-Dashboard auf Raspberry Pi Zero 2 W ermöglicht die Echtzeit-Überwachung, Fernsteuerung und detaillierte Telemetrie-Analyse aller Systemkomponenten.
-Für die Sensoren wurden 3D-gedruckte Gehäuse verwendet.  
-Dies war mein erstes praktisches Embedded-System-Projekt, umgesetzt mit minimaler Vorerfahrung im ersten Semester.  
+Das Projekt ist eine selbstentwickelte IoT-Alarmanlage auf Basis von zwei ESP8266-Nodes und einem Elegoo Uno R3. Als modularer Grundbaustein lässt es sich flexibel um weitere Nodes erweitern.
 
-This project is a self-developed basic IoT alarm system using two ESP8266 nodes and an Elegoo Uno R3.  
-It serves as a modular foundation, allowing additional nodes to be integrated as needed, making the system flexible and easily expandable.
-It includes sensor data acquisition, communication (UART & UDP) between nodes, a central control unit, and custom-designed PCBs.  
-A web dashboard on Raspberry Pi Zero 2 W enables real-time monitoring, remote control, and detailed telemetry analysis of all system components.
-3D-printed housings were used for the sensors.  
-This was my first hands-on embedded systems project, developed with minimal prior experience during my first semester.
+Die Firmware beider ESP-Nodes ist mit HMAC-SHA256 kryptografisch gesichert und setzt auf eine HAL/FSM-Architektur. Resilienz-Features wie UDP-Broadcast-Fallback, Active WiFi-Failback und Remote-Management sorgen für einen robusten Betrieb auch bei Netzwerkproblemen.
+
+Der Elegoo Uno R3 verarbeitet Sensordaten (Hall-Sensoren, RFID) lokal und kommuniziert per UART mit dem Sender-Node. Die ESP-Nodes tauschen Alarm-Pakete per UDP aus und übermitteln Telemetrie, Heartbeat und Remote-Befehle über eine HTTP/JSON API an den Raspberry Pi. Für beide Nodes wurden eigene PCBs entworfen und 3D-gedruckte Gehäuse für die Sensoren gefertigt.
+
+Ein Web-Dashboard auf Raspberry Pi Zero 2 W rundet das System ab: Es bietet Echtzeit-Überwachung, Fernsteuerung und Telemetrie-Analyse aller Nodes über eine responsive Benutzeroberfläche — entwickelt im ersten Semester an der THGA Bochum.
+
+This project is a self-developed IoT alarm system based on two ESP8266 nodes and an Elegoo Uno R3, designed as a modular foundation that can be flexibly extended with additional nodes.
+
+Both ESP node firmwares are secured with HMAC-SHA256 and built on a HAL/FSM architecture. Resilience features such as UDP broadcast fallback, active WiFi failback, and remote management ensure robust operation even under network failures.
+
+The Elegoo Uno R3 processes sensor data (Hall sensors, RFID) locally and communicates with the sender node via UART. The ESP nodes exchange alarm packets via UDP and transmit telemetry, heartbeats, and remote commands to the Raspberry Pi via HTTP/JSON API. Custom PCBs were designed for both nodes, and 3D-printed housings were built for the sensors.
+
+A web dashboard on Raspberry Pi Zero 2 W completes the system — providing real-time monitoring, remote control, and telemetry analysis of all nodes through a responsive UI, developed during the first semester at THGA Bochum.
 
 ---
 
@@ -93,6 +96,23 @@ The following workflow shows how sensors and actuators interact via the control 
                                    ↓                    
                               LED + Buzzer         
 ```
+
+---
+
+## Kommunikationsarten / Communication Protocols
+
+Das System nutzt ausschliesslich leichtgewichtige Protokolle ohne externe Broker-Abhängigkeit. Jede UDP-Nachricht ist kryptografisch per HMAC-SHA256 gesichert und replay-geschützt.
+
+The system relies exclusively on lightweight protocols without external broker dependencies. Every UDP message is cryptographically secured via HMAC-SHA256 and replay-protected.
+
+| Protokoll / Protocol | Strecke / Route | Zweck / Purpose |
+|----------------------|-----------------|-----------------|
+| UART (9600 baud) | Elegoo Uno R3 → ESP8266 Sender | Alarm-Befehle, Statusmeldungen, Heartbeat |
+| UDP unicast | ESP8266 Sender <-> ESP8266 Empfänger | HMAC-signierte Alarm-Pakete mit Replay-Schutz |
+| UDP broadcast (Fallback) | ESP8266 Sender → Subnetz | Fallback bei DNS-/mDNS-Ausfall |
+| HTTP/JSON API | ESP8266 Nodes <-> Raspberry Pi | Telemetrie, Heartbeat, Remote-Steuerung, Audit-Log |
+| USB/Serial | Elegoo Uno R3 <-> Raspberry Pi | Heartbeat-Watchdog, Verbindungsüberwachung |
+| mDNS | ESP8266 Sender → ESP8266 Empfänger | Dynamische IP-Auflösung (alarm-receiver.local) |
 
 ---
 
@@ -170,28 +190,40 @@ Der Empfänger (`sketch_receiver`) priorisiert lokale Alarm-Logik über Netzwerk
 - **Sicherheit (Security Hardening):**
   - **HMAC-SHA256 Signierung:** Authentifiziert Sender via `BearSSL` und Secret Token.
   - **Anti-Replay Protection:** Validierung von Sequenznummern verhindert Wiederholungsangriffe.
-  - **Traffic Obfuscation:** Verschleierte Payloads (z.B. `NICE_TRY_WIRESHARK_USER`) erschweren Paketanalyse.
-  - **DoS-Protection:** Rate-Limiting (Max. 60 Pakete/Min) und Brute-Force-Schutz für Telnet.
+  - **Binary String Obfuscation:** Kritische Strings im Flash verschleiert gegen statische Analyse.
+  - **DoS-Protection:** Rate-Limiting (Max. 60 Pakete/Min).
 
 - **Netzwerk & Resilienz:**
   - **Priority Mode:** Blockiert unkritische Netzwerk-Tasks während eines Alarms ("Stop-the-World").
+  - **Remote Override:** Fernabschaltung des Alarms via Heartbeat-Kanal (bricht Priority-Mode).
   - **WLAN Failover:** Asynchroner Wechsel auf Backup-SSID bei Verbindungsverlust.
+  - **Flash Wear-Leveling:** Gleichmäßige Verteilung der Schreibzugriffe verlängert die Flash-Lebensdauer.
+  - **Emergency QoS:** API-Logs werden im Alarmzustand priorisiert gefiltert.
   - **Watchdog V2:** Dedizierter Hardware-Timer überwacht den Loop-Zyklus und erzwingt bei Hängern einen Reboot.
 
 ---
 
 ### ESP8266 Sender Node
-Der Sender (`sketch_receiver`) ist auf zuverlässige Befehlsübermittlung ausgelegt, selbst in instabilen Netzwerken.
+Der Sender (`sketch_sender`) ist auf zuverlässige Befehlsübermittlung ausgelegt, selbst in instabilen Netzwerken.
+
+- **Sicherheit (Security Hardening):**
+  - **HMAC-SHA256 Signierung:** Jeder gesendete Befehl ist kryptografisch signiert.
+  - **Firmware String Obfuscation:** Kritische Strings im Flash verschleiert gegen statische Analyse.
+  - **Constant-Time ACK-Vergleich:** Verhindert Timing-Angriffe bei der Antwortvalidierung.
 
 - **Zuverlässige Kommunikation:**
   - **Retry-Logik:** Sendet Befehle bis zu 10x wiederholt, bis ein kryptografisch signiertes `ACK` (Acknowledgement) vom Empfänger eintrifft.
+  - **UDP-Broadcast-Fallback:** Sendet bei DNS-Ausfall als Broadcast ins Subnetz.
   - **Non-Blocking Architecture:** Wartet auf Bestätigung, ohne den restlichen Systembetrieb (z.B. LEDs) zu blockieren.
   - **mDNS Discovery:** Löst die IP des Empfängers dynamisch auf (`alarm-receiver.local`), um IP-Änderungen automatisch zu verkraften.
 
-- **System-Features:**
+- **Resilienz & Management:**
+  - **Active WiFi-Failback:** Hysterese-gesteuerter Wechsel auf Backup-SSID und automatische Rückkehr zum Hauptnetz.
+  - **Remote-Konfigurations-Update:** Konfigurationsparameter können zur Laufzeit per API-Rückkanal aktualisiert werden.
+  - **Remote-Wipe:** Ferngesteuertes Zurücksetzen auf Werkseinstellungen via API.
+  - **Software-Watchdog:** Überwacht Loop-Zyklen zusätzlich zum Hardware-Watchdog.
+  - **Remote-Logging / Audit Trail:** Alle sicherheitsrelevanten Ereignisse werden an das Dashboard übermittelt.
   - **Safe Reset Pattern:** Werksreset erfordert langes Drücken (>10s) mit visuellem LED-Feedback, um Fehlbedienung zu verhindern.
-  - **Telemetrie:** Übermittelt RSSI, Heap-Auslastung und Reset-Gründe an das Dashboard.
-  - **OTA & Remote Debug:** Firmware-Updates und Debugging via Telnet over-the-air möglich.
 
 ---
 
@@ -251,7 +283,7 @@ Der Uno R3 fungiert als **intelligenter Sensor-Hub** und wurde softwareseitig vo
 - Detaillierte Telemetrie-Analyse mit Zeitreihen-Visualisierung / Detailed telemetry analysis with time-series visualization
 - Vollständiges Audit-Logging für Sicherheit und Nachverfolgbarkeit / Complete audit logging for security and traceability
 - Modular erweiterbar für zusätzliche Sensoren oder Aktoren, z. B. ESP32-Kamera-Modul oder PIR-Bewegungssensoren / Modularly extendable for additional sensors or actuators, e.g., ESP32 camera module or PIR motion sensors  
-- Prototypische IoT-Funktionalität über UART, UDP und HTTP/JSON / Prototype IoT functionality via UART, UDP, and HTTP/JSON
+- Kommunikation über UART, UDP (unicast + broadcast Fallback), HTTP/JSON API und mDNS / Communication via UART, UDP (unicast + broadcast fallback), HTTP/JSON API and mDNS
 
 ---
 

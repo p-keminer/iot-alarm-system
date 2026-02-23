@@ -1,6 +1,6 @@
 # Alarm-System — Sender
 
-**Kryptografisch gesicherter Alarm-Sender mit HAL/FSM-Architektur**
+**Kryptografisch gesicherter Alarm-Sender mit HAL/FSM-Architektur, UDP-Broadcast-Fallback, Active WiFi-Failback und Remote-Management (Config/Wipe)**
 
 > Sendet HMAC-signierte UDP-Befehle bei seriellem Kommando, wartet auf validiertes ACK vom Empfänger und steuert Status-LEDs. Alle Hardware-Zugriffe sind über eine Abstraktionsschicht (HAL) gekapselt, die Programmlogik läuft als endlicher Automat (FSM).
 

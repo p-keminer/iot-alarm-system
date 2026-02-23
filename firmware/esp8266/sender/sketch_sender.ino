@@ -9,13 +9,16 @@
  *   [HAL]      - Hardware-Abstraktion: GPIO, WiFi, UDP, Flash, Timer, Telnet, mDNS
  *
  * Security: HMAC-SHA256, Sequenznummer-Persistierung (LittleFS),
- *           Constant-Time ACK-Vergleich, Traffic Obfuscation,
- *           Telnet Brute-Force-Schutz
+ *           Constant-Time ACK-Vergleich, Firmware String Obfuscation (Flash)
+ *
+ * Resilienz: UDP-Broadcast-Fallback (DNS-Ausfall), Active WiFi-Failback mit Hysterese,
+ *            Remote-Konfigurations-Update & Remote-Wipe via API-Rueckkanal,
+ *            Software-Watchdog, Remote-Logging / Audit Trail
  *
  * Hardware:   NodeMCU V2 (ESP8266)
  * Autor:      Philip Keminer
- * Version:    V13.0 (Sender - HAL/FSM, OTA entfernt)
- * Datum:      2026-02-10
+ * Version:    V14.0 (Sender - HAL/FSM, OTA entfernt)
+ * Datum:      2026-02-23
  */
 
 // ============================================================================
