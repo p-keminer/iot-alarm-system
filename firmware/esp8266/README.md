@@ -14,7 +14,7 @@ Definition der Verhaltensweisen im aktiven Betrieb:
 
 * **Konnektivität:** Deaktivierung des WiFiManagers im produktiven Dauerzustand; statische Verbindung zum Ziel-WLAN zur Minimierung der Angriffsfläche.
 * **Telnet-Honeypot:** Betrieb der Telnet-Schnittstelle als aktives Täuschungssystem.
-* **Netzwerk-Filterung:** Definition der Trust-Boundary; Layer-3 Flooding-Schutz, sowie VPN. wird als externe Leistung durch den Router vorausgesetzt.
+* **Netzwerk-Filterung:** Definition der Trust-Boundary; Layer-3 Flooding-Schutz wird als externe Leistung durch den Router vorausgesetzt.
 
 
 ## 3. Mögliche Projekterweiterung
