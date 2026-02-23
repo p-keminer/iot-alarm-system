@@ -1,6 +1,6 @@
 # Alarm-System — Empfänger 
 
-**Kryptografisch gesicherter Alarm-Empfänger mit HAL/FSM-Architektur und Priority-Mode**
+**Kryptografisch gesicherter Alarm-Empfänger mit HAL/FSM-Architektur, Priority-Mode, Flash Wear-Leveling und Remote-Override**
 
 > Empfängt HMAC-signierte UDP-Pakete, validiert sie gegen Replay-Angriffe und steuert Alarm-Hardware (LEDs + Summer) mit minimaler Latenz. Im Alarm-Zustand werden alle Netzwerk-Tasks pausiert (Stop-the-World), damit die Hardware-Signale niemals stottern.
 

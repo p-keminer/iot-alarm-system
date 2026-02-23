@@ -1,6 +1,6 @@
 # Alarmsystem - Uno R3 (Master)
 
-RFID-gesteuerte Alarmanlage mit Magnetsensoren, HAL-Architektur und Pico2W-Anbindung.
+RFID-gesteuerte Alarmanlage mit redundanten Magnetsensoren, HAL/FSM-Architektur, Hardware-Watchdog und Heartbeat-Überwachung via Pico2W.
 
 ---
 

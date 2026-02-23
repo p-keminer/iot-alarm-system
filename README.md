@@ -1,10 +1,10 @@
 
 # IoT-Basis-Alarmanlage / IoT Basic Alarm System
 
-**Kurzbeschreibung / Brief Description:**  
-IoT-Alarmanlagen-Basissystem auf ESP8266 und Elegoo Uno R3-Basis mit magnetischen Hall-Sensoren (KY-021) und RFID-Zugangskontrolle (RC522). Das System verarbeitet Sensordaten lokal, steuert Ausgaben wie LED und Buzzer, kommuniziert über UART und UDP und ist modular erweiterbar. Ein webbasiertes Monitoring-Dashboard auf Raspberry Pi Zero 2 W ermöglicht Echtzeit-Überwachung, Fernsteuerung und Telemetrie-Analyse aller Nodes. Ziel ist ein praxisnahes Embedded-/IoT-Projekt eines Studierenden der THGA Bochum.
+**Kurzbeschreibung / Brief Description:**
+IoT-Alarmanlage auf Basis von ESP8266 und Elegoo Uno R3 mit kryptografischer HMAC-SHA256-Absicherung, Hall-Sensoren (KY-021) und RFID-Zugangskontrolle (RC522). Die Firmware beider Nodes nutzt eine HAL/FSM-Architektur mit Resilienz-Features wie UDP-Broadcast-Fallback, Active WiFi-Failback und Remote-Management (Konfigurations-Update & Wipe). Echtzeit-Überwachung und Fernsteuerung aller Nodes über ein Web-Dashboard auf Raspberry Pi Zero 2 W. Studierendenprojekt an der THGA Bochum.
 
-Basic IoT alarm system based on ESP8266 and Elegoo Uno R3, featuring magnetic Hall-effect sensors (KY-021) and RFID access control (RC522). The system processes sensor data locally, controls outputs such as LEDs and buzzers, communicates via UART and UDP, and is designed for modular expansion. A web-based monitoring dashboard on Raspberry Pi Zero 2 W enables real-time monitoring, remote control, and telemetry analysis of all nodes. This project serves as a hands-on Embedded/IoT application developed by a student at THGA Bochum.
+IoT alarm system based on ESP8266 and Elegoo Uno R3 with HMAC-SHA256 cryptographic security, Hall-effect sensors (KY-021), and RFID access control (RC522). Both node firmwares use a HAL/FSM architecture with resilience features including UDP broadcast fallback, active WiFi failback, and remote management (config update & wipe). Real-time monitoring and remote control of all nodes via a web dashboard on Raspberry Pi Zero 2 W. Student project at THGA Bochum.
 
 ---
 
@@ -47,19 +47,21 @@ Basic IoT alarm system based on ESP8266 and Elegoo Uno R3, featuring magnetic Ha
 ---
 
 ## Übersicht / Overview
-Dieses Projekt ist eine selbstentwickelte Basis-IoT-Alarmanlage mit zwei ESP8266-Nodes und einem Elegoo Uno R3.  
-Es dient als modularer Grundbaustein, der es ermöglicht, bei Bedarf weitere Nodes hinzuzufügen und das System so flexibel und einfach zu erweitern.
-Es umfasst Sensorerfassung, Kommunikation (UART & UDP) zwischen den Nodes, eine zentrale Steuerungseinheit sowie selbst entworfene PCBs.  
-Ein Web-Dashboard auf Raspberry Pi Zero 2 W ermöglicht die Echtzeit-Überwachung, Fernsteuerung und detaillierte Telemetrie-Analyse aller Systemkomponenten.
-Für die Sensoren wurden 3D-gedruckte Gehäuse verwendet.  
-Dies war mein erstes praktisches Embedded-System-Projekt, umgesetzt mit minimaler Vorerfahrung im ersten Semester.  
+Das Projekt ist eine selbstentwickelte IoT-Alarmanlage auf Basis von zwei ESP8266-Nodes und einem Elegoo Uno R3. Als modularer Grundbaustein lässt es sich flexibel um weitere Nodes erweitern.
 
-This project is a self-developed basic IoT alarm system using two ESP8266 nodes and an Elegoo Uno R3.  
-It serves as a modular foundation, allowing additional nodes to be integrated as needed, making the system flexible and easily expandable.
-It includes sensor data acquisition, communication (UART & UDP) between nodes, a central control unit, and custom-designed PCBs.  
-A web dashboard on Raspberry Pi Zero 2 W enables real-time monitoring, remote control, and detailed telemetry analysis of all system components.
-3D-printed housings were used for the sensors.  
-This was my first hands-on embedded systems project, developed with minimal prior experience during my first semester.
+Die Firmware beider ESP-Nodes ist mit HMAC-SHA256 kryptografisch gesichert und setzt auf eine HAL/FSM-Architektur. Resilienz-Features wie UDP-Broadcast-Fallback, Active WiFi-Failback und Remote-Management sorgen für einen robusten Betrieb auch bei Netzwerkproblemen.
+
+Der Elegoo Uno R3 verarbeitet Sensordaten (Hall-Sensoren, RFID) lokal und kommuniziert per UART mit dem Sender-Node. Für beide Nodes wurden eigene PCBs entworfen und 3D-gedruckte Gehäuse für die Sensoren gefertigt.
+
+Ein Web-Dashboard auf Raspberry Pi Zero 2 W rundet das System ab: Es bietet Echtzeit-Überwachung, Fernsteuerung und Telemetrie-Analyse aller Nodes über eine responsive Benutzeroberfläche — entwickelt im ersten Semester an der THGA Bochum.
+
+This project is a self-developed IoT alarm system based on two ESP8266 nodes and an Elegoo Uno R3, designed as a modular foundation that can be flexibly extended with additional nodes.
+
+Both ESP node firmwares are secured with HMAC-SHA256 and built on a HAL/FSM architecture. Resilience features such as UDP broadcast fallback, active WiFi failback, and remote management ensure robust operation even under network failures.
+
+The Elegoo Uno R3 processes sensor data (Hall sensors, RFID) locally and communicates with the sender node via UART. Custom PCBs were designed for both nodes, and 3D-printed housings were built for the sensors.
+
+A web dashboard on Raspberry Pi Zero 2 W completes the system — providing real-time monitoring, remote control, and telemetry analysis of all nodes through a responsive UI, developed during the first semester at THGA Bochum.
 
 ---
 
