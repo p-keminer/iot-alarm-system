@@ -54,7 +54,8 @@ Die Firmware beider ESP-Nodes ist mit HMAC-SHA256 kryptografisch gesichert und s
 
 Der Elegoo Uno R3 verarbeitet Sensordaten (Hall-Sensoren, RFID) lokal und kommuniziert per UART mit dem Sender-Node. Die ESP-Nodes tauschen Alarm-Pakete per UDP aus und übermitteln Telemetrie, Heartbeat und Remote-Befehle über eine HTTP/JSON API an den Raspberry Pi. Für beide Nodes wurden eigene PCBs entworfen und 3D-gedruckte Gehäuse für die Sensoren gefertigt.
 
-Ein Web-Dashboard auf Raspberry Pi Zero 2 W rundet das System ab: Es bietet Echtzeit-Überwachung, Fernsteuerung und Telemetrie-Analyse aller Nodes über eine responsive Benutzeroberfläche — entwickelt im ersten Semester an der THGA Bochum.
+Ein Web-Dashboard auf Raspberry Pi Zero 2 W rundet das System ab: Es bietet Echtzeit-Überwachung, Fernsteuerung und Telemetrie-Analyse aller Nodes über eine responsive Benutzeroberfläche — entwickelt im ersten Semester an der THGA Bochum ohne Vorerfahrung in technischen Bereich.
+
 
 This project is a self-developed IoT alarm system based on two ESP8266 nodes and an Elegoo Uno R3, designed as a modular foundation that can be flexibly extended with additional nodes.
 
@@ -62,7 +63,7 @@ Both ESP node firmwares are secured with HMAC-SHA256 and built on a HAL/FSM arch
 
 The Elegoo Uno R3 processes sensor data (Hall sensors, RFID) locally and communicates with the sender node via UART. The ESP nodes exchange alarm packets via UDP and transmit telemetry, heartbeats, and remote commands to the Raspberry Pi via HTTP/JSON API. Custom PCBs were designed for both nodes, and 3D-printed housings were built for the sensors.
 
-A web dashboard on Raspberry Pi Zero 2 W completes the system — providing real-time monitoring, remote control, and telemetry analysis of all nodes through a responsive UI, developed during the first semester at THGA Bochum.
+A web dashboard on Raspberry Pi Zero 2 W completes the system — providing real-time monitoring, remote control, and telemetry analysis of all nodes through a responsive UI, developed during the first semester at THGA Bochum without any technical knowledge before.
 
 ---
 

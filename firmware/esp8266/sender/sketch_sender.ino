@@ -62,14 +62,14 @@ const unsigned long IP_UPDATE_INTERVALL = 60000;           // mDNS-Aufloesung al
 // --- Sicherheit ---
 const uint8_t MAX_TELNET_VERSUCHE = 3;                     // Max 3 Login-Versuche
 
-// --- Obfuscated Payloads (Muss mit Empfaenger uebereinstimmen!) ---
-const char* CMD_ALARM_AN  = "NICE_TRY_WIRESHARK_USER";     // Verschleierter ALARM_ON Befehl
-const char* CMD_ALARM_AUS = "ENCRYPTION_IS_YOUR_FRIEND";   // Verschleierter ALARM_OFF Befehl
-
 // --- Pins ---
 #define PIN_RESET_TASTER D3            // Hardware-Reset-Taster
 #define PIN_LED_ALARM LED_BUILTIN      // Alarm-LED (invertiert: LOW = an)
 #define PIN_LED_WLAN D5                // WLAN-Status-LED
+
+// --- Obfuscated Payloads (Muss mit Empfaenger uebereinstimmen!) ---
+const char* CMD_ALARM_AN  = "NICE_TRY_WIRESHARK_USER";     // Verschleierter ALARM_ON Befehl
+const char* CMD_ALARM_AUS = "ENCRYPTION_IS_YOUR_FRIEND";   // Verschleierter ALARM_OFF Befehl
 
 // ============================================================================
 // QUELLTEXT-VERSCHLEIERUNG (Kein Klartext in der Firmware)
@@ -110,12 +110,12 @@ struct SystemKonfiguration {
     char udpToken[41] = "";             // HMAC-Secret (40 Zeichen + \0)
     char mdnsZiel[33] = "";             // Empfaenger-Hostname (ohne .local)
     char apiServer[33] = "";            // API-Server IP-Adresse
-    char telnetPasswort[21] = "y!Q#u_pPx_%L9gI";  // Telnet-Login (verschleiert)
+    char telnetPasswort[21] = "y!Q#I_pPx_%L9gI";  // Telnet-Login (verschleiert)
     char backupSsid[33] = "";           // Fallback-WLAN
     char backupPasswort[65] = "";       // Fallback-WLAN-Passwort
     char hauptWlanName[33] = "";        // Primaeres WLAN
     char hauptWlanPasswort[65] = "";    // Primaeres WLAN-Passwort
-    char apPasswort[65] = "y!Q#u_pPx_%L9gI";  // Access-Point-Passwort (verschleiert)
+    char apPasswort[65] = "y!Q#I_pPx_%L9gI";  // Access-Point-Passwort (verschleiert)
     char apiToken[33] = "";             // Bearer-Token fuer API
 };
 
@@ -650,10 +650,7 @@ void verarbeiteHeartbeat() {
                             strlcpy(config.backupPasswort, newConf["bpass"] | "", sizeof(config.backupPasswort));  // Kopieren
                             neustartNoetig = true;    // Neustart markieren
                         }
-                        if (newConf.containsKey("apiip")) {  // API-Server
-                            strlcpy(config.apiServer, newConf["apiip"] | "", sizeof(config.apiServer));  // Kopieren
-                            neustartNoetig = true;    // Neustart markieren
-                        }
+
                         if (newConf.containsKey("tpass")) {  // Telnet-PW
                             strlcpy(config.telnetPasswort, newConf["tpass"] | "", sizeof(config.telnetPasswort));  // Kopieren
                             neustartNoetig = true;    // Neustart markieren

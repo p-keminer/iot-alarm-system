@@ -1,6 +1,6 @@
 # Alarmsystem - Uno R3 (Master)
 
-RFID-gesteuerte Alarmanlage mit redundanten Magnetsensoren, HAL/FSM-Architektur, Hardware-Watchdog und Heartbeat-Überwachung via Pico2W.
+RFID-gesteuerte Alarmanlage mit redundanten Magnetsensoren, HAL/FSM-Architektur, Hardware-Watchdog und Heartbeat-Überwachung via Zero2W.
 
 ---
 
@@ -9,7 +9,7 @@ RFID-gesteuerte Alarmanlage mit redundanten Magnetsensoren, HAL/FSM-Architektur,
 - Zwei redundante Magnetsensoren (Alarm nur wenn beide offen)
 - USB-Heartbeat-Watchdog zur Verbindungsueberwachung
 - Hardware-Watchdog gegen Absturz
-- Remote-Steuerung via Pico2W
+- Remote-Steuerung via Zero2W
 - State Machine Architektur
 
 ---
@@ -131,7 +131,7 @@ alarm_system/
 2. `alarm_system.ino` oeffnen
 3. Bibliothek "MFRC522" installieren (Werkzeuge → Bibliotheken verwalten)
 4. UIDs in `uid_check.cpp` eintragen
-5. Board: Arduino Nano, Prozessor: ATmega328P
+5. Board: Elegoo Uno, Prozessor: ATmega328P
 6. Hochladen
 
 ### VS Code + PlatformIO
@@ -160,7 +160,7 @@ alarm_system/
 
 ## Kommunikationsprotokoll
 
-### Eingehend (Pico2W → Arduino)
+### Eingehend (Zero2W → Elegoo)
 
 | Kommando | Funktion |
 |----------|----------|
@@ -172,7 +172,7 @@ alarm_system/
 | `REBOOT` | Neustart |
 | `HB_ACK` | Heartbeat bestaetigen |
 
-### Ausgehend (Arduino → Pico2W)
+### Ausgehend (Elegoo → Zero2W)
 
 | Nachricht | Bedeutung |
 |-----------|-----------|
@@ -192,7 +192,7 @@ alarm_system/
 
 Anfrage: `STATUS`
 
-Antwort: `STATUS:SCHARF=1,AUSGELOEST=0,TUER1=ZU,TUER2=ZU,VERBINDUNG=OK`
+Antwort: `STATUS:SCHARF=1,AUSGELOEST=0,TUEROFFEN1=ZU,TUEROFFEN2=ZU,VERBINDUNG=OK`
 
 ---
 
@@ -221,7 +221,7 @@ Alarm wird NUR ausgeloest wenn **beide** Sensoren offen sind:
 
 ### Heartbeat-Watchdog (Software)
 
-- Sendet alle 5s `HB` an Pico2W
+- Sendet alle 5s `HB` an Zero2W
 - Erwartet `HB_ACK` innerhalb 15s
 - Bei Timeout: `STATUS:VERBINDUNG_VERLOREN`
 - Alarm funktioniert weiterhin lokal
@@ -268,7 +268,7 @@ Hinweis: Widerstandswerte bitte den Schaltplänen unter ```hardware/schematics``
                          │       D12  │◄──── RFID MISO         │
                          │       D13  │────► RFID SCK          │
                          │            │                       GND
-                         │       USB  │◄───► Pico2W (Serial)
+                         │       USB  │◄───► Zero2W (Serial)
                          │            │
                          │       3.3V │────► RFID VCC
                          │        GND │────► GND

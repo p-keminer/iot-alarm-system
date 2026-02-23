@@ -153,6 +153,7 @@ Jeder UDP-Befehl wird kryptografisch signiert:
 Payload:    "NICE_TRY_WIRESHARK_USER:42"     (Obfuscated Befehl + Sequenznummer)
 HMAC:       SHA256(payload, shared_secret)     (64 Hex-Zeichen)
 UDP-Paket:  "NICE_TRY_WIRESHARK_USER:42:a1b2c3..."
+
 ```
 
 - **BearSSL C-API** statt Arduino-Wrapper (kein Heap)
@@ -198,6 +199,12 @@ return ergebnis == 0;
 - Max. 3 Fehlversuche
 - Danach 5 Minuten Sperre (Verbindung wird getrennt)
 - Auto-Logout nach 5 Minuten Inaktivität
+
+### 6. Bidirektionales Management
+
+- Remote Config & Kill
+
+### 7. UDP Broadcast Fallback
 
 ---
 

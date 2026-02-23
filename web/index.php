@@ -14,25 +14,22 @@
 // - Alarm-Aufnahmen-Verwaltung
 // ============================================================
 
+// Session Security ist in /etc/php/8.4/fpm/pool.d/www.conf konfiguriert
+session_start();
+
+function loadUserLogs() {
+    $file = 'data/user_logs.json';
+    if (!file_exists($file)) return [];
+    $data = json_decode(file_get_contents($file), true);
+    return is_array($data) ? $data : [];
+}
+
 // === PHP FEHLERBEHANDLUNG ===
 // Fehler werden geloggt, aber NICHT im Browser angezeigt (Sicherheit)
 ini_set('display_errors', 0);
 ini_set('display_startup_errors', 0);
 ini_set('log_errors', 1);
 error_reporting(E_ALL);
-
-// === SESSION SECURITY HARDENING ===
-// HttpOnly: JavaScript kann Session-Cookie nicht lesen (XSS-Schutz)
-ini_set('session.cookie_httponly', 1);
-// SameSite Strict: Cookie wird nur bei Same-Origin-Requests gesendet (CSRF-Schutz)
-ini_set('session.cookie_samesite', 'Strict');
-// Strict Mode: Server akzeptiert nur selbst generierte Session-IDs
-ini_set('session.use_strict_mode', 1);
-// Secure-Flag: Cookie nur √ºber HTTPS senden (falls HTTPS aktiv)
-if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
-    ini_set('session.cookie_secure', 1);
-}
-session_start();
 
 // ============================================================
 // EINSTELLUNGEN LADEN
@@ -46,8 +43,8 @@ $defaults = [
     "refresh_rate"   => 2000,                                         // Dashboard-Aktualisierung in ms
     "site_title"     => "IoT Control Center",                         // Seitentitel
     "timeout_active" => true,                                         // Auto-Logout aktiviert
-    "timeout_minutes"=> 5,                                            // Timeout nach X Minuten Inaktivit√§t
-    "esp_token"      => bin2hex(random_bytes(16)),                    // Token f√ºr ESP-API-Authentifizierung
+    "timeout_minutes"=> 5,                                            // Timeout nach X Minuten Inaktivit‰t
+    "esp_token"      => bin2hex(random_bytes(16)),                    // Token f¸r ESP-API-Authentifizierung
     "camera_port"    => 8082                                          // Port des Kamera-Streams
 ];
 
@@ -56,7 +53,7 @@ $settings = [];
 if (file_exists($confFile)) {
     $settings = json_decode(file_get_contents($confFile), true);
 }
-// Falls Konfiguration fehlt oder ung√ºltig ‚Üí Defaults schreiben
+// Falls Konfiguration fehlt oder ung¸ltig ? Defaults schreiben
 if (!$settings || !isset($settings['password'])) {
     $settings = $defaults;
     if (!is_dir('data')) mkdir('data', 0750, true);
@@ -67,17 +64,17 @@ if (!$settings || !isset($settings['password'])) {
 // BRUTE-FORCE SCHUTZ - Konfiguration
 // ============================================================
 // Progressives Lockout-System:
-// - Stufe 1: Nach 5 Fehlversuchen ‚Üí 5 Minuten Sperre
-// - Stufe 2: Nach 10 Fehlversuchen ‚Üí 15 Minuten Sperre
-// - Stufe 3: Nach 15 Fehlversuchen ‚Üí 60 Minuten Sperre
+// - Stufe 1: Nach 5 Fehlversuchen ? 5 Minuten Sperre
+// - Stufe 2: Nach 10 Fehlversuchen ? 15 Minuten Sperre
+// - Stufe 3: Nach 15 Fehlversuchen ? 60 Minuten Sperre
 $bruteForceConfig = [
     'lockout_tiers' => [
-        ['attempts' => 5,  'lockout_seconds' => 300],   // 5 Versuche ‚Üí 5 Min Sperre
-        ['attempts' => 10, 'lockout_seconds' => 900],   // 10 Versuche ‚Üí 15 Min Sperre
-        ['attempts' => 15, 'lockout_seconds' => 3600],  // 15 Versuche ‚Üí 60 Min Sperre
+        ['attempts' => 5,  'lockout_seconds' => 300],   // 5 Versuche ? 5 Min Sperre
+        ['attempts' => 10, 'lockout_seconds' => 900],   // 10 Versuche ? 15 Min Sperre
+        ['attempts' => 15, 'lockout_seconds' => 3600],  // 15 Versuche ? 60 Min Sperre
     ],
-    'attempt_window' => 3600,  // Zeitfenster: Fehlversuche √§lter als 1h werden vergessen
-    'file'           => 'data/login_attempts.json'  // Datei f√ºr Fehlversuch-Tracking
+    'attempt_window' => 3600,  // Zeitfenster: Fehlversuche ‰lter als 1h werden vergessen
+    'file'           => 'data/login_attempts.json'  // Datei f¸r Fehlversuch-Tracking
 ];
 
 // ============================================================
@@ -85,9 +82,9 @@ $bruteForceConfig = [
 // ============================================================
 
 /**
- * Pr√ºft den Brute-Force-Status f√ºr eine IP-Adresse.
+ * Pr¸ft den Brute-Force-Status f¸r eine IP-Adresse.
  * 
- * @param string $ip           - Die zu pr√ºfende IP-Adresse
+ * @param string $ip           - Die zu pr¸fende IP-Adresse
  * @param array  $bfConfig     - Brute-Force-Konfiguration
  * @return array               - [blocked => bool, remaining_attempts => int, 
  *                                lockout_remaining => int, total_attempts => int, tier => int]
@@ -102,7 +99,7 @@ function checkBruteForce($ip, $bfConfig) {
         $attempts = json_decode(file_get_contents($attemptFile), true) ?: [];
     }
     
-    // Keine Eintr√§ge f√ºr diese IP ‚Üí nicht gesperrt
+    // Keine Eintr‰ge f¸r diese IP ? nicht gesperrt
     if (!isset($attempts[$ip])) {
         return [
             'blocked'             => false,
@@ -113,7 +110,7 @@ function checkBruteForce($ip, $bfConfig) {
         ];
     }
     
-    // Veraltete Eintr√§ge entfernen (√§lter als attempt_window)
+    // Veraltete Eintr‰ge entfernen (‰lter als attempt_window)
     $attempts[$ip] = array_values(array_filter($attempts[$ip], function($entry) use ($now, $bfConfig) {
         $timestamp = is_array($entry) ? $entry['time'] : $entry;
         return ($now - $timestamp) < $bfConfig['attempt_window'];
@@ -142,7 +139,7 @@ function checkBruteForce($ip, $bfConfig) {
         if ($t > $lastAttemptTime) $lastAttemptTime = $t;
     }
     
-    // Pr√ºfe jede Lockout-Stufe (von h√∂chster zu niedrigster)
+    // Pr¸fe jede Lockout-Stufe (von hˆchster zu niedrigster)
     $tiers = $bfConfig['lockout_tiers'];
     $currentTier = 0;
     for ($i = count($tiers) - 1; $i >= 0; $i--) {
@@ -164,7 +161,7 @@ function checkBruteForce($ip, $bfConfig) {
         }
     }
     
-    // Nicht gesperrt ‚Üí berechne verbleibende Versuche bis n√§chste Stufe
+    // Nicht gesperrt ? berechne verbleibende Versuche bis n‰chste Stufe
     $nextTierAttempts = $bfConfig['lockout_tiers'][0]['attempts'];  // Default: erste Stufe
     foreach ($tiers as $tier) {
         if ($totalAttempts < $tier['attempts']) {
@@ -184,7 +181,7 @@ function checkBruteForce($ip, $bfConfig) {
 }
 
 /**
- * Registriert einen fehlgeschlagenen Login-Versuch f√ºr eine IP.
+ * Registriert einen fehlgeschlagenen Login-Versuch f¸r eine IP.
  * 
  * @param string $ip        - IP-Adresse des Angreifers
  * @param array  $bfConfig  - Brute-Force-Konfiguration
@@ -208,7 +205,7 @@ function recordFailedAttempt($ip, $bfConfig) {
 }
 
 /**
- * L√∂scht alle Fehlversuche einer IP nach erfolgreichem Login.
+ * Lˆscht alle Fehlversuche einer IP nach erfolgreichem Login.
  * 
  * @param string $ip        - IP-Adresse
  * @param array  $bfConfig  - Brute-Force-Konfiguration
@@ -226,79 +223,29 @@ function clearFailedAttempts($ip, $bfConfig) {
 // ============================================================
 // LOGIN-VERARBEITUNG
 // ============================================================
-$loginFailed = false;
-$bruteForceStatus = null;
+// ============================================================
+// LOGIN-STATUS AUS SESSION LESEN (von keks.php gesetzt)
+// ============================================================
+$loginFailed = isset($_SESSION['login_failed']) ? $_SESSION['login_failed'] : false;
+$bruteForceStatus = isset($_SESSION['brute_force_status']) ? $_SESSION['brute_force_status'] : null;
 
-if (isset($_POST['password'])) {
-    $ip = $_SERVER['REMOTE_ADDR'];
-    
-    // Brute-Force-Status pr√ºfen BEVOR Passwort verifiziert wird
-    $bruteForceStatus = checkBruteForce($ip, $bruteForceConfig);
-    
-    if ($bruteForceStatus['blocked']) {
-        // IP ist gesperrt ‚Üí Login wird gar nicht erst versucht
-        $loginFailed = true;
-    } elseif (password_verify($_POST['password'], $settings['password'])) {
-        // === ERFOLGREICHER LOGIN ===
-        
-        // Session-ID regenerieren (Session-Fixation-Schutz)
-        session_regenerate_id(true);
-        
-        // Session-Variablen setzen
-        $_SESSION['loggedin']      = true;
-        $_SESSION['last_activity'] = time();       // F√ºr Timeout-Tracking
-        $_SESSION['login_time']    = time();       // F√ºr Sitzungsdauer-Berechnung
-        $_SESSION['csrf_token']    = bin2hex(random_bytes(32));  // CSRF-Token generieren
-        
-        // Fehlversuche f√ºr diese IP l√∂schen
-        clearFailedAttempts($ip, $bruteForceConfig);
-        
-        // Login in Audit-Log schreiben
-        $agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
-        $device = gethostbyaddr($ip);
-        if ($device == $ip) $device = "Unknown Device";
-        
-        $userLogFile = 'data/user_logs.json';
-        $logs = file_exists($userLogFile) ? json_decode(file_get_contents($userLogFile), true) : [];
-        array_unshift($logs, [
-            'timestamp'   => time(),
-            'date'        => date("d.m.Y H:i:s"),
-            'ip'          => $ip,
-            'device_name' => $device,
-            'user_agent'  => $agent,
-            'action'      => 'LOGIN',
-            'details'     => 'Erfolgreicher Login',
-            'session_id'  => session_id()
-        ]);
-        // Maximal 100 Log-Eintr√§ge behalten
-        $logs = array_slice($logs, 0, 100);
-        if (!is_dir('data')) mkdir('data', 0750, true);
-        file_put_contents($userLogFile, json_encode($logs));
-        
-    } else {
-        // === FEHLGESCHLAGENER LOGIN ===
-        recordFailedAttempt($ip, $bruteForceConfig);
-        $loginFailed = true;
-        
-        // Status nach dem neuen Fehlversuch aktualisieren (f√ºr Anzeige)
-        $bruteForceStatus = checkBruteForce($ip, $bruteForceConfig);
-    }
-}
+// Session-Flags zur√ºcksetzen (nur einmal anzeigen)
+unset($_SESSION['login_failed']);
+unset($_SESSION['brute_force_status']);
 
 // ============================================================
 // SESSION TIMEOUT CHECK
 // ============================================================
-// Pr√ºft ob die aktive Session wegen Inaktivit√§t abgelaufen ist
+// Pr¸ft ob die aktive Session wegen Inaktivit‰t abgelaufen ist
 if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
     if ($settings['timeout_active'] && isset($_SESSION['last_activity'])) {
         $timeout_seconds = ($settings['timeout_minutes'] ?? 5) * 60;
         
         if (time() - $_SESSION['last_activity'] > $timeout_seconds) {
-            // Timeout erreicht ‚Üí Auto-Logout durchf√ºhren
-            
-            // Audit-Log-Eintrag f√ºr Auto-Logout
-            $userLogFile = 'data/user_logs.json';
-            $logs = file_exists($userLogFile) ? json_decode(file_get_contents($userLogFile), true) : [];
+            // Timeout erreicht ? Auto-Logout durchf¸hren
+            $logs = loadUserLogs();
+
+            // Audit-Log-Eintrag f¸r Auto-Logout
             
             $ip = $_SERVER['REMOTE_ADDR'];
             $agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
@@ -316,21 +263,21 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                 'device_name' => $device,
                 'user_agent'  => $agent,
                 'action'      => 'AUTO-LOGOUT',
-                'details'     => "Timeout nach Inaktivit√§t (Sitzungsdauer: $durationStr)",
+                'details'     => "Timeout nach Inaktivit‰t (Sitzungsdauer: $durationStr)",
                 'session_id'  => session_id()
             ];
             array_unshift($logs, $newLog);
             $logs = array_slice($logs, 0, 100);
             if (!is_dir('data')) mkdir("data", 0750, true);
-            file_put_contents($userLogFile, json_encode($logs));
+            file_put_contents("data/user_logs.json", json_encode($logs));
             
-            // Session zerst√∂ren und zur Login-Seite weiterleiten
+            // Session zerstˆren und zur Login-Seite weiterleiten
             session_destroy();
             header("Location: index.php?timeout=1");
             exit;
         }
     }
-    // Aktivit√§ts-Timestamp aktualisieren bei jedem Seitenaufruf
+    // Aktivit‰ts-Timestamp aktualisieren bei jedem Seitenaufruf
     $_SESSION['last_activity'] = time();
 }
 
@@ -338,10 +285,8 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
 // MANUELLER LOGOUT
 // ============================================================
 if (isset($_GET['logout'])) {
-    // Audit-Log-Eintrag f√ºr manuellen Logout
-    $userLogFile = 'data/user_logs.json';
-    $logs = file_exists($userLogFile) ? json_decode(file_get_contents($userLogFile), true) : [];
-    
+    // Audit-Log-Eintrag f¸r manuellen Logout
+    $logs = loadUserLogs();	    
     $ip = $_SERVER['REMOTE_ADDR'];
     $agent = $_SERVER['HTTP_USER_AGENT'] ?? 'Unknown';
     $device = gethostbyaddr($ip);
@@ -362,7 +307,7 @@ if (isset($_GET['logout'])) {
     ];
     array_unshift($logs, $newLog);
     $logs = array_slice($logs, 0, 100);
-    file_put_contents($userLogFile, json_encode($logs));
+    file_put_contents("data/user_logs.json", json_encode($logs));
     
     session_destroy();
     header("Location: index.php");
@@ -402,7 +347,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
             // === Normaler Fehlversuch mit Restversuche-Anzeige ===
             $remainingText = '';
             if ($bruteForceStatus && $bruteForceStatus['remaining_attempts'] <= 3) {
-                $remainingText = '<br><span style="font-size:12px;">‚ö† ' . $bruteForceStatus['remaining_attempts'] . ' attempt(s) remaining before lockout</span>';
+                $remainingText = '<br><span style="font-size:12px;">? ' . $bruteForceStatus['remaining_attempts'] . ' attempt(s) remaining before lockout</span>';
             }
             $failedMsg = '<div class="alert-warning" style="background:#fee2e2;border-color:#ef4444;color:#991b1b;">'
                 . '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'
@@ -411,7 +356,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         }
     }
     
-    // Pr√ºfe ob das Login-Formular disabled sein soll (bei Lockout)
+    // Pr¸fe ob das Login-Formular disabled sein soll (bei Lockout)
     $formDisabled = ($bruteForceStatus && $bruteForceStatus['blocked']) ? 'disabled' : '';
     $btnExtraStyle = ($bruteForceStatus && $bruteForceStatus['blocked']) ? 'opacity:0.5;cursor:not-allowed;' : '';
     
@@ -449,7 +394,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         . '<p>Access Control Center</p>'
         . '</div>'
         . $timeoutMsg . $failedMsg
-        . '<form method="post" id="login-form">'
+        . '<form method="post" action="keks.php" id="login-form">'
         . '<div class="form-group">'
         . '<label class="form-label">Password</label>'
         . '<input type="password" name="password" class="form-input" placeholder="Enter password" required autofocus ' . $formDisabled . '>'
@@ -460,7 +405,7 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
         . '<script>'
         . '(function(){'
         . '  var timerEl = document.getElementById("lockout-timer");'
-        . '  if (!timerEl) return;'  // Kein Lockout aktiv ‚Üí nichts tun
+        . '  if (!timerEl) return;'  // Kein Lockout aktiv ? nichts tun
         . '  var seconds = parseInt(timerEl.getAttribute("data-seconds")) || 0;'
         . '  if (seconds <= 0) return;'
         . '  var form = document.getElementById("login-form");'
@@ -489,22 +434,22 @@ if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
 }
 
 // ============================================================
-// AB HIER: NUR F√úR EINGELOGGTE BENUTZER
+// AB HIER: NUR F‹R EINGELOGGTE BENUTZER
 // ============================================================
 
 // === DIAGNOSE-DATEN LADEN ===
-$statusFile = 'data/status.json';    // Ger√§te-Statusdaten (von ESP-Nodes gemeldet)
+$statusFile = 'data/status.json';    // Ger‰te-Statusdaten (von ESP-Nodes gemeldet)
 $logFile    = 'data/log.txt';        // System-Log (textbasiert)
 $csvFile    = 'data/telemetry.csv';  // Telemetrie-Zeitreihen (RSSI, Heap, etc.)
 
-// Ger√§te-Status laden
+// Ger‰te-Status laden
 $diagStatus = [];
 if (file_exists($statusFile)) {
     $diagStatus = json_decode(file_get_contents($statusFile), true);
 }
 
-// === TELEMETRIE-DATEN F√úR CHARTS AUFBEREITEN ===
-// Struktur: F√ºr jedes Ger√§t (sender/receiver/camera) werden
+// === TELEMETRIE-DATEN F‹R CHARTS AUFBEREITEN ===
+// Struktur: F¸r jedes Ger‰t (sender/receiver/camera) werden
 // RSSI, Heap und Zeitstempel in Arrays gesammelt
 $chartData = [
     'sender'   => ['rssi' => [], 'heap' => [], 'time' => []],
@@ -514,7 +459,7 @@ $chartData = [
 
 if (file_exists($csvFile)) {
     $lines = file($csvFile);
-    // Nur die letzten 100 Zeilen f√ºr Performance
+    // Nur die letzten 100 Zeilen f¸r Performance
     $lines = array_slice($lines, -100);
     
     foreach ($lines as $line) {
@@ -550,14 +495,14 @@ if (file_exists($logFile)) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Seitentitel aus Konfiguration -->
     <title><?php echo htmlspecialchars($settings['site_title']); ?></title>
-    <!-- CSRF-Token als Meta-Tag f√ºr JavaScript-Zugriff -->
+    <!-- CSRF-Token als Meta-Tag f¸r JavaScript-Zugriff -->
     <meta name="csrf-token" content="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>">
-    <!-- Google Fonts: Inter f√ºr modernes UI -->
+    <!-- Google Fonts: Inter f¸r modernes UI -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Lucide Icons: SVG-Icon-Bibliothek -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Chart.js: F√ºr Telemetrie-Diagramme -->
+    <!-- Chart.js: F¸r Telemetrie-Diagramme -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     
     <style>
@@ -569,9 +514,9 @@ if (file_exists($logFile)) {
             --bg-secondary: #1e293b;     /* Karten-Hintergrund */
             --bg-tertiary: #334155;      /* Buttons/Inputs Hintergrund */
             --text-primary: #f1f5f9;     /* Haupttext (hell) */
-            --text-secondary: #94a3b8;   /* Sekund√§rtext (grau) */
-            --text-tertiary: #64748b;    /* Terti√§rtext (dunkelgrau) */
-            --accent-blue: #3b82f6;      /* Prim√§rfarbe (Buttons, Links) */
+            --text-secondary: #94a3b8;   /* Sekund‰rtext (grau) */
+            --text-tertiary: #64748b;    /* Terti‰rtext (dunkelgrau) */
+            --accent-blue: #3b82f6;      /* Prim‰rfarbe (Buttons, Links) */
             --accent-green: #10b981;     /* Erfolg/Online Status */
             --accent-yellow: #f59e0b;    /* Warnung */
             --accent-red: #ef4444;       /* Fehler/Danger */
@@ -712,7 +657,7 @@ if (file_exists($logFile)) {
             margin: 0 auto;
         }
         
-        /* Seiten√ºberschrift */
+        /* Seiten¸berschrift */
         .page-header {
             margin-bottom: 32px;
         }
@@ -729,7 +674,7 @@ if (file_exists($logFile)) {
             color: var(--text-secondary);
         }
         
-        /* Grid-Layouts f√ºr Karten */
+        /* Grid-Layouts f¸r Karten */
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -743,7 +688,7 @@ if (file_exists($logFile)) {
         }
         
         /* ============================================================
-           KARTEN - Ger√§te-Status & Inhaltsbl√∂cke
+           KARTEN - Ger‰te-Status & Inhaltsblˆcke
            ============================================================ */
         .card {
             background: var(--bg-secondary);
@@ -755,7 +700,7 @@ if (file_exists($logFile)) {
             overflow: hidden;
         }
         
-        /* Farbiger Streifen oben an der Karte (zeigt Ger√§testatus) */
+        /* Farbiger Streifen oben an der Karte (zeigt Ger‰testatus) */
         .card::before {
             content: '';
             position: absolute;
@@ -767,7 +712,7 @@ if (file_exists($logFile)) {
             transition: all 0.3s;
         }
         
-        /* Farbiger Streifen wenn Ger√§t online */
+        /* Farbiger Streifen wenn Ger‰t online */
         .card.online::before { background: var(--accent-green); }
         .card.sender.online::before { background: var(--accent-blue); }
         .card.receiver.online::before { background: var(--accent-yellow); }
@@ -813,7 +758,7 @@ if (file_exists($logFile)) {
         }
         
         .status-indicator.online {
-            background: var(--accent-green);     /* Gr√ºn wenn online */
+            background: var(--accent-green);     /* Gr¸n wenn online */
         }
         
         @keyframes pulse {
@@ -1008,7 +953,7 @@ if (file_exists($logFile)) {
             overflow-y: auto;
             font-family: 'Courier New', monospace;
             font-size: 13px;
-            color: var(--accent-green);        /* Gr√ºne Schrift wie Terminal */
+            color: var(--accent-green);        /* Gr¸ne Schrift wie Terminal */
         }
         
         .terminal-header {
@@ -1038,7 +983,7 @@ if (file_exists($logFile)) {
         /* ============================================================
            FORMULARE
            ============================================================ */
-        /* View-Sections: Standardm√§√üig ausgeblendet (per JS gesteuert) */
+        /* View-Sections: Standardm‰ﬂig ausgeblendet (per JS gesteuert) */
         .view-section {
             display: none;
         }
@@ -1149,7 +1094,7 @@ if (file_exists($logFile)) {
             font-weight: 500;
         }
         
-        /* Chart-Container (feste H√∂he f√ºr Chart.js) */
+        /* Chart-Container (feste Hˆhe f¸r Chart.js) */
         .chart-container {
             position: relative;
             height: 300px;
@@ -1196,7 +1141,7 @@ if (file_exists($logFile)) {
         }
         
         /* ============================================================
-           AUDIT-LOG Eintr√§ge
+           AUDIT-LOG Eintr‰ge
            ============================================================ */
         .log-container {
             background: var(--bg-primary);
@@ -1317,7 +1262,7 @@ if (file_exists($logFile)) {
         <div class="container">
             
             <!-- ========================================================
-                 DASHBOARD VIEW - Ger√§te√ºbersicht & Steuerung
+                 DASHBOARD VIEW - Ger‰te¸bersicht & Steuerung
                  ======================================================== -->
             <div id="view-dashboard">
                 <div class="page-header">
@@ -1421,17 +1366,17 @@ if (file_exists($logFile)) {
                             </div>
                         </div>
                         <div class="btn-group">
-                            <!-- Kamera-Stream √∂ffnen -->
+                            <!-- Kamera-Stream ˆffnen -->
                             <button class="btn btn-primary" onclick="openCameraStream()">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                 Stream
                             </button>
-                            <!-- Aufnahmen-Seite √∂ffnen -->
+                            <!-- Aufnahmen-Seite ˆffnen -->
                             <button class="btn btn-primary" onclick="switchView('recordings')">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                 Aufnahmen
                             </button>
-                            <!-- Pi Reboot (mit doppelter Best√§tigung) -->
+                            <!-- Pi Reboot (mit doppelter Best‰tigung) -->
                             <button class="btn btn-danger" onclick="rebootPi()">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
                                 Reboot
@@ -1532,15 +1477,15 @@ if (file_exists($logFile)) {
             </div>
 
             <!-- ========================================================
-                 DIAGNOSE VIEW - Telemetrie & System-√úberwachung
+                 DIAGNOSE VIEW - Telemetrie & System-‹berwachung
                  ======================================================== -->
             <div id="view-diagnose" class="view-section">
                 <div class="page-header">
                     <h1 class="page-title">System-Diagnose & Telemetrie</h1>
-                    <p class="page-subtitle">Detaillierte System√ºberwachung und Performance-Analyse</p>
+                    <p class="page-subtitle">Detaillierte System¸berwachung und Performance-Analyse</p>
                 </div>
                 
-                <!-- Auto-Refresh Toggle f√ºr Diagnose-Seite -->
+                <!-- Auto-Refresh Toggle f¸r Diagnose-Seite -->
                 <div class="alert alert-info" style="display: flex; align-items: center; gap: 12px;">
                     <label class="switch">
                         <input type="checkbox" id="diag-auto-refresh" checked>
@@ -1549,10 +1494,10 @@ if (file_exists($logFile)) {
                     <span>Auto-Refresh (alle 5 Sek.)</span>
                 </div>
                 
-                <!-- Statistik-√úbersicht (4 Boxen) -->
+                <!-- Statistik-‹bersicht (4 Boxen) -->
                 <div class="stats-grid">
                     <?php 
-                    // Online-Ger√§te z√§hlen (Ger√§t gilt als online wenn letzter Heartbeat < 30s)
+                    // Online-Ger‰te z‰hlen (Ger‰t gilt als online wenn letzter Heartbeat < 30s)
                     $onlineCount = 0;
                     $totalUptime = 0;
                     foreach($diagStatus as $data) {
@@ -1561,11 +1506,11 @@ if (file_exists($logFile)) {
                     }
                     ?>
                     <div class="stat-box">
-                        <div class="stat-label">Online Ger√§te</div>
+                        <div class="stat-label">Online Ger‰te</div>
                         <div class="stat-value"><?php echo $onlineCount; ?> / <?php echo count($diagStatus); ?></div>
                     </div>
                     <div class="stat-box">
-                        <div class="stat-label">Telemetrie-Eintr√§ge</div>
+                        <div class="stat-label">Telemetrie-Eintr‰ge</div>
                         <div class="stat-value"><?php echo file_exists($csvFile) ? count(file($csvFile)) : 0; ?></div>
                     </div>
                     <div class="stat-box">
@@ -1580,17 +1525,17 @@ if (file_exists($logFile)) {
                     </div>
                 </div>
                 
-                <!-- Ger√§te-Status Tabelle mit detaillierten Telemetrie-Daten -->
+                <!-- Ger‰te-Status Tabelle mit detaillierten Telemetrie-Daten -->
                 <div class="card" style="margin-bottom: 24px;">
                     <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                        Ger√§te-Status & Telemetrie
+                        Ger‰te-Status & Telemetrie
                     </h3>
                     <div style="overflow-x: auto;">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Ger√§t</th>
+                                    <th>Ger‰t</th>
                                     <th>Status</th>
                                     <th>IP-Adresse</th>
                                     <th>Zuletzt gesehen</th>
@@ -1604,7 +1549,7 @@ if (file_exists($logFile)) {
                                 <?php if($diagStatus): foreach ($diagStatus as $name => $data): 
                                     // Online-Status: letzter Heartbeat < 30 Sekunden
                                     $isOnline = isset($data['last_seen']) && time() - $data['last_seen'] < 30;
-                                    // RSSI-Qualit√§t: > -60 = gut, > -75 = mittel, sonst = kritisch
+                                    // RSSI-Qualit‰t: > -60 = gut, > -75 = mittel, sonst = kritisch
                                     $rssi = $data['rssi'] ?? 0;
                                     $rssiClass = $rssi > -60 ? 'badge-good' : ($rssi > -75 ? 'badge-warning' : 'badge-critical');
                                 ?>
@@ -1631,7 +1576,7 @@ if (file_exists($logFile)) {
                                     </td>
                                     <td><?php echo isset($data['uptime']) ? gmdate("H:i:s", $data['uptime']) : '-'; ?></td>
                                     <td>
-                                        <!-- Reset-Grund farblich markiert (gr√ºn = normal, rot = Watchdog/Crash) -->
+                                        <!-- Reset-Grund farblich markiert (gr¸n = normal, rot = Watchdog/Crash) -->
                                         <span style="color: <?php echo in_array($data['reset_reason'] ?? '', ['External System', 'Power On']) ? 'var(--accent-green)' : 'var(--accent-red)'; ?>">
                                             <?php echo htmlspecialchars($data['reset_reason'] ?? 'unknown'); ?>
                                         </span>
@@ -1644,7 +1589,7 @@ if (file_exists($logFile)) {
                                     </td>
                                 </tr>
                                 <?php endforeach; else: ?>
-                                <tr><td colspan="8" style="text-align: center; color: var(--text-secondary);">Keine Ger√§te verbunden</td></tr>
+                                <tr><td colspan="8" style="text-align: center; color: var(--text-secondary);">Keine Ger‰te verbunden</td></tr>
                                 <?php endif; ?>
                             </tbody>
                         </table>
@@ -1653,7 +1598,7 @@ if (file_exists($logFile)) {
                 
                 <!-- Telemetrie-Charts (RSSI & Heap) -->
                 <div class="grid-2" style="margin-top: 24px;">
-                    <!-- RSSI Chart (WLAN-Signalst√§rke √ºber Zeit) -->
+                    <!-- RSSI Chart (WLAN-Signalst‰rke ¸ber Zeit) -->
                     <div class="card">
                         <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"/></svg>
@@ -1661,11 +1606,11 @@ if (file_exists($logFile)) {
                         </h3>
                         <div class="chart-container"><canvas id="rssiChart"></canvas></div>
                     </div>
-                    <!-- Heap Chart (Verf√ºgbarer RAM √ºber Zeit) -->
+                    <!-- Heap Chart (Verf¸gbarer RAM ¸ber Zeit) -->
                     <div class="card">
                         <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
-                            Verf√ºgbarer RAM (Heap)
+                            Verf¸gbarer RAM (Heap)
                         </h3>
                         <div class="chart-container"><canvas id="heapChart"></canvas></div>
                     </div>
@@ -1675,7 +1620,7 @@ if (file_exists($logFile)) {
                 <div class="card" style="margin-top: 24px;">
                     <h3 style="margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                        System-Logs (Letzte 50 Eintr√§ge)
+                        System-Logs (Letzte 50 Eintr‰ge)
                     </h3>
                     <div class="terminal" style="height: 400px;">
                         <?php if(!empty($systemLogs)): ?>
@@ -1684,7 +1629,7 @@ if (file_exists($logFile)) {
                             <?php endforeach; ?>
                         <?php else: ?>
                             <div style="color: var(--text-secondary); text-align: center; padding: 40px;">
-                                Keine Logs verf√ºgbar
+                                Keine Logs verf¸gbar
                             </div>
                         <?php endif; ?>
                     </div>
@@ -1704,11 +1649,11 @@ if (file_exists($logFile)) {
                         </a>
                         <button class="btn btn-danger" onclick="clearTelemetry()">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                            Telemetrie l√∂schen
+                            Telemetrie lˆschen
                         </button>
                         <button class="btn btn-danger" onclick="clearAllLogs()">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                            System-Logs l√∂schen
+                            System-Logs lˆschen
                         </button>
                     </div>
                 </div>
@@ -1747,13 +1692,13 @@ if (file_exists($logFile)) {
                             <input type="text" id="cfg-title" class="form-input" value="<?php echo $settings['site_title']; ?>">
                         </div>
                         
-                        <!-- Admin-Passwort √§ndern -->
+                        <!-- Admin-Passwort ‰ndern -->
                         <div class="form-group">
                             <label class="form-label">Change Admin Password</label>
                             <input type="password" id="cfg-pw" class="form-input" placeholder="Enter new password">
                         </div>
                         
-                        <!-- Alarm-PIN √§ndern -->
+                        <!-- Alarm-PIN ‰ndern -->
                         <div class="form-group">
                             <label class="form-label">Alarm-PIN aendern</label>
                             <input type="password" id="cfg-alarm-pin" class="form-input" placeholder="Neuer Alarm-PIN (Standard: CHANGE_ME)">
@@ -1815,7 +1760,7 @@ if (file_exists($logFile)) {
                             <span>Only online devices can be configured</span>
                         </div>
                         
-                        <!-- Zielger√§t ausw√§hlen -->
+                        <!-- Zielger‰t ausw‰hlen -->
                         <div class="form-group">
                             <label class="form-label">Target Device</label>
                             <select id="conf-target" class="form-select">
@@ -1823,13 +1768,13 @@ if (file_exists($logFile)) {
                             </select>
                         </div>
                         
-                        <!-- API Server IP f√ºr ESP-Nodes -->
+                        <!-- API Server IP f¸r ESP-Nodes -->
                         <div class="form-group">
                             <label class="form-label">API Server IP</label>
                             <input type="text" id="conf-apiip" class="form-input" placeholder="e.g. 192.168.1.50">
                         </div>
                         
-                        <!-- Prim√§res WLAN -->
+                        <!-- Prim‰res WLAN -->
                         <div class="form-group">
                             <label class="form-label">Primary WLAN SSID</label>
                             <input type="text" id="conf-mssid" class="form-input" placeholder="Network name">
@@ -1851,7 +1796,7 @@ if (file_exists($logFile)) {
                             <input type="password" id="conf-bpass" class="form-input" placeholder="Backup password">
                         </div>
                         
-                        <!-- Telnet-Zugang f√ºr Fernwartung -->
+                        <!-- Telnet-Zugang f¸r Fernwartung -->
                         <div class="form-group">
                             <label class="form-label">Telnet Password</label>
                             <input type="password" id="conf-telnet" class="form-input" placeholder="Telnet access password">
@@ -1867,7 +1812,7 @@ if (file_exists($logFile)) {
             </div>
 
             <!-- ========================================================
-                 AUDIT LOG VIEW (nur f√ºr Admin sichtbar)
+                 AUDIT LOG VIEW (nur f¸r Admin sichtbar)
                  ======================================================== -->
             <?php if(strtolower($settings['site_title']) === 'admin'): ?>
             <div id="view-userlogs" class="view-section">
@@ -1896,7 +1841,7 @@ if (file_exists($logFile)) {
                     </div>
                 </div>
                 
-                <!-- Audit-Log Container (wird per AJAX gef√ºllt) -->
+                <!-- Audit-Log Container (wird per AJAX gef¸llt) -->
                 <div class="card">
                     <div id="userlog-container" class="log-container">
                         <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
@@ -1956,9 +1901,9 @@ if (file_exists($logFile)) {
     <!-- ============================================================
          SCRIPT 1: Kritische Funktionen
          ============================================================
-         Enth√§lt: CSRF-Setup, API-Helper, Dashboard-Updates,
-         Navigation, Ger√§tsteuerung, Konfiguration.
-         Isoliert von Chart-Code damit Button-Fehler unabh√§ngig sind.
+         Enth‰lt: CSRF-Setup, API-Helper, Dashboard-Updates,
+         Navigation, Ger‰tsteuerung, Konfiguration.
+         Isoliert von Chart-Code damit Button-Fehler unabh‰ngig sind.
          ============================================================ -->
     <script>
         // ============================================================
@@ -1974,10 +1919,10 @@ if (file_exists($logFile)) {
          * apiCall() - Zentraler API-Wrapper mit CSRF-Schutz
          * 
          * Sendet POST-Requests an api.php mit automatischem CSRF-Token.
-         * Bei HTTP 403 (Session abgelaufen) ‚Üí automatischer Redirect zum Login.
+         * Bei HTTP 403 (Session abgelaufen) ? automatischer Redirect zum Login.
          * 
          * @param {string} action  - API-Aktion (z.B. 'send_command', 'save_settings')
-         * @param {Object} params  - Zus√§tzliche Parameter als Key-Value Paare
+         * @param {Object} params  - Zus‰tzliche Parameter als Key-Value Paare
          * @returns {Promise}      - Fetch-Response Promise
          */
         function apiCall(action, params) {
@@ -1994,7 +1939,7 @@ if (file_exists($logFile)) {
                 credentials: 'same-origin'    // Cookies mitsenden
             }).then(function(response) {
                 console.log('[API Response]', action, response.status);
-                // Session abgelaufen ‚Üí zum Login weiterleiten
+                // Session abgelaufen ? zum Login weiterleiten
                 if (response.status === 403) {
                     window.location.href = 'index.php?timeout=1';
                     return new Promise(function() {});  // Blockiert weitere Verarbeitung
@@ -2010,14 +1955,14 @@ if (file_exists($logFile)) {
         // GLOBALE VARIABLEN
         // ============================================================
         var refreshRate = <?php echo (int)$settings['refresh_rate']; ?>;  // Dashboard-Aktualisierungsrate in ms
-        var updateTimer = null;                                           // Timer-Handle f√ºr Dashboard-Loop
+        var updateTimer = null;                                           // Timer-Handle f¸r Dashboard-Loop
         var timeoutActive = <?php echo json_encode($settings['timeout_active'] ?? false); ?>;
         var timeoutMinutes = <?php echo (int)($settings['timeout_minutes'] ?? 5); ?>;
 
         // ============================================================
-        // ACTIVITY TRACKING (f√ºr Session-Timeout)
+        // ACTIVITY TRACKING (f¸r Session-Timeout)
         // ============================================================
-        // Sendet bei Benutzeraktivit√§t einen Ping an den Server
+        // Sendet bei Benutzeraktivit‰t einen Ping an den Server
         // um die Session am Leben zu halten. Maximal alle 30 Sekunden.
         var lastPing = 0;
         function resetActivityTimer() {
@@ -2028,13 +1973,13 @@ if (file_exists($logFile)) {
             fetch('api.php?action=ping_activity', {method: 'POST', credentials: 'same-origin'});
         }
 
-        // Aktivit√§ts-Events registrieren (passiv f√ºr Performance)
+        // Aktivit‰ts-Events registrieren (passiv f¸r Performance)
         ['mousedown', 'keydown', 'scroll', 'touchstart'].forEach(function(event) {
             document.addEventListener(event, resetActivityTimer, {passive: true});
         });
 
         // ============================================================
-        // GER√ÑTESTEUERUNG - ESP Befehle senden
+        // GERƒTESTEUERUNG - ESP Befehle senden
         // ============================================================
         
         /**
@@ -2058,7 +2003,7 @@ if (file_exists($logFile)) {
         }
 
         /**
-         * toggleAlarm() - Alarm √ºber ESP Receiver ein/ausschalten
+         * toggleAlarm() - Alarm ¸ber ESP Receiver ein/ausschalten
          * @param {HTMLElement} checkbox - Alarm Toggle Checkbox
          */
         function toggleAlarm(checkbox) {
@@ -2075,7 +2020,7 @@ if (file_exists($logFile)) {
         // ============================================================
         
         /**
-         * clearLog() - Terminal-Log eines Ger√§ts l√∂schen
+         * clearLog() - Terminal-Log eines Ger‰ts lˆschen
          * @param {string} id - DOM-ID des Terminal-Elements
          */
         function clearLog(id) {
@@ -2093,7 +2038,7 @@ if (file_exists($logFile)) {
                 ['catch'](function() { alert('Fehler beim Loeschen'); });
         }
 
-        /** clearTelemetry() - Alle Telemetrie-CSV-Daten l√∂schen (Charts werden zur√ºckgesetzt) */
+        /** clearTelemetry() - Alle Telemetrie-CSV-Daten lˆschen (Charts werden zur¸ckgesetzt) */
         function clearTelemetry() {
             if (!confirm('Telemetrie-Daten wirklich loeschen? Charts werden zurueckgesetzt.')) return;
             apiCall('clear_telemetry')
@@ -2102,7 +2047,7 @@ if (file_exists($logFile)) {
                 ['catch'](function() { alert('Fehler beim Loeschen'); });
         }
 
-        /** clearAllLogs() - Alle System-Logs l√∂schen */
+        /** clearAllLogs() - Alle System-Logs lˆschen */
         function clearAllLogs() {
             if (!confirm('ALLE System-Logs wirklich loeschen?')) return;
             apiCall('clear_all_logs')
@@ -2115,12 +2060,12 @@ if (file_exists($logFile)) {
         // KAMERA & RASPBERRY PI STEUERUNG
         // ============================================================
         
-        /** openCameraStream() - Kamera-Stream in neuem Tab √∂ffnen */
+        /** openCameraStream() - Kamera-Stream in neuem Tab ˆffnen */
         function openCameraStream() {
             window.open('stream.php', '_blank');
         }
 
-        /** rebootPi() - Raspberry Pi neustarten (doppelte Best√§tigung) */
+        /** rebootPi() - Raspberry Pi neustarten (doppelte Best‰tigung) */
         function rebootPi() {
             if (!confirm('Raspberry Pi wirklich neustarten?')) return;
             if (!confirm('ACHTUNG: Dashboard wird kurzzeitig nicht erreichbar!')) return;
@@ -2212,8 +2157,8 @@ if (file_exists($logFile)) {
         }
 
         /**
-         * deleteRecording() - Einzelne Aufnahme l√∂schen
-         * @param {string} filename - Name der zu l√∂schenden Datei
+         * deleteRecording() - Einzelne Aufnahme lˆschen
+         * @param {string} filename - Name der zu lˆschenden Datei
          */
         function deleteRecording(filename) {
             if (!confirm('Aufnahme "' + filename + '" wirklich loeschen?')) return;
@@ -2226,7 +2171,7 @@ if (file_exists($logFile)) {
                 ['catch'](function() { alert('Fehler beim Loeschen'); });
         }
 
-        /** deleteAllRecordings() - Alle Aufnahmen l√∂schen */
+        /** deleteAllRecordings() - Alle Aufnahmen lˆschen */
         function deleteAllRecordings() {
             if (!confirm('ALLE Aufnahmen wirklich loeschen?')) return;
             apiCall('delete_all_recordings')
@@ -2236,11 +2181,11 @@ if (file_exists($logFile)) {
         }
 
         // ============================================================
-        // ARDUINO SERIAL - Alarmanlage √ºber serielle Schnittstelle
+        // ARDUINO SERIAL - Alarmanlage ¸ber serielle Schnittstelle
         // ============================================================
         
         /**
-         * sendSerialCmd() - Befehl √ºber serielle Schnittstelle an Arduino senden
+         * sendSerialCmd() - Befehl ¸ber serielle Schnittstelle an Arduino senden
          * @param {string} cmd - '1' = Alarm aktivieren, '0' = Alarm deaktivieren
          */
         function sendSerialCmd(cmd) {
@@ -2280,9 +2225,9 @@ if (file_exists($logFile)) {
          * @param {string} tabName - Name des Views (z.B. 'dashboard', 'logs')
          */
         function switchView(tabName) {
-            // Alle verf√ºgbaren Views
+            // Alle verf¸gbaren Views
             var views = ['dashboard', 'logs', 'diagnose', 'config', 'userlogs', 'recordings'];
-            // Mapping: View-Name ‚Üí Button-ID Suffix
+            // Mapping: View-Name ? Button-ID Suffix
             var btnMap = { 'dashboard': 'dash', 'config': 'conf', 'logs': 'logs', 'userlogs': 'userlogs', 'diagnose': 'diag' };
             
             // Alle Views ausblenden und Buttons deaktivieren
@@ -2293,13 +2238,13 @@ if (file_exists($logFile)) {
                 if (btn) btn.classList.remove('active');
             });
             
-            // Gew√§hlten View einblenden und Button aktivieren
+            // Gew‰hlten View einblenden und Button aktivieren
             var targetView = document.getElementById('view-' + tabName);
             if (targetView) targetView.style.display = 'block';
             var activeBtn = document.getElementById('btn-' + btnMap[tabName]);
             if (activeBtn) activeBtn.classList.add('active');
             
-            // Tab-Auswahl im SessionStorage speichern (√ºberlebt Seiten-Reloads)
+            // Tab-Auswahl im SessionStorage speichern (¸berlebt Seiten-Reloads)
             try { sessionStorage.setItem('activeTab', tabName); } catch(e) {}
             
             // View-spezifische Initialisierungen
@@ -2336,7 +2281,7 @@ if (file_exists($logFile)) {
             var target = document.getElementById('conf-target').value;
             if (!target) { alert("No device selected!"); return; }
             
-            // Nur ausgef√ºllte Felder senden
+            // Nur ausgef¸llte Felder senden
             var config = {};
             var api = document.getElementById('conf-apiip').value; if(api) config.apiip = api;
             var mssid = document.getElementById('conf-mssid').value; if(mssid) config.mssid = mssid;
@@ -2354,7 +2299,7 @@ if (file_exists($logFile)) {
                 ['catch'](function() { alert('Request failed'); });
         }
 
-        /** resetSystem() - Alle Daten l√∂schen (doppelte Best√§tigung) */
+        /** resetSystem() - Alle Daten lˆschen (doppelte Best‰tigung) */
         function resetSystem() {
             if (!confirm("Delete all data?")) return;
             if (!confirm("CONFIRM: Erase all status, logs and commands?")) return;
@@ -2392,7 +2337,7 @@ if (file_exists($logFile)) {
         
         /**
          * updateDashboard() - Holt alle aktuellen Daten von der API
-         * und aktualisiert Dashboard-Elemente: Ger√§testatus, Logs,
+         * und aktualisiert Dashboard-Elemente: Ger‰testatus, Logs,
          * Konfiguration, Alarm-Toggle, Pi-Temperatur etc.
          */
         function updateDashboard() {
@@ -2422,11 +2367,11 @@ if (file_exists($logFile)) {
                     // === Pi Hardware-Metriken ===
                     var tempEl = document.getElementById('pi-cpu-temp');
                     var loadEl = document.getElementById('pi-cpu-load');
-                    // CPU-Temperatur mit Farbcodierung (gr√ºn < 55¬∞C < gelb < 70¬∞C < rot)
+                    // CPU-Temperatur mit Farbcodierung (gr¸n < 55∞C < gelb < 70∞C < rot)
                     if (piData.cpu_temp !== undefined && tempEl) {
                         var temp = parseFloat(piData.cpu_temp);
                         var color = temp > 70 ? '#ef4444' : (temp > 55 ? '#f59e0b' : '#10b981');
-                        tempEl.innerHTML = '<span style="color:' + color + '">' + temp.toFixed(1) + ' ¬∞C</span>';
+                        tempEl.innerHTML = '<span style="color:' + color + '">' + temp.toFixed(1) + ' ∞C</span>';
                     }
                     if (piData.cpu_load !== undefined && loadEl) {
                         loadEl.textContent = piData.cpu_load;
@@ -2437,7 +2382,7 @@ if (file_exists($logFile)) {
                     if (recEl && data.alarm_monitor) {
                         var am = data.alarm_monitor;
                         if (am.state === 'recording') {
-                            recEl.innerHTML = '<span style="color:#ef4444;font-weight:600;">‚óè REC</span>';
+                            recEl.innerHTML = '<span style="color:#ef4444;font-weight:600;">? REC</span>';
                         } else if (am.state === 'idle') {
                             recEl.innerHTML = '<span style="color:#10b981;">Bereit</span>';
                         } else if (am.state === 'not_running') {
@@ -2479,7 +2424,7 @@ if (file_exists($logFile)) {
                     var logSender = document.getElementById('log-sender');
                     var logReceiver = document.getElementById('log-receiver');
                     var logCamera = document.getElementById('log-camera');
-                    // Terminals leeren vor Neubef√ºllung
+                    // Terminals leeren vor Neubef¸llung
                     if (logSender) logSender.innerHTML = '';
                     if (logReceiver) logReceiver.innerHTML = '';
                     if (logCamera) logCamera.innerHTML = '';
@@ -2496,7 +2441,7 @@ if (file_exists($logFile)) {
                             var container = document.getElementById(tgt);
                             if (container) container.appendChild(div);
                         });
-                        // Auto-Scroll zu neuesten Eintr√§gen
+                        // Auto-Scroll zu neuesten Eintr‰gen
                         ['log-sender', 'log-receiver', 'log-camera'].forEach(function(id) {
                             var el = document.getElementById(id);
                             if (el) el.scrollTop = el.scrollHeight;
@@ -2511,8 +2456,8 @@ if (file_exists($logFile)) {
         }
 
         /**
-         * updateNode() - Einzelne Ger√§tekarte aktualisieren
-         * @param {string} name - Ger√§tename ('sender', 'receiver', 'camera')
+         * updateNode() - Einzelne Ger‰tekarte aktualisieren
+         * @param {string} name - Ger‰tename ('sender', 'receiver', 'camera')
          * @param {Object} data - Statusdaten {ip, online, status, ...}
          */
         function updateNode(name, data) {
@@ -2523,7 +2468,7 @@ if (file_exists($logFile)) {
             if (!card) return;
             
             if (!data) {
-                // Keine Daten ‚Üí Offline-Zustand
+                // Keine Daten ? Offline-Zustand
                 card.classList.remove('online');
                 if (dot) dot.classList.remove('online');
                 return;
@@ -2542,7 +2487,7 @@ if (file_exists($logFile)) {
 
         /**
          * startLoop() - Rekursiver Dashboard-Update Loop
-         * Verwendet setTimeout statt setInterval f√ºr robusteres Timing
+         * Verwendet setTimeout statt setInterval f¸r robusteres Timing
          */
         function startLoop() {
             updateDashboard();
@@ -2569,7 +2514,7 @@ if (file_exists($logFile)) {
                         container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">No activity logged</div>';
                         return;
                     }
-                    // Maximal 20 Log-Eintr√§ge anzeigen
+                    // Maximal 20 Log-Eintr‰ge anzeigen
                     var html = '';
                     logs.slice(0, 20).forEach(function(log) {
                         html += '<div class="log-entry">' +
@@ -2594,7 +2539,7 @@ if (file_exists($logFile)) {
         /** exportUserLogs() - Audit-Logs als Datei herunterladen */
         function exportUserLogs() { window.location.href = 'api.php?action=export_user_logs'; }
 
-        /** clearUserLogs() - Alle Audit-Logs l√∂schen */
+        /** clearUserLogs() - Alle Audit-Logs lˆschen */
         function clearUserLogs() {
             if (!confirm('Delete all audit logs?')) return;
             apiCall('clear_user_logs')
@@ -2631,18 +2576,18 @@ if (file_exists($logFile)) {
          KEINE kritischen Funktionen (Buttons, Navigation) brechen.
          ============================================================ -->
     <script>
-        // Chart-Instanzen (global f√ºr Destroy/Recreate)
+        // Chart-Instanzen (global f¸r Destroy/Recreate)
         var rssiChart = null, heapChart = null;
         
         /**
          * initDiagnoseCharts() - Telemetrie-Charts initialisieren
          * 
          * Erstellt zwei Chart.js Line-Charts:
-         * 1. RSSI Chart: WLAN-Signalst√§rke √ºber Zeit (alle 3 Ger√§te)
-         * 2. Heap Chart: Verf√ºgbarer RAM √ºber Zeit (alle 3 Ger√§te)
+         * 1. RSSI Chart: WLAN-Signalst‰rke ¸ber Zeit (alle 3 Ger‰te)
+         * 2. Heap Chart: Verf¸gbarer RAM ¸ber Zeit (alle 3 Ger‰te)
          * 
          * Verwendet eine gemeinsame Zeitachse (Union aller Timestamps).
-         * Fehlende Datenpunkte werden als null dargestellt (L√ºcken).
+         * Fehlende Datenpunkte werden als null dargestellt (L¸cken).
          */
         function initDiagnoseCharts() {
             try {
@@ -2655,14 +2600,14 @@ if (file_exists($logFile)) {
                 var chartData = <?php echo json_encode($chartData); ?>;
                 
                 // === Gemeinsame Zeitachse erstellen ===
-                // Sammle alle Timestamps aller Ger√§te in ein sortiertes Array
+                // Sammle alle Timestamps aller Ger‰te in ein sortiertes Array
                 var allTimes = {};
                 ['sender', 'receiver', 'camera'].forEach(function(src) {
                     chartData[src].time.forEach(function(t) { allTimes[t] = true; });
                 });
                 var sortedTimes = Object.keys(allTimes).map(Number).sort(function(a,b) { return a-b; });
                 
-                // Keine Daten ‚Üí Platzhalter-Nachricht anzeigen
+                // Keine Daten ? Platzhalter-Nachricht anzeigen
                 if (sortedTimes.length === 0) {
                     console.log('[CHARTS] Keine Telemetrie-Daten vorhanden');
                     var rssiEl = document.getElementById('rssiChart');
@@ -2676,8 +2621,8 @@ if (file_exists($logFile)) {
                 var labels = sortedTimes.map(function(t) { return new Date(t * 1000).toLocaleTimeString('de-DE'); });
                 
                 /**
-                 * mapToTimeline() - Ger√§tedaten auf gemeinsame Zeitachse mappen
-                 * @param {Object} srcData - Daten eines Ger√§ts {time:[], rssi:[], heap:[]}
+                 * mapToTimeline() - Ger‰tedaten auf gemeinsame Zeitachse mappen
+                 * @param {Object} srcData - Daten eines Ger‰ts {time:[], rssi:[], heap:[]}
                  * @param {string} field   - Feldname ('rssi' oder 'heap')
                  * @returns {Array}        - Werte aligned mit sortedTimes (null wo Daten fehlen)
                  */
@@ -2687,12 +2632,12 @@ if (file_exists($logFile)) {
                     return sortedTimes.map(function(t) { return (t in lookup) ? lookup[t] : null; });
                 }
 
-                // Bestehende Charts zerst√∂ren vor Neuerstellen
+                // Bestehende Charts zerstˆren vor Neuerstellen
                 if (rssiChart) { rssiChart.destroy(); rssiChart = null; }
                 if (heapChart) { heapChart.destroy(); heapChart = null; }
 
                 /**
-                 * makeDatasets() - Chart.js Datasets f√ºr alle 3 Ger√§te erstellen
+                 * makeDatasets() - Chart.js Datasets f¸r alle 3 Ger‰te erstellen
                  * @param {string} field - 'rssi' oder 'heap'
                  * @returns {Array}      - Array von Chart.js Dataset-Objekten
                  */
@@ -2735,7 +2680,7 @@ if (file_exists($logFile)) {
                         y: { 
                             ticks: { 
                                 color: '#94a3b8', 
-                                // Bytes in KB umrechnen f√ºr bessere Lesbarkeit
+                                // Bytes in KB umrechnen f¸r bessere Lesbarkeit
                                 callback: function(v) { return (v/1024).toFixed(1) + ' KB'; } 
                             }, 
                             grid: { color: 'rgba(51,65,85,0.3)' }, 
@@ -2755,7 +2700,7 @@ if (file_exists($logFile)) {
                 console.error('[CHARTS] Error:', err);
             }
             
-            // === Auto-Refresh f√ºr Diagnose-Seite ===
+            // === Auto-Refresh f¸r Diagnose-Seite ===
             var toggle = document.getElementById('diag-auto-refresh');
             var diagInterval = null;
             // Gespeicherten Zustand wiederherstellen
@@ -2782,7 +2727,7 @@ if (file_exists($logFile)) {
         // === Auto-Init Check ===
         // Falls der Diagnose-Tab beim Seitenladen bereits aktiv ist
         // (z.B. durch SessionStorage-Restore in Script 1),
-        // m√ºssen die Charts hier initialisiert werden, da Script 1
+        // m¸ssen die Charts hier initialisiert werden, da Script 1
         // switchView() aufgerufen hat BEVOR initDiagnoseCharts() definiert war.
         try {
             var diagView = document.getElementById('view-diagnose');

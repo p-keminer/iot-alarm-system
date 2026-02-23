@@ -67,10 +67,6 @@ const uint8_t MAX_TELNET_VERSUCHE = 3;                    // Brute-Force-Schutz
 const uint8_t REPLAY_FENSTER_GROESSE = 25;                // Sliding-Window Breite
 const unsigned long SEQ_PERSIST_SCHWELLE = 5;              // Flash-Write alle N Sequenzen
 
-// --- Obfuscated Payloads (Muss mit Sender uebereinstimmen!) ---
-const char* CMD_ALARM_AN  = "NICE_TRY_WIRESHARK_USER";     // Verschleierter ALARM_ON Befehl
-const char* CMD_ALARM_AUS = "ENCRYPTION_IS_YOUR_FRIEND";   // Verschleierter ALARM_OFF Befehl
-
 // --- Pins ---
 #define PIN_LED_ROT  D1   // Alarm-LED 1 (wechselt mit Gelb)
 #define PIN_LED_GELB D2   // Alarm-LED 2 (wechselt mit Rot)
@@ -78,6 +74,10 @@ const char* CMD_ALARM_AUS = "ENCRYPTION_IS_YOUR_FRIEND";   // Verschleierter ALA
 #define PIN_SUMMER_1 D5   // Akustischer Alarm 1
 #define PIN_SUMMER_2 D6   // Akustischer Alarm 2
 #define PIN_TASTER   D7   // Toggle (<1s) / Reset (>10s)
+
+// --- Obfuscated Payloads (Muss mit Sender uebereinstimmen!) ---
+const char* CMD_ALARM_AN  = "NICE_TRY_WIRESHARK_USER";     // Verschleierter ALARM_ON Befehl
+const char* CMD_ALARM_AUS = "ENCRYPTION_IS_YOUR_FRIEND";   // Verschleierter ALARM_OFF Befehl
 
 // ============================================================================
 // QUELLTEXT-VERSCHLEIERUNG (Kein Klartext in der Firmware)
@@ -117,12 +117,12 @@ void deobfuscate(char* text) {
 struct SystemKonfiguration {
     char udpToken[41] = "";             // HMAC-Secret (40 Zeichen + \0)
     char mdnsName[33] = "";             // Eigener mDNS-Hostname
-    char telnetPasswort[21] = "y!Q#u_pPx_%L9gI";  // Telnet-Login (verschleiert)
+    char telnetPasswort[21] = "y!Q#I_pPx_%L9gI";  // Telnet-Login (verschleiert)
     char backupSsid[33] = "";           // Fallback-WLAN
     char backupPasswort[65] = "";       // Fallback-WLAN-Passwort
     char hauptWlanName[33] = "";        // Primaeres WLAN
     char hauptWlanPasswort[65] = "";    // Primaeres WLAN-Passwort
-    char apPasswort[65] = "y!Q#u_pPx_%L9gI";  // Access-Point-Passwort (verschleiert)
+    char apPasswort[65] = "y!Q#I_pPx_%L9gI";  // Access-Point-Passwort (verschleiert)
     char apiServer[33] = "";            // API-Server IP-Adresse
     char apiToken[33] = "";             // Bearer-Token fuer API
 };
@@ -737,10 +737,7 @@ void verarbeiteHeartbeat() {
                          strlcpy(config.backupPasswort, newConf["bpass"] | "", sizeof(config.backupPasswort));  // Kopieren
                             neustartNoetig = true;    // Neustart markieren
                         }
-                        if (newConf.containsKey("apiip")) {  // API-Server
-                            strlcpy(config.apiServer, newConf["apiip"] | "", sizeof(config.apiServer));  // Kopieren
-                            neustartNoetig = true;    // Neustart markieren
-                        }
+                        
                         if (newConf.containsKey("tpass")) {  // Telnet-PW
                             strlcpy(config.telnetPasswort, newConf["tpass"] | "", sizeof(config.telnetPasswort));  // Kopieren
                             neustartNoetig = true;    // Neustart markieren

@@ -2,7 +2,7 @@
 """  
 Alarm Monitor Daemon  
 ====================  
-Liest den seriellen Port (Uno R3) und steuert die Kameraaufnahme.  
+Liest den seriellen Port (Arduino R3) und steuert die Kameraaufnahme.  
   
 - ALARM_ON  -> Startet ffmpeg-Aufnahme vom mjpg-streamer  
 - ALARM_OFF -> Stoppt Aufnahme  
@@ -21,9 +21,11 @@ import signal
 import glob  
 from datetime import datetime  
   
+# >>>>>>>>>>>> ✅ NEU (SCHRITT 1)  
 import shutil  
+# >>>>>>>>>>>> ✅ NEU (SCHRITT 2)  
 import fcntl  
-
+# <<<<<<<<<<<<  
   
 # === KONFIGURATION ===  
 SERIAL_PORTS = ['/dev/ttyUSB0', '/dev/ttyUSB1', '/dev/ttyACM0', '/dev/ttyACM1']  
@@ -66,14 +68,14 @@ def update_status(state, filepath=None, extra=None):
     try:  
         os.makedirs(os.path.dirname(STATUS_FILE), exist_ok=True)  
   
-         
+        # >>>>>>>>>>>> ✅ GEÄNDERT (SCHRITT 2: File-Locking)  
         with open(STATUS_FILE, 'w') as f:  
             fcntl.flock(f, fcntl.LOCK_EX)   # exklusiver Write-Lock  
             json.dump(status, f)  
             f.flush()  
             os.fsync(f.fileno())  
             fcntl.flock(f, fcntl.LOCK_UN)  
-        
+        # <<<<<<<<<<<<  
   
     except Exception as e:  
         print(f"Status write error: {e}")  
@@ -91,7 +93,7 @@ def start_recording():
     """Startet ffmpeg-Aufnahme vom mjpg-streamer."""  
     global recording_process, current_file  
   
-    #NEU (SCHRITT 1: DISK-FULL-NOTBREMSE)  
+    # >>>>>>>>>>>> ✅ NEU (SCHRITT 1: DISK-FULL-NOTBREMSE)  
     try:  
         total, used, free = shutil.disk_usage("/")  
         free_gb = free // (2**30)  
@@ -103,7 +105,7 @@ def start_recording():
         log(f"WARN: Disk-Check fehlgeschlagen: {e}")  
         update_status('error', extra={'error': 'Disk check failed'})  
         return  
-    # <
+    # <<<<<<<<<<<<  
   
     if recording_process is not None:  
         log("Aufnahme laeuft bereits")  

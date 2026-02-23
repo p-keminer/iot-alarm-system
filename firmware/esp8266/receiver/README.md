@@ -2,7 +2,7 @@
 
 **Kryptografisch gesicherter Alarm-Empfänger mit HAL/FSM-Architektur, Priority-Mode, Flash Wear-Leveling und Remote-Override**
 
-> Empfängt HMAC-signierte UDP-Pakete, validiert sie gegen Replay-Angriffe und steuert Alarm-Hardware (LEDs + Summer) mit minimaler Latenz. Im Alarm-Zustand werden alle Netzwerk-Tasks pausiert (Stop-the-World), damit die Hardware-Signale niemals stottern.
+> Empfängt HMAC-signierte UDP-Pakete, validiert sie gegen Replay-Angriffe und steuert Alarm-Hardware (LEDs + Summer) mit minimaler Latenz. Im Alarm-Zustand werden alle Netzwerk-Tasks pausiert (Stop-the-World) bis auf Heartbeat für Remote-Control, damit die Hardware-Signale niemals stottern.
 
 ---
 
@@ -80,9 +80,9 @@
               │ • WLAN-Failover      │  ALARM_OFF │    + Summer)      │
               │ • mDNS-Update        │ ◄───────── │ • UDP-Empfang     │
               │ • Taster (Toggle)    │  od. Taster│ • Taster          │
-              └───┬──────────────────┘            │                   │
-    Taster >10s   │                               │ PAUSIERT:         │
-                  │                               │ • Heartbeat       │
+              └───┬──────────────────┘            │ • Heartbeat       │
+    Taster >10s   │                               │                   │
+                  │                               │   PAUSIERT:       │  
                   ▼                               │ • Telnet          │
          ┌────────────┐                           │ • WLAN-Scan       │
          │ WERKSRESET  │◄─── Taster >10s ──────── │                   │
@@ -305,19 +305,17 @@ Der Kern-Designunterschied zu einer naiven Implementierung:
 ┌─────────────────────────────────────────────────────────┐
 │                     ZUSTAND_ALARM                       │
 │                                                         │
-│  ✅ aktualisiereAlarmHardware()   (200ms LED/Summer)    │
-│  ✅ verarbeiteUdpEmpfang()        (kann ALARM_OFF)      │
-│  ✅ verarbeiteTaster()             (kann deaktivieren)  │
-│  ✅ aktualisiereWlanLed()          (Status-Anzeige)     │
+│   aktualisiereAlarmHardware()    (200ms LED/Summer)     │
+│   verarbeiteUdpEmpfang()         (kann ALARM_OFF)       │
+│   verarbeiteTaster()             (kann deaktivieren)    │
+│   aktualisiereWlanLed()          (Status-Anzeige)       │
+│   verarbeiteHeartbeat()          (nur für Remote)       │
 │                                                         │
-│  ❌ verarbeiteHeartbeat()          PAUSIERT             │
-│  ❌ pruefeTelnetZugang()           PAUSIERT             │
-│  ❌ verwalteWlanVerbindung()       PAUSIERT             │
-│  ❌ mdnsUpdate()                   PAUSIERT             │
+│   pruefeTelnetZugang()           PAUSIERT               │
+│   verwalteWlanVerbindung()       PAUSIERT               │
+│   mdnsUpdate()                   PAUSIERT               │
 └─────────────────────────────────────────────────────────┘
 ```
-
-**Warum?** HTTP-Requests (Heartbeat) können bis zu 2 Sekunden blockieren. In dieser Zeit würden die Alarm-LEDs und Summer "einfrieren". Durch das Pausieren aller Netzwerk-Tasks im Alarm-Zustand wird eine **stotterfreie 5-Hz-Signalausgabe** garantiert.
 
 ---
 
