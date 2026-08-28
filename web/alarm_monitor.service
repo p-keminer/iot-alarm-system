@@ -1,0 +1,56 @@
+[Unit]
+Description=IoT Alarm Monitor - exclusive serial and recorder owner
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=iot-alarm-monitor
+Group=www-data
+SupplementaryGroups=dialout
+WorkingDirectory=/var/www/html
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+EnvironmentFile=-/etc/default/iot-alarm-monitor
+
+# The '+' prefix runs only these directory-creation steps with full service
+# manager privileges. Runtime code still runs as iot-alarm-monitor.
+ExecStartPre=+/usr/bin/install -d -o iot-alarm-monitor -g www-data -m 2770 /var/www/html/data
+ExecStartPre=+/usr/bin/install -d -o iot-alarm-monitor -g www-data -m 0750 /var/www/html/data/recordings
+ExecStart=/usr/bin/python3 /var/www/html/alarm_monitor.py
+
+# The daemon owns the Unix control socket. PHP may connect through the shared
+# www-data group, but www-data itself never receives dialout or sudo rights.
+RuntimeDirectory=iot-alarm-monitor
+RuntimeDirectoryMode=0750
+UMask=0027
+
+# Code and the rest of the OS remain read-only. Only runtime data and the
+# systemd-created socket directory are writable.
+ReadWritePaths=/var/www/html/data /run/iot-alarm-monitor
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=30s
+KillMode=control-group
+
+NoNewPrivileges=true
+CapabilityBoundingSet=
+AmbientCapabilities=
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectControlGroups=true
+ProtectClock=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+RestrictNamespaces=true
+RemoveIPC=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+SystemCallArchitectures=native
+
+[Install]
+WantedBy=multi-user.target

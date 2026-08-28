@@ -1,0 +1,24 @@
+* text=auto eol=lf
+
+*.ino text eol=lf
+*.c text eol=lf
+*.cpp text eol=lf
+*.h text eol=lf
+*.php text eol=lf
+*.py text eol=lf
+*.js text eol=lf
+*.css text eol=lf
+*.md text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+
+*.gif binary
+*.jpg binary
+*.jpeg binary
+*.mov binary
+*.mp4 binary
+*.png binary
+*.stl binary
+*.zip binary

@@ -1,0 +1,19 @@
+#ifndef UID_WHITELIST_LOCAL_H
+#define UID_WHITELIST_LOCAL_H
+
+// 1. Diese Datei als uid_whitelist.local.h kopieren.
+// 2. UID_BYTE_* und UID_LENGTH durch die lokal ausgelesenen Werte ersetzen.
+// 3. Die lokale Datei niemals committen (*.local.h ist in .gitignore).
+//
+// Mehrere Karten werden durch Kommas getrennt:
+//   { { UID_BYTES... }, UID_LENGTH },
+//   { { UID_BYTES... }, UID_LENGTH }
+//
+// Die absichtlich undefinierten Platzhalter sorgen dafuer, dass eine
+// unveraendert kopierte Vorlage nicht kompiliert statt eine Beispielkarte
+// freizuschalten.
+#define ALARM_UID_WHITELIST_ENTRIES { \
+  { {UID_BYTE_1, UID_BYTE_2, UID_BYTE_3, UID_BYTE_4}, UID_LENGTH } \
+}
+
+#endif

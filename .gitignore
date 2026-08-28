@@ -1,0 +1,58 @@
+# --- PlatformIO / IDE Müll ---
+.pio/
+.vscode/.browse.vc.db
+.vscode/ipch/
+.vscode/launch.json
+node_modules/
+.vscode/
+.idea/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+build/
+dist/
+
+# --- Kompilate ---
+*.bin
+*.elf
+*.hex
+*.o
+# GCC/PlatformIO Dependency-Dateien: immer "quelldatei.erweiterung.d"
+# (z.B. main.cpp.d, sensor.c.d) – nie bare Verzeichnisnamen wie filter.d
+*.c.d
+*.cpp.d
+*.h.d
+*.S.d
+*.asm.d
+
+# --- Sicherheit ---
+include/secrets.h
+src/secrets.h
+.env
+*.secrets
+
+# --- System-Dateien ---
+.DS_Store
+Thumbs.db
+
+# --- Bewusste Mediengrenze ---
+# GitHub-direkt darstellbare GIF/JPG/PNG bleiben erlaubt; HEIC/HEIF sowie die
+# aus dem Repo entfernten MP4/MOV-Quellderivate sollen nicht zurueckkehren.
+*.[hH][eE][iI][cC]
+*.[hH][eE][iI][fF]
+*.[mM][pP]4
+*.[mM][oO][vV]
+
+# --- Lokale Dashboard-Daten (NICHT committen) ---
+web/data/*
+!web/data/README.md
+
+# --- Lokale Geräte- und Build-Konfiguration ---
+*.local.h
+*.local.json
+*.local.ini
+*.local.toml
+*.local.yaml
+*.local.yml
+firmware/**/uid_config.h

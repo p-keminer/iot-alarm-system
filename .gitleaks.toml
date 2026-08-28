@@ -1,0 +1,21 @@
+title = "IoT alarm system secret scan"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Known non-secret identifier names"
+regexTarget = "match"
+regexes = [
+  '''csrf_token''',
+  '''CSRF_TOKEN''',
+  '''authHeader''',
+  '''empfangenerToken''',
+]
+
+[[allowlists]]
+description = "Exact published deterministic HMAC test vector (not an operational credential)"
+condition = "AND"
+regexTarget = "line"
+paths = ['''tests/security_protocol/protocol_test\.php''']
+regexes = ['''^\$secret = '0123456789abcdef0123456789abcdef01234567';$''']
